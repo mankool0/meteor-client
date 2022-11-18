@@ -23,10 +23,6 @@ public abstract class MeteorAddon {
 
     public abstract String getPackage();
 
-    public String getWebsite() {
-        return null;
-    }
-
     public GithubRepo getRepo() {
         return null;
     }

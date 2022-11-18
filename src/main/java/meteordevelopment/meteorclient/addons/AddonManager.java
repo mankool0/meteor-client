@@ -30,11 +30,6 @@ public class AddonManager {
                 }
 
                 @Override
-                public String getWebsite() {
-                    return "https://meteorclient.com";
-                }
-
-                @Override
                 public GithubRepo getRepo() {
                     return new GithubRepo("MeteorDevelopment", "meteor-client");
                 }
