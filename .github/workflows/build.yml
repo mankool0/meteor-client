@@ -24,7 +24,7 @@ jobs:
           java-version: '17'
 
       - run: chmod +x gradlew
-      - run: echo $(git describe --always --tags | grep -oP '[-](.*)' | cut -c2-)
+      - run: echo $(git describe --always --tags)
 
       - name: Build
         run: ./gradlew build -Pcommit="$(git describe --always --tags | grep -oP '[-](.*)' | cut -c2-)"
