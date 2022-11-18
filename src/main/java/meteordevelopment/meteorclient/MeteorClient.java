@@ -45,7 +45,6 @@ public class MeteorClient implements ClientModInitializer {
     public static final String MOD_ID = "meteor-client";
     public static final ModMetadata MOD_META = FabricLoader.getInstance().getModContainer(MOD_ID).get().getMetadata();
     public final static Version VERSION;
-    public final static String DEV_BUILD;
     public static MeteorAddon ADDON;
 
     public static MinecraftClient mc;
@@ -59,7 +58,6 @@ public class MeteorClient implements ClientModInitializer {
         if (versionString.contains("-")) versionString = versionString.split("-")[0];
 
         VERSION = new Version(versionString);
-        DEV_BUILD = MOD_META.getCustomValue(MeteorClient.MOD_ID + ":devbuild").getAsString();
     }
 
     @Override

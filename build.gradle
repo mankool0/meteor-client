@@ -7,7 +7,7 @@ plugins {
 sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name
-version = project.mod_version + (project.hasProperty("devbuild") ? ("-" + project.findProperty("devbuild")) : "")
+version = project.mod_version + (project.hasProperty("commit") ? ("-" + project.findProperty("commit")) : "")
 group = project.maven_group
 
 repositories {
@@ -80,7 +80,6 @@ shadowJar {
 processResources {
     filesMatching("fabric.mod.json") {
         expand "version": project.version,
-               "devbuild": project.findProperty("devbuild") ?: "",
                "commit": project.findProperty("commit") ?: ""
     }
 }
@@ -111,41 +110,4 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 task javadocJar(type: Jar) {
     archiveClassifier.set("javadoc")
     from javadoc
-}
-
-publishing {
-    publications {
-        java(MavenPublication) {
-            artifactId = "meteor-client"
-            version = project.hasProperty("devbuild") ? (project.mod_version + "-SNAPSHOT") : project.mod_version
-
-            artifact(remapJar) {
-                builtBy remapJar
-            }
-
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
-
-            artifact(javadocJar) {
-                builtBy javadocJar
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            name = "meteor-maven"
-            url = project.hasProperty("devbuild") ? "https://maven.meteordev.org/snapshots" : "https://maven.meteordev.org/releases"
-
-            credentials {
-                username = System.getenv("MAVEN_METEOR_ALIAS")
-                password = System.getenv("MAVEN_METEOR_TOKEN")
-            }
-
-            authentication {
-                basic(BasicAuthentication)
-            }
-        }
-    }
 }
