@@ -14,6 +14,7 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.player.DamageUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
@@ -88,8 +89,30 @@ public class AutoLog extends Module {
             .build()
     );
 
+    private final Setting<Boolean> disableAutoReconnect = sgGeneral.add(new BoolSetting.Builder()
+        .name("disable-auto-reconnect")
+        .description("Disables Auto Reconnect on AutoLog and enables after AutoLog is re-enabled.")
+        .defaultValue(true)
+        .build()
+    );
+
+    public boolean enableAutoReconnect = false;
+
     public AutoLog() {
         super(Categories.Combat, "auto-log", "Automatically disconnects you when certain requirements are met.");
+    }
+
+    @Override
+    public String getInfoString() {
+        return String.valueOf(health.get());
+    }
+
+    private void handleAutoReconnect() {
+        Module autoReconnect = Modules.get().get(AutoReconnect.class);
+        if (disableAutoReconnect.get() && autoReconnect != null && autoReconnect.isActive()) {
+            enableAutoReconnect = true;
+            autoReconnect.toggle();
+        }
     }
 
     @EventHandler
@@ -100,6 +123,7 @@ public class AutoLog extends Module {
             return;
         }
         if (playerHealth <= health.get()) {
+            handleAutoReconnect();
             mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("[AutoLog] Health was lower than " + health.get() + ".")));
             if(smartToggle.get()) {
                 this.toggle();
@@ -108,7 +132,8 @@ public class AutoLog extends Module {
             }
         }
 
-        if(smart.get() && playerHealth + mc.player.getAbsorptionAmount() - PlayerUtils.possibleHealthReductions() < health.get()){
+        if(smart.get() && playerHealth + mc.player.getAbsorptionAmount() - PlayerUtils.possibleHealthReductions() < health.get()) {
+            handleAutoReconnect();
             mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("[AutoLog] Health was going to be lower than " + health.get() + ".")));
             if (toggleOff.get()) {
                 this.toggle();
@@ -119,15 +144,17 @@ public class AutoLog extends Module {
         for (Entity entity : mc.world.getEntities()) {
             if (entity instanceof PlayerEntity && entity.getUuid() != mc.player.getUuid()) {
                 if (onlyTrusted.get() && entity != mc.player && !Friends.get().isFriend((PlayerEntity) entity)) {
-                        mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("[AutoLog] A non-trusted player appeared in your render distance.")));
-                        if (toggleOff.get()) {
-                            this.toggle();
-                            return;
-                        }
-                        break;
+                    handleAutoReconnect();
+                    mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("[AutoLog] A non-trusted player appeared in your render distance.")));
+                    if (toggleOff.get()) {
+                        this.toggle();
+                        return;
+                    }
+                    break;
                 }
                 if (PlayerUtils.isWithin(entity, 8) && instantDeath.get() && DamageUtils.getSwordDamage((PlayerEntity) entity, true)
                         > playerHealth + mc.player.getAbsorptionAmount()) {
+                    handleAutoReconnect();
                     mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("[AutoLog] Anti-32k measures.")));
                     if (toggleOff.get()) {
                         this.toggle();
@@ -137,6 +164,7 @@ public class AutoLog extends Module {
                 }
             }
             if (entity instanceof EndCrystalEntity && PlayerUtils.isWithin(entity, range.get()) && crystalLog.get()) {
+                handleAutoReconnect();
                 mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("[AutoLog] End Crystal appeared within specified range.")));
                 if (toggleOff.get()) {
                     this.toggle();
