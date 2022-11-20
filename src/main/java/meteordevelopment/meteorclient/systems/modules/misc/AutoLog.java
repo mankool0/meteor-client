@@ -104,31 +104,44 @@ public class AutoLog extends Module {
             if(smartToggle.get()) {
                 this.toggle();
                 enableHealthListener();
+                return;
             }
         }
 
         if(smart.get() && playerHealth + mc.player.getAbsorptionAmount() - PlayerUtils.possibleHealthReductions() < health.get()){
             mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("[AutoLog] Health was going to be lower than " + health.get() + ".")));
-            if (toggleOff.get()) this.toggle();
+            if (toggleOff.get()) {
+                this.toggle();
+                return;
+            }
         }
 
         for (Entity entity : mc.world.getEntities()) {
             if (entity instanceof PlayerEntity && entity.getUuid() != mc.player.getUuid()) {
                 if (onlyTrusted.get() && entity != mc.player && !Friends.get().isFriend((PlayerEntity) entity)) {
                         mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("[AutoLog] A non-trusted player appeared in your render distance.")));
-                        if (toggleOff.get()) this.toggle();
+                        if (toggleOff.get()) {
+                            this.toggle();
+                            return;
+                        }
                         break;
                 }
                 if (PlayerUtils.isWithin(entity, 8) && instantDeath.get() && DamageUtils.getSwordDamage((PlayerEntity) entity, true)
                         > playerHealth + mc.player.getAbsorptionAmount()) {
                     mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("[AutoLog] Anti-32k measures.")));
-                    if (toggleOff.get()) this.toggle();
+                    if (toggleOff.get()) {
+                        this.toggle();
+                        return;
+                    }
                     break;
                 }
             }
             if (entity instanceof EndCrystalEntity && PlayerUtils.isWithin(entity, range.get()) && crystalLog.get()) {
                 mc.player.networkHandler.onDisconnect(new DisconnectS2CPacket(Text.literal("[AutoLog] End Crystal appeared within specified range.")));
-                if (toggleOff.get()) this.toggle();
+                if (toggleOff.get()) {
+                    this.toggle();
+                    return;
+                }
             }
         }
     }
@@ -139,7 +152,8 @@ public class AutoLog extends Module {
             if (isActive()) disableHealthListener();
 
             else if (Utils.canUpdate()
-                    && !mc.player.isDead()
+                    && mc.player != null
+                    && mc.player.canTakeDamage()
                     && mc.player.getHealth() > health.get()) {
                 toggle();
                 disableHealthListener();
