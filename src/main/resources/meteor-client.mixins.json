@@ -155,6 +155,7 @@
     "VertexBufferMixin",
     "WorldAccessor",
     "WorldChunkMixin",
+    "WorldMixin",
     "WorldRendererAccessor",
     "WorldRendererMixin"
   ],
