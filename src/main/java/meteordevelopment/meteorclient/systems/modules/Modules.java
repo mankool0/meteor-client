@@ -531,6 +531,7 @@ public class Modules extends System<Modules> {
         add(new AutoSmelter());
         add(new BuildHeight());
         add(new EChestFarmer());
+        add(new InstantMine());
         add(new EndermanLook());
         add(new Flamethrower());
         add(new InfinityMiner());
