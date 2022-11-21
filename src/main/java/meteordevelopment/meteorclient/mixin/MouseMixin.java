@@ -6,6 +6,7 @@
 package meteordevelopment.meteorclient.mixin;
 
 import meteordevelopment.meteorclient.MeteorClient;
+import meteordevelopment.meteorclient.events.meteor.LockCursorEvent;
 import meteordevelopment.meteorclient.events.meteor.MouseButtonEvent;
 import meteordevelopment.meteorclient.events.meteor.MouseScrollEvent;
 import meteordevelopment.meteorclient.mixininterface.ICamera;
@@ -62,5 +63,10 @@ public class MouseMixin {
             if (Math.abs(freeLook.cameraPitch) > 90.0F) freeLook.cameraPitch = freeLook.cameraPitch > 0.0F ? 90.0F : -90.0F;
         }
         else player.changeLookDirection(cursorDeltaX, cursorDeltaY);
+    }
+
+    @Inject(method = "lockCursor", at = @At("HEAD"), cancellable = true)
+    private void onLockCursor(CallbackInfo info) {
+        if (MeteorClient.EVENT_BUS.post(LockCursorEvent.get()).isCancelled()) info.cancel();
     }
 }
