@@ -5,6 +5,7 @@
 
 package meteordevelopment.meteorclient.systems.modules;
 
+import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.addons.AddonManager;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import net.minecraft.item.Items;
@@ -16,6 +17,7 @@ public class Categories {
     public static final Category Render = new Category("Render", Items.GLASS.getDefaultStack());
     public static final Category World = new Category("World", Items.GRASS_BLOCK.getDefaultStack());
     public static final Category Misc = new Category("Misc", Items.LAVA_BUCKET.getDefaultStack());
+    public static final Category Litematica = new Category("Litematica", Items.SCAFFOLDING.getDefaultStack());
 
     public static boolean REGISTERING;
 
@@ -29,6 +31,14 @@ public class Categories {
         Modules.registerCategory(Render);
         Modules.registerCategory(World);
         Modules.registerCategory(Misc);
+
+        // Custom
+        try {
+            Class.forName("fi.dy.masa.litematica.Litematica");
+            Modules.registerCategory(Litematica);
+        } catch (ClassNotFoundException e) {
+            MeteorClient.LOG.info("Litematica appears to be missing. Skipping related category.");
+        }
 
         // Addons
         AddonManager.ADDONS.forEach(MeteorAddon::onRegisterCategories);

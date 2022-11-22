@@ -89,6 +89,10 @@ public class Modules extends System<Modules> {
         initRender();
         initWorld();
         initMisc();
+
+        if (CATEGORIES.contains(Categories.Litematica)) {
+            initLitematica();
+        }
     }
 
     @Override
@@ -569,6 +573,10 @@ public class Modules extends System<Modules> {
         add(new Spam());
         add(new ServerSpoof());
         add(new InventoryTweaks());
+    }
+
+    private void initLitematica() {
+        add(new SchematicSafeguard());
     }
 
     public static class ModuleRegistry extends Registry<Module> {

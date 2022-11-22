@@ -23,6 +23,20 @@ repositories {
         name = "vram"
         url = "https://maven.vram.io//"
     }
+    maven {
+        name = "masa"
+        url = "https://masa.dy.fi/maven"
+        content {
+            includeGroup "fi.dy.masa.malilib"
+        }
+    }
+    maven {
+        name = "curseforge"
+        url = "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
+    }
     mavenCentral()
 }
 
@@ -47,6 +61,10 @@ dependencies {
     modCompileOnly fabricApi.module("fabric-renderer-indigo", project.fapi_version)
     modCompileOnly("me.jellysquid.mods:sodium-fabric:${project.sodium_version}") { transitive = false }
     modCompileOnly("io.vram:canvas-fabric-mc119:1.0.+") { transitive = false }
+
+    // Litematica (https://github.com/maruohon/litematica)
+	modImplementation("fi.dy.masa.malilib:malilib-fabric-${project.malilib_version}")
+	modImplementation("curse.maven:litematica-${project.litematica_projectid}:${project.litematica_fileid}")
 
 	// Baritone (https://github.com/MeteorDevelopment/baritone)
     modInclude "baritone:fabric:${project.minecraft_version}-SNAPSHOT"
