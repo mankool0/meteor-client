@@ -1,4 +1,4 @@
-package meteordevelopment.meteorclient.systems.modules.world;
+package meteordevelopment.meteorclient.systems.modules.litematica;
 
 // by Moon_dark 13.07.21, special for -/- corner top diggers list and art
 // Adapted for Meteor/Litematica 21.11.22
