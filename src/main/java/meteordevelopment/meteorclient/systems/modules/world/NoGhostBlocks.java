@@ -15,6 +15,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.util.Hand;
 
 public class NoGhostBlocks extends Module {
 
@@ -56,7 +57,9 @@ public class NoGhostBlocks extends Module {
         if (mc.isInSingleplayer() || !placing.get())
             return;
 
-        if (event.flags == 11 && event.state.getBlock() != Blocks.AIR) // There might be a better way to do this
+        if (event.flags == 11 && event.state.getBlock() != Blocks.AIR) { // There might be a better way to do this
             event.setCancelled(true);
+            mc.player.swingHand(Hand.MAIN_HAND);
+        }
     }
 }
