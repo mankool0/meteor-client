@@ -121,6 +121,8 @@ public class MeteorStarscript {
             .set("_toString", () -> Value.string(mc.getSession().getUsername()))
             .set("health", () -> Value.number(mc.player != null ? mc.player.getHealth() : 0))
             .set("hunger", () -> Value.number(mc.player != null ? mc.player.getHungerManager().getFoodLevel() : 0))
+            .set("saturation", () -> Value.number(mc.player != null ? mc.player.getHungerManager().getSaturationLevel() : 0))
+            .set("score", () -> Value.number(mc.player != null ? mc.player.getScore() : 0))
             .set("speed", () -> Value.number(Utils.getPlayerSpeed()))
 
             .set("breaking_progress", () -> Value.number(mc.interactionManager != null ? ((ClientPlayerInteractionManagerAccessor) mc.interactionManager).getBreakingProgress() : 0))

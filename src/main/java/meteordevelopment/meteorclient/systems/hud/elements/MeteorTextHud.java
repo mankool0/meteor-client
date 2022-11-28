@@ -15,6 +15,8 @@ public class MeteorTextHud {
     public static final HudElementInfo<TextHud>.Preset TPS;
     public static final HudElementInfo<TextHud>.Preset PING;
     public static final HudElementInfo<TextHud>.Preset SPEED;
+    public static final HudElementInfo<TextHud>.Preset HUNGER;
+    public static final HudElementInfo<TextHud>.Preset SATURATION;
     public static final HudElementInfo<TextHud>.Preset DURABILITY;
     public static final HudElementInfo<TextHud>.Preset POSITION;
     public static final HudElementInfo<TextHud>.Preset OPPOSITE_POSITION;
@@ -26,6 +28,7 @@ public class MeteorTextHud {
     public static final HudElementInfo<TextHud>.Preset WORLD_TIME;
     public static final HudElementInfo<TextHud>.Preset REAL_TIME;
     public static final HudElementInfo<TextHud>.Preset ROTATION;
+    public static final HudElementInfo<TextHud>.Preset SCORE;
     public static final HudElementInfo<TextHud>.Preset MODULE_ENABLED;
     public static final HudElementInfo<TextHud>.Preset MODULE_ENABLED_WITH_INFO;
     public static final HudElementInfo<TextHud>.Preset WATERMARK;
@@ -37,6 +40,8 @@ public class MeteorTextHud {
         TPS = addPreset("TPS", "TPS: #1{round(server.tps, 1)}");
         PING = addPreset("Ping", "Ping: #1{ping}");
         SPEED = addPreset("Speed", "Speed: #1{round(player.speed, 1)}", 0);
+        HUNGER = addPreset("Hunger", "Hunger: #1{round(player.hunger, 1)}", 0);
+        SATURATION = addPreset("Saturation", "Saturation: #1{player.saturation}", 0);
         DURABILITY = addPreset("Durability", "Durability: #1{player.hand_or_offhand.durability}");
         POSITION = addPreset("Position", "Pos: #1{floor(camera.pos.x)}, {floor(camera.pos.y)}, {floor(camera.pos.z)}", 0);
         OPPOSITE_POSITION = addPreset("Opposite Position", "{player.opposite_dimension != \"End\" ? player.opposite_dimension + \":\" : \"\"} #1{player.opposite_dimension != \"End\" ? \"\" + floor(camera.opposite_dim_pos.x) + \", \" + floor(camera.opposite_dim_pos.y) + \", \" + floor(camera.opposite_dim_pos.z) : \"\"}", 0);
@@ -48,6 +53,7 @@ public class MeteorTextHud {
         WORLD_TIME = addPreset("World time", "Time: #1{server.time}");
         REAL_TIME = addPreset("Real time", "Time: #1{time}");
         ROTATION = addPreset("Rotation", "{camera.direction} #1({round(camera.yaw, 1)}, {round(camera.pitch, 1)})", 0);
+        SCORE = addPreset("Score", "Score: #1{player.score}", 0);
         MODULE_ENABLED = addPreset("Module enabled", "Kill Aura: {meteor.is_module_active(\"kill-aura\") ? #2 \"ON\" : #3 \"OFF\"}", 0);
         MODULE_ENABLED_WITH_INFO = addPreset("Module enabled with info", "Kill Aura: {meteor.is_module_active(\"kill-aura\") ? #2 \"ON\" : #3 \"OFF\"} #1{meteor.get_module_info(\"kill-aura\")}", 0);
         WATERMARK = addPreset("Watermark", "Meteor Client #1{version}", Integer.MAX_VALUE);
