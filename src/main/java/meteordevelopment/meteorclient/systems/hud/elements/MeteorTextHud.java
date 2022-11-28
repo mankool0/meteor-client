@@ -40,8 +40,8 @@ public class MeteorTextHud {
         TPS = addPreset("TPS", "TPS: #1{round(server.tps, 1)}");
         PING = addPreset("Ping", "Ping: #1{ping}");
         SPEED = addPreset("Speed", "Speed: #1{round(player.speed, 1)}", 0);
-        HUNGER = addPreset("Hunger", "Hunger: #1{round(player.hunger, 1)}", 0);
-        SATURATION = addPreset("Saturation", "Saturation: #1{player.saturation}", 0);
+        HUNGER = addPreset("Hunger", "Hunger: #1{player.hunger, 1}", 0);
+        SATURATION = addPreset("Saturation", "Saturation: #1{round(player.saturation, 1)}", 0);
         DURABILITY = addPreset("Durability", "Durability: #1{player.hand_or_offhand.durability}");
         POSITION = addPreset("Position", "Pos: #1{floor(camera.pos.x)}, {floor(camera.pos.y)}, {floor(camera.pos.z)}", 0);
         OPPOSITE_POSITION = addPreset("Opposite Position", "{player.opposite_dimension != \"End\" ? player.opposite_dimension + \":\" : \"\"} #1{player.opposite_dimension != \"End\" ? \"\" + floor(camera.opposite_dim_pos.x) + \", \" + floor(camera.opposite_dim_pos.y) + \", \" + floor(camera.opposite_dim_pos.z) : \"\"}", 0);
