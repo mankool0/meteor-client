@@ -77,7 +77,7 @@ public class AutoBreed extends Module {
             else animal = (AnimalEntity) entity;
 
             if (!entities.get().getBoolean(animal.getType())
-                    || (animal.isBaby() && !ignoreBabies.get())
+                    || (animal.isBaby() && ignoreBabies.get())
                     || animalsFed.contains(animal)
                     || !PlayerUtils.isWithin(animal, range.get())
                     || !animal.isBreedingItem(hand.get() == Hand.MAIN_HAND ? mc.player.getMainHandStack() : mc.player.getOffHandStack())) continue;
