@@ -8,6 +8,7 @@ package meteordevelopment.meteorclient.utils.world;
 import baritone.api.BaritoneAPI;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.utils.SettingsUtil;
+import meteordevelopment.meteorclient.utils.misc.HorizontalDirection;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
@@ -17,8 +18,12 @@ public class GoalDirection implements Goal {
     private int x;
     private int z;
 
-    public GoalDirection(Vec3d origin, float yaw) {
-        this.yaw = yaw;
+    public GoalDirection(Vec3d origin, float yaw, boolean round) {
+        if (round) {
+            this.yaw = HorizontalDirection.get(yaw).yaw;
+        } else {
+            this.yaw = yaw;
+        }
         recalculate(origin);
     }
 

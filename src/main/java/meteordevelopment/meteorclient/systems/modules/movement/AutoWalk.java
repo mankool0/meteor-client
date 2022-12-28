@@ -7,6 +7,7 @@ package meteordevelopment.meteorclient.systems.modules.movement;
 
 import baritone.api.BaritoneAPI;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.EnumSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
@@ -64,6 +65,14 @@ public class AutoWalk extends Module {
             .build()
     );
 
+    private final Setting<Boolean> roundDirection = sgGeneral.add(new BoolSetting.Builder()
+        .name("round-direction")
+            .description("Rounds walking direction to nearest axis.")
+            .defaultValue(true)
+            .visible(() -> mode.get() == Mode.Smart)
+            .build()
+    );
+
     private int timer = 0;
     private GoalDirection goal;
 
@@ -117,7 +126,7 @@ public class AutoWalk extends Module {
 
     private void createGoal() {
         timer = 0;
-        goal = new GoalDirection(mc.player.getPos(), mc.player.getYaw());
+        goal = new GoalDirection(mc.player.getPos(), mc.player.getYaw(), roundDirection.get());
         BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(goal);
     }
 }
