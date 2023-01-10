@@ -182,7 +182,8 @@ public class AutoLog extends Module {
             else if (Utils.canUpdate()
                     && mc.player != null
                     && mc.player.canTakeDamage()
-                    && mc.player.getHealth() > health.get()) {
+                    && mc.player.getHealth() > health.get()
+                    && !mc.player.getInventory().isEmpty()) {
                 toggle();
                 disableHealthListener();
            }
