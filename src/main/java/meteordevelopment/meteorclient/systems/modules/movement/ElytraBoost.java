@@ -35,7 +35,7 @@ public class ElytraBoost extends Module {
 
     public final Setting<BoostModes> boostMode = sgGeneral.add(new EnumSetting.Builder<BoostModes>()
         .name("mode")
-        .description("The boost bode.")
+        .description("The boost mode.")
         .defaultValue(BoostModes.Fall)
         .build()
     );
