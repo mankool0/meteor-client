@@ -17,16 +17,12 @@ import meteordevelopment.meteorclient.systems.profiles.Profile;
 import meteordevelopment.meteorclient.systems.profiles.Profiles;
 import net.minecraft.text.Text;
 
-import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.command.CommandSource.suggestMatching;
 
 public class ProfileArgumentType implements ArgumentType<String> {
     private static final DynamicCommandExceptionType NO_SUCH_PROFILE = new DynamicCommandExceptionType(name -> Text.literal("Profile with name " + name + " doesn't exist."));
-
-    private static final Collection<String> EXAMPLES = List.of("pvp.meteorclient.com", "anarchy");
 
     public static ProfileArgumentType create() {
         return new ProfileArgumentType();
@@ -48,10 +44,5 @@ public class ProfileArgumentType implements ArgumentType<String> {
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
         return suggestMatching(Streams.stream(Profiles.get()).map(profile -> profile.name.get()), builder);
-    }
-
-    @Override
-    public Collection<String> getExamples() {
-        return EXAMPLES;
     }
 }

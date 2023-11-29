@@ -26,7 +26,6 @@ import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.Version;
 import meteordevelopment.meteorclient.utils.misc.input.KeyAction;
 import meteordevelopment.meteorclient.utils.misc.input.KeyBinds;
-import meteordevelopment.meteorclient.utils.network.OnlinePlayers;
 import meteordevelopment.orbit.EventBus;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
@@ -46,20 +45,17 @@ public class MeteorClient implements ClientModInitializer {
     public static final String MOD_ID = "meteor-client";
     public static final ModMetadata MOD_META;
     public static final String NAME;
-    public static final  Version VERSION;
-    public static final  String DEV_BUILD;
-
-    public static MeteorClient INSTANCE;
+    public final static Version VERSION;
     public static MeteorAddon ADDON;
 
     public static MinecraftClient mc;
+    public static MeteorClient INSTANCE;
     public static final IEventBus EVENT_BUS = new EventBus();
     public static final File FOLDER = FabricLoader.getInstance().getGameDir().resolve(MOD_ID).toFile();
     public static final Logger LOG;
 
     static {
         MOD_META = FabricLoader.getInstance().getModContainer(MOD_ID).orElseThrow().getMetadata();
-
         NAME = MOD_META.getName();
         LOG = LoggerFactory.getLogger(NAME);
 
@@ -67,7 +63,6 @@ public class MeteorClient implements ClientModInitializer {
         if (versionString.contains("-")) versionString = versionString.split("-")[0];
 
         VERSION = new Version(versionString);
-        DEV_BUILD = MOD_META.getCustomValue(MeteorClient.MOD_ID + ":devbuild").getAsString();
     }
 
     @Override
@@ -77,7 +72,7 @@ public class MeteorClient implements ClientModInitializer {
             return;
         }
 
-        LOG.info("Initializing {}", NAME);
+        LOG.info("Initializing Meteor Client");
 
         // Global minecraft client accessor
         mc = MinecraftClient.getInstance();
@@ -131,7 +126,6 @@ public class MeteorClient implements ClientModInitializer {
 
         // Save on shutdown
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            OnlinePlayers.leave();
             Systems.save();
             GuiThemes.save();
         }));

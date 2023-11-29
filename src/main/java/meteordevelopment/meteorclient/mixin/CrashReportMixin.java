@@ -26,9 +26,6 @@ public class CrashReportMixin {
     private void onAddStackTrace(StringBuilder sb, CallbackInfo info) {
         sb.append("\n\n-- Meteor Client --\n\n");
         sb.append("Version: ").append(MeteorClient.VERSION).append("\n");
-        if (!MeteorClient.DEV_BUILD.isEmpty()) {
-            sb.append("Dev Build: ").append(MeteorClient.DEV_BUILD).append("\n");
-        }
 
         if (Modules.get() != null) {
             boolean modulesActive = false;

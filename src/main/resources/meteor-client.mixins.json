@@ -160,6 +160,7 @@
     "WorldAccessor",
     "WorldBorderMixin",
     "WorldChunkMixin",
+    "WorldMixin",
     "WorldRendererAccessor",
     "WorldRendererMixin",
     "YggdrasilMinecraftSessionServiceAccessor"

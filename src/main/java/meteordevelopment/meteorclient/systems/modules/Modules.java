@@ -21,6 +21,7 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.System;
 import meteordevelopment.meteorclient.systems.Systems;
 import meteordevelopment.meteorclient.systems.modules.combat.*;
+import meteordevelopment.meteorclient.systems.modules.litematica.*;
 import meteordevelopment.meteorclient.systems.modules.misc.*;
 import meteordevelopment.meteorclient.systems.modules.misc.swarm.Swarm;
 import meteordevelopment.meteorclient.systems.modules.movement.*;
@@ -89,6 +90,10 @@ public class Modules extends System<Modules> {
         initRender();
         initWorld();
         initMisc();
+
+        if (CATEGORIES.contains(Categories.Litematica)) {
+            initLitematica();
+        }
     }
 
     @Override
@@ -528,6 +533,7 @@ public class Modules extends System<Modules> {
         add(new AutoSmelter());
         add(new BuildHeight());
         add(new EChestFarmer());
+        add(new InstantMine());
         add(new EndermanLook());
         add(new Flamethrower());
         add(new InfinityMiner());
@@ -556,6 +562,7 @@ public class Modules extends System<Modules> {
         add(new DiscordPresence());
         add(new MessageAura());
         add(new MiddleClickFriend());
+        add(new MouseTweaks());
         add(new NameProtect());
         add(new Notebot());
         add(new Notifier());
@@ -564,6 +571,10 @@ public class Modules extends System<Modules> {
         add(new Spam());
         add(new ServerSpoof());
         add(new InventoryTweaks());
+    }
+
+    private void initLitematica() {
+        add(new SchematicSafeguard());
     }
 
     public static class ModuleRegistry extends SimpleRegistry<Module> {

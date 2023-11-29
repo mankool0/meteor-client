@@ -17,4 +17,7 @@ public interface ClientPlayerInteractionManagerAccessor {
 
     @Accessor("currentBreakingPos")
     BlockPos getCurrentBreakingBlockPos();
+
+    @Accessor("blockBreakingCooldown")
+    void setBlockBreakingCooldown(int cooldown);
 }

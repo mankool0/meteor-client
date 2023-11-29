@@ -7,7 +7,7 @@ plugins {
 sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name
-version = project.mod_version + (project.hasProperty("devbuild") ? ("-" + project.findProperty("devbuild")) : "")
+version = project.mod_version + (project.hasProperty("commit") ? ("-" + project.findProperty("commit")) : "")
 group = project.maven_group
 
 repositories {
@@ -30,6 +30,20 @@ repositories {
     maven {
         name = "vram"
         url = "https://maven.vram.io//"
+    }
+    maven {
+        name = "masa"
+        url = "https://masa.dy.fi/maven"
+        content {
+            includeGroup "fi.dy.masa.malilib"
+        }
+    }
+    maven {
+        name = "curseforge"
+        url = "https://www.cursemaven.com"
+        content {
+            includeGroup "curse.maven"
+        }
     }
     mavenCentral()
 }
@@ -57,6 +71,10 @@ dependencies {
     modCompileOnly("maven.modrinth:lithium:${project.lithium_version}") { transitive = false }
     modCompileOnly("maven.modrinth:iris:${project.iris_version}") { transitive = false }
     //modCompileOnly("io.vram:canvas-fabric-mc119:1.0.+") { transitive = false } // TODO: 1.19.3
+
+    // Litematica (https://github.com/maruohon/litematica)
+	modImplementation("fi.dy.masa.malilib:malilib-fabric-${project.malilib_version}")
+	modImplementation("curse.maven:litematica-${project.litematica_projectid}:${project.litematica_fileid}")
 
 	// Baritone (https://github.com/MeteorDevelopment/baritone)
     modInclude "baritone:fabric:${project.minecraft_version}-SNAPSHOT"
@@ -98,7 +116,6 @@ shadowJar {
 processResources {
     filesMatching("fabric.mod.json") {
         expand "version": project.version,
-               "devbuild": project.findProperty("devbuild") ?: "",
                "commit": project.findProperty("commit") ?: ""
     }
 }
@@ -129,41 +146,4 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 task javadocJar(type: Jar) {
     archiveClassifier.set("javadoc")
     from javadoc
-}
-
-publishing {
-    publications {
-        java(MavenPublication) {
-            artifactId = "meteor-client"
-            version = project.hasProperty("devbuild") ? (project.mod_version + "-SNAPSHOT") : project.mod_version
-
-            artifact(remapJar) {
-                builtBy remapJar
-            }
-
-            artifact(sourcesJar) {
-                builtBy remapSourcesJar
-            }
-
-            artifact(javadocJar) {
-                builtBy javadocJar
-            }
-        }
-    }
-
-    repositories {
-        maven {
-            name = "meteor-maven"
-            url = project.hasProperty("devbuild") ? "https://maven.meteordev.org/snapshots" : "https://maven.meteordev.org/releases"
-
-            credentials {
-                username = System.getenv("MAVEN_METEOR_ALIAS")
-                password = System.getenv("MAVEN_METEOR_TOKEN")
-            }
-
-            authentication {
-                basic(BasicAuthentication)
-            }
-        }
-    }
 }

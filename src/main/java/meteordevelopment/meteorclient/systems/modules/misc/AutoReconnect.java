@@ -12,6 +12,7 @@ import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.orbit.EventHandler;
 
 import java.net.InetSocketAddress;
@@ -29,16 +30,24 @@ public class AutoReconnect extends Module {
     );
 
     public InetSocketAddress lastServerConnection;
+    private final Module autoReconnect;
 
     public AutoReconnect() {
         super(Categories.Misc, "auto-reconnect", "Automatically reconnects when disconnected from a server.");
         MeteorClient.EVENT_BUS.subscribe(new StaticListener());
+        autoReconnect = this;
     }
 
     private class StaticListener {
         @EventHandler
         private void onGameJoined(ConnectToServerEvent event) {
             lastServerConnection = event.address;
+            AutoLog autoLog = Modules.get().get(AutoLog.class);
+            if (autoLog.enableAutoReconnect) {
+                autoLog.enableAutoReconnect = false;
+                if (!autoReconnect.isActive())
+                    autoReconnect.toggle();
+            }
         }
     }
 }

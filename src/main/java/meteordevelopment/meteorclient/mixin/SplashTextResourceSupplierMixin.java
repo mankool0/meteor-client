@@ -37,7 +37,7 @@ public class SplashTextResourceSupplierMixin {
                 "Star Meteor Client on GitHub!",
                 "Based utility mod.",
                 "§6MineGame159 §fbased god",
-                "§4meteorclient.com",
+                "§4meteorclient",
                 "§4Meteor on Crack!",
                 "§6Meteor on Crack!"
         );

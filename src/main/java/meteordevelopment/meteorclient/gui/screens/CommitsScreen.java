@@ -55,9 +55,6 @@ public class CommitsScreen extends WindowScreen {
         if (commits.length == 1) text = "There is %d new commit";
         l.add(theme.label(String.format(text, commits.length))).expandX();
 
-        String website = addon.getWebsite();
-        if (website != null) l.add(theme.button("Website")).widget().action = () -> Util.getOperatingSystem().open(website);
-
         l.add(theme.button("GitHub")).widget().action = () -> {
             GithubRepo repo = addon.getRepo();
             Util.getOperatingSystem().open(String.format("https://github.com/%s/tree/%s", repo.getOwnerName(), repo.branch()));

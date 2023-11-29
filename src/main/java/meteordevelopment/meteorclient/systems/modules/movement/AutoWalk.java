@@ -12,6 +12,7 @@ import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.misc.HorizontalDirection;
 import meteordevelopment.meteorclient.utils.misc.input.Input;
 import meteordevelopment.meteorclient.utils.world.GoalDirection;
 import meteordevelopment.orbit.EventHandler;
@@ -52,8 +53,17 @@ public class AutoWalk extends Module {
         .build()
     );
 
+    private final Setting<HorizontalDirection> horizontalDirection = sgGeneral.add(new EnumSetting.Builder<HorizontalDirection>()
+        .name("smart-direction")
+        .description("The direction to walk in smart mode.")
+        .defaultValue(HorizontalDirection.North)
+        .visible(() -> mode.get() == Mode.Smart)
+        .build()
+    );
+
     private int timer = 0;
     private GoalDirection goal;
+    private int restartTimer = 0;
 
     public AutoWalk() {
         super(Categories.Movement, "auto-walk", "Automatically walks forward.");
@@ -85,6 +95,14 @@ public class AutoWalk extends Module {
             if (timer > 20) {
                 timer = 0;
                 goal.recalculate(mc.player.getPos());
+                if (!BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().isActive()) {
+                    restartTimer++;
+                    if (restartTimer > 10) {
+                        restartTimer = 0;
+                        goal = new GoalDirection(mc.player.getPos(), horizontalDirection.get().yaw, true);
+                        BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(goal);
+                    }
+                }
             }
 
             timer++;
@@ -105,7 +123,7 @@ public class AutoWalk extends Module {
 
     private void createGoal() {
         timer = 0;
-        goal = new GoalDirection(mc.player.getPos(), mc.player.getYaw());
+        goal = new GoalDirection(mc.player.getPos(), horizontalDirection.get().yaw, true);
         BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(goal);
     }
 

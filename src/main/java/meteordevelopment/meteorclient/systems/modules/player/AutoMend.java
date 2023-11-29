@@ -6,20 +6,19 @@
 package meteordevelopment.meteorclient.systems.modules.player;
 
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.ItemListSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import java.util.List;
+import java.util.Map;
 
 public class AutoMend extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -28,6 +27,12 @@ public class AutoMend extends Module {
         .name("blacklist")
         .description("Item blacklist.")
         .filter(Item::isDamageable)
+        .build()
+    );
+
+    private final Setting<List<Enchantment>> enchantBlacklist = sgGeneral.add(new EnchantmentListSetting.Builder()
+        .name("enchant-blacklist")
+        .description("Enchant blacklist.")
         .build()
     );
 
@@ -93,10 +98,15 @@ public class AutoMend extends Module {
     }
 
     private int getSlot() {
+        outer:
         for (int i = 0; i < mc.player.getInventory().main.size(); i++) {
             ItemStack itemStack = mc.player.getInventory().getStack(i);
             if (blacklist.get().contains(itemStack.getItem())) continue;
-
+            Map<Enchantment, Integer> enchants = EnchantmentHelper.get(itemStack);
+            for (Enchantment enchant : enchantBlacklist.get()) {
+                if (enchants.containsKey(enchant))
+                    continue outer;
+            }
             if (EnchantmentHelper.getLevel(Enchantments.MENDING, itemStack) > 0 && itemStack.getDamage() > 0) {
                 return i;
             }
