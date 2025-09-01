@@ -414,6 +414,7 @@ public class Modules extends System<Modules> {
         add(new AutoArmor());
         add(new AutoCity());
         add(new AutoEXP());
+        add(new AutoLog());
         add(new AutoTotem());
         add(new AutoTrap());
         add(new AutoWeapon());
@@ -579,7 +580,6 @@ public class Modules extends System<Modules> {
     private void initMisc() {
         add(new Swarm());
         add(new AntiPacketKick());
-        add(new AutoLog());
         add(new AutoReconnect());
         add(new AutoRespawn());
         add(new BetterBeacons());
