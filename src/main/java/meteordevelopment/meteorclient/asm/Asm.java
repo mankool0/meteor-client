@@ -100,6 +100,11 @@ public class Asm {
         }
 
         @Override
+        public boolean couldTransformClass(MixinEnvironment environment, String name) {
+            return delegate.couldTransformClass(environment, name);
+        }
+
+        @Override
         public byte[] transformClassBytes(String name, String transformedName, byte[] basicClass) {
             basicClass = delegate.transformClassBytes(name, transformedName, basicClass);
             return Asm.INSTANCE.transform(name, basicClass);
