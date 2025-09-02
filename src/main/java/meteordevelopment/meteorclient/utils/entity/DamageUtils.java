@@ -13,22 +13,33 @@ import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.AttributeModifierSlot;
 import net.minecraft.component.type.AttributeModifiersComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.*;
-import net.minecraft.entity.attribute.*;
+import net.minecraft.entity.DamageUtil;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.*;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.MaceItem;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.registry.tag.EntityTypeTags;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.Heightmap;
@@ -73,7 +84,7 @@ public class DamageUtils {
     /**
      * Low level control of parameters without having to reimplement everything, for addon authors who wish to use their
      * own predictions or other systems.
-     * @see net.minecraft.world.explosion.ExplosionBehavior#calculateDamage(Explosion, Entity)
+     * @see net.minecraft.world.explosion.ExplosionBehavior#calculateDamage(Explosion, Entity, float)
      */
     public static float explosionDamage(LivingEntity target, Vec3d targetPos, Box targetBox, Vec3d explosionPos, float power, RaycastFactory raycastFactory) {
         double modDistance = PlayerUtils.distance(targetPos.x, targetPos.y, targetPos.z, explosionPos.x, explosionPos.y, explosionPos.z);
@@ -142,7 +153,7 @@ public class DamageUtils {
     /**
      * @see PlayerEntity#attack(Entity)
      */
-    public static float getAttackDamage(LivingEntity attacker, LivingEntity target) {
+    public static float getAttackDamage(LivingEntity attacker, Entity target) {
         float itemDamage = (float) attacker.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
         DamageSource damageSource = attacker instanceof PlayerEntity player ? mc.world.getDamageSources().playerAttack(player) : mc.world.getDamageSources().mobAttack(attacker);
 
@@ -150,7 +161,7 @@ public class DamageUtils {
         return calculateReductions(damage, target, damageSource);
     }
 
-    public static float getAttackDamage(LivingEntity attacker, LivingEntity target, ItemStack weapon) {
+    public static float getAttackDamage(LivingEntity attacker, Entity target, ItemStack weapon) {
         EntityAttributeInstance original = attacker.getAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE);
         EntityAttributeInstance copy = new EntityAttributeInstance(EntityAttributes.GENERIC_ATTACK_DAMAGE, o -> {});
 
@@ -174,7 +185,7 @@ public class DamageUtils {
         return calculateReductions(damage, target, damageSource);
     }
 
-    private static float modifyAttackDamage(LivingEntity attacker, LivingEntity target, ItemStack weapon, DamageSource damageSource, float damage) {
+    private static float modifyAttackDamage(LivingEntity attacker, Entity target, ItemStack weapon, DamageSource damageSource, float damage) {
         // Get enchant damage
         Object2IntMap<RegistryEntry<Enchantment>> enchantments = new Object2IntOpenHashMap<>();
         Utils.getEnchantments(weapon, enchantments);
@@ -210,7 +221,7 @@ public class DamageUtils {
                 float bonusDamage = item.getBonusAttackDamage(target, damage, damageSource);
                 if (bonusDamage > 0f) {
                     int density = Utils.getEnchantmentLevel(weapon, Enchantments.DENSITY);
-                    if (density > 0) bonusDamage += 0.5f * attacker.fallDistance;
+                    if (density > 0) bonusDamage += (float) (0.5f * attacker.fallDistance);
                     damage += bonusDamage;
                 }
             }
@@ -227,7 +238,7 @@ public class DamageUtils {
     // Fall Damage
 
     /**
-     * @see LivingEntity#computeFallDamage(float, float) (float, float, DamageSource)
+     * @see LivingEntity#computeFallDamage(float, float)
      */
     public static float fallDamage(LivingEntity entity) {
         if (entity instanceof PlayerEntity player && player.getAbilities().flying) return 0f;
@@ -255,9 +266,9 @@ public class DamageUtils {
     // Utils
 
     /**
-     * @see LivingEntity#applyDamage(DamageSource, float)
+     * @see LivingEntity#applyDamage(ServerWorld, DamageSource, float)
      */
-    public static float calculateReductions(float damage, LivingEntity entity, DamageSource damageSource) {
+    public static float calculateReductions(float damage, Entity entity, DamageSource damageSource) {
         if (damageSource.isScaledWithDifficulty()) {
             switch (mc.world.getDifficulty()) {
                 case EASY     -> damage = Math.min(damage / 2 + 1, damage);
@@ -265,14 +276,15 @@ public class DamageUtils {
             }
         }
 
-        // Armor reduction
-        damage = DamageUtil.getDamageLeft(entity, damage, damageSource, getArmor(entity), (float) entity.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS));
+        if (entity instanceof LivingEntity livingEntity) { // Armor reduction
+            damage = DamageUtil.getDamageLeft(livingEntity, damage, damageSource, getArmor(livingEntity), (float) livingEntity.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS));
 
-        // Resistance reduction
-        damage = resistanceReduction(entity, damage);
+            // Resistance reduction
+            damage = resistanceReduction(livingEntity, damage);
 
-        // Protection reduction
-        damage = protectionReduction(entity, damage, damageSource);
+            // Protection reduction
+            damage = protectionReduction(livingEntity, damage, damageSource);
+        }
 
         return Math.max(damage, 0);
     }
@@ -336,7 +348,7 @@ public class DamageUtils {
     }
 
     /**
-     * @see Explosion#getExposure(Vec3d, Entity)
+     * @see net.minecraft.world.explosion.ExplosionImpl#calculateReceivedDamage(Vec3d, Entity)
      */
     private static float getExposure(Vec3d source, Box box, RaycastFactory raycastFactory) {
         double xDiff = box.maxX - box.minX;
