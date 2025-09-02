@@ -15,8 +15,8 @@ import meteordevelopment.meteorclient.systems.modules.movement.Sprint;
 import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.ElytraFlightModes;
 import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.ElytraFly;
 import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.modes.Bounce;
+import meteordevelopment.meteorclient.systems.modules.player.NoStatusEffects;
 import meteordevelopment.meteorclient.systems.modules.player.OffhandCrash;
-import meteordevelopment.meteorclient.systems.modules.player.PotionSpoof;
 import meteordevelopment.meteorclient.systems.modules.render.HandView;
 import meteordevelopment.meteorclient.systems.modules.render.NoRender;
 import meteordevelopment.meteorclient.utils.Utils;
@@ -113,7 +113,7 @@ public abstract class LivingEntityMixin extends Entity {
 
     @ModifyReturnValue(method = "hasStatusEffect", at = @At("RETURN"))
     private boolean hasStatusEffect(boolean original, RegistryEntry<StatusEffect> effect) {
-        if (Modules.get().get(PotionSpoof.class).shouldBlock(effect.value())) return false;
+        if (Modules.get().get(NoStatusEffects.class).shouldBlock(effect.value())) return false;
 
         return original;
     }
@@ -121,9 +121,7 @@ public abstract class LivingEntityMixin extends Entity {
     @ModifyExpressionValue(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"))
     private float modifyGetYaw(float original) {
         if ((Object) this != mc.player) return original;
-
-        Sprint s = Modules.get().get(Sprint.class);
-        if (!s.rageSprint() || !s.jumpFix.get()) return original;
+        if (!Modules.get().get(Sprint.class).rageSprint()) return original;
 
         float forward = Math.signum(mc.player.input.movementForward);
         float strafe = 90 * Math.signum(mc.player.input.movementSideways);

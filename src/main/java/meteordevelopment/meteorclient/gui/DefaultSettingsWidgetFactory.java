@@ -243,6 +243,7 @@ public class DefaultSettingsWidgetFactory extends SettingsWidgetFactory {
 
         WButton reset = list.add(theme.button(GuiRenderer.RESET)).expandCellX().right().widget();
         reset.action = keybind::resetBind;
+        reset.tooltip = "Reset";
     }
 
     private void blockW(WTable table, BlockSetting setting) {
@@ -337,14 +338,14 @@ public class DefaultSettingsWidgetFactory extends SettingsWidgetFactory {
 
     private void blockDataW(WTable table, BlockDataSetting<?> setting) {
         WButton button = table.add(theme.button(GuiRenderer.EDIT)).expandCellX().widget();
-        button.action = () -> mc.setScreen(new BlockDataSettingScreen(theme, setting));
+        button.action = () -> mc.setScreen(new BlockDataSettingScreen<>(theme, setting));
 
         reset(table, setting, null);
     }
 
     private void potionW(WTable table, PotionSetting setting) {
         WHorizontalList list = table.add(theme.horizontalList()).expandX().widget();
-        WItemWithLabel item = list.add(theme.itemWithLabel(setting.get().potion, I18n.translate(setting.get().potion.getTranslationKey()))).widget();
+        WItemWithLabel item = list.add(theme.itemWithLabel(setting.get().potion, I18n.translate(setting.get().potion.getItem().getTranslationKey()))).widget();
 
         WButton button = list.add(theme.button("Select")).expandCellX().widget();
         button.action = () -> {
@@ -484,6 +485,7 @@ public class DefaultSettingsWidgetFactory extends SettingsWidgetFactory {
             setting.reset();
             if (action != null) action.run();
         };
+        reset.tooltip = "Reset";
     }
 
     private static class WSelectedCountLabel extends WMeteorLabel {

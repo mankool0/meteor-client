@@ -25,9 +25,7 @@ public class GuiDebugRenderer {
         if (widget == null) return;
 
         mesh.begin();
-
         renderWidget(widget);
-
         mesh.end();
         mesh.render(matrices);
     }

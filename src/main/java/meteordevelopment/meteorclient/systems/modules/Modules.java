@@ -5,8 +5,6 @@
 
 package meteordevelopment.meteorclient.systems.modules;
 
-import com.mojang.datafixers.util.Pair;
-import com.mojang.serialization.Lifecycle;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.game.GameJoinedEvent;
@@ -44,28 +42,15 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.SimpleRegistry;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.entry.RegistryEntryList;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.random.Random;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Stream;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class Modules extends System<Modules> {
-    public static final ModuleRegistry REGISTRY = new ModuleRegistry();
-
     private static final List<Category> CATEGORIES = new ArrayList<>();
 
     private final List<Module> modules = new ArrayList<>();
@@ -96,7 +81,7 @@ public class Modules extends System<Modules> {
 
     @Override
     public void load(File folder) {
-        for (Module module : modules) {
+        for (Module module : getAll()) {
             for (SettingGroup group : module.settings) {
                 for (Setting<?> setting : group) setting.reset();
             }
@@ -120,15 +105,6 @@ public class Modules extends System<Modules> {
 
     public static Iterable<Category> loopCategories() {
         return CATEGORIES;
-    }
-
-    @Deprecated(forRemoval = true)
-    public static Category getCategoryByHash(int hash) {
-        for (Category category : CATEGORIES) {
-            if (category.hashCode() == hash) return category;
-        }
-
-        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -157,12 +133,16 @@ public class Modules extends System<Modules> {
         return moduleInstances.values();
     }
 
+    /**
+     * @deprecated Use {@link Modules#getAll()} instead.
+     */
+    @Deprecated(forRemoval = true)
     public List<Module> getList() {
         return modules;
     }
 
     public int getCount() {
-        return moduleInstances.values().size();
+        return moduleInstances.size();
     }
 
     public List<Module> getActive() {
@@ -316,7 +296,7 @@ public class Modules extends System<Modules> {
     @EventHandler
     private void onGameJoined(GameJoinedEvent event) {
         synchronized (active) {
-            for (Module module : modules) {
+            for (Module module : getAll()) {
                 if (module.isActive() && !module.runInMainMenu) {
                     MeteorClient.EVENT_BUS.subscribe(module);
                     module.onActivate();
@@ -328,7 +308,7 @@ public class Modules extends System<Modules> {
     @EventHandler
     private void onGameLeft(GameLeftEvent event) {
         synchronized (active) {
-            for (Module module : modules) {
+            for (Module module : getAll()) {
                 if (module.isActive() && !module.runInMainMenu) {
                     MeteorClient.EVENT_BUS.unsubscribe(module);
                     module.onDeactivate();
@@ -339,7 +319,7 @@ public class Modules extends System<Modules> {
 
     public void disableAll() {
         synchronized (active) {
-            for (Module module : modules) {
+            for (Module module : getAll()) {
                 if (module.isActive()) module.toggle();
             }
         }
@@ -437,6 +417,8 @@ public class Modules extends System<Modules> {
     }
 
     private void initPlayer() {
+        add(new AirPlace());
+        add(new AntiAFK());
         add(new AntiHunger());
         add(new AutoEat());
         add(new AutoClicker());
@@ -444,6 +426,7 @@ public class Modules extends System<Modules> {
         add(new AutoGap());
         add(new AutoMend());
         add(new AutoReplenish());
+        add(new AutoRespawn());
         add(new AutoTool());
         add(new BreakDelay());
         add(new ChestSwap());
@@ -455,13 +438,14 @@ public class Modules extends System<Modules> {
         add(new LiquidInteract());
         add(new MiddleClickExtra());
         add(new Multitask());
+        add(new NameProtect());
         add(new NoInteract());
         add(new NoMiningTrace());
         add(new NoRotate());
+        add(new NoStatusEffects());
         add(new OffhandCrash());
         add(new Portals());
         add(new PotionSaver());
-        add(new PotionSpoof());
         add(new Reach());
         add(new Rotation());
         add(new SpeedMine());
@@ -470,7 +454,6 @@ public class Modules extends System<Modules> {
     private void initMovement() {
         add(new AirJump());
         add(new Anchor());
-        add(new AntiAFK());
         add(new AntiVoid());
         add(new AutoJump());
         add(new AutoWalk());
@@ -505,8 +488,11 @@ public class Modules extends System<Modules> {
     }
 
     private void initRender() {
+        add(new BetterTab());
         add(new BetterTooltips());
+        add(new BlockESP());
         add(new BlockSelection());
+        add(new Blur());
         add(new BossStack());
         add(new Breadcrumbs());
         add(new BreakIndicators());
@@ -527,26 +513,21 @@ public class Modules extends System<Modules> {
         add(new Marker());
         add(new Nametags());
         add(new NoRender());
-        add(new BlockESP());
+        add(new PopChams());
         add(new StorageESP());
         add(new TimeChanger());
         add(new Tracers());
         add(new Trail());
         add(new Trajectories());
-        add(new UnfocusedCPU());
+        add(new TunnelESP());
         add(new VoidESP());
         add(new WallHack());
         add(new WaypointsModule());
         add(new Xray());
         add(new Zoom());
-        add(new Blur());
-        add(new PopChams());
-        add(new TunnelESP());
-        add(new BetterTab());
     }
 
     private void initWorld() {
-        add(new AirPlace());
         add(new Ambience());
         add(new AutoBreed());
         add(new AutoBrewer());
@@ -578,168 +559,20 @@ public class Modules extends System<Modules> {
     }
 
     private void initMisc() {
-        add(new Swarm());
         add(new AntiPacketKick());
         add(new AutoReconnect());
-        add(new AutoRespawn());
         add(new BetterBeacons());
         add(new BetterChat());
         add(new BookBot());
         add(new DiscordPresence());
         add(new InventoryTweaks());
         add(new MessageAura());
-        add(new NameProtect());
         add(new Notebot());
         add(new Notifier());
         add(new PacketCanceller());
         add(new ServerSpoof());
         add(new SoundBlocker());
         add(new Spam());
-    }
-
-    public static class ModuleRegistry extends SimpleRegistry<Module> {
-        public ModuleRegistry() {
-            super(RegistryKey.ofRegistry(MeteorClient.identifier("modules")), Lifecycle.stable());
-        }
-
-        @Override
-        public int size() {
-            return Modules.get().getAll().size();
-        }
-
-        @Override
-        public Identifier getId(Module entry) {
-            return null;
-        }
-
-        @Override
-        public Optional<RegistryKey<Module>> getKey(Module entry) {
-            return Optional.empty();
-        }
-
-        @Override
-        public int getRawId(Module entry) {
-            return 0;
-        }
-
-        @Override
-        public Module get(RegistryKey<Module> key) {
-            return null;
-        }
-
-        @Override
-        public Module get(Identifier id) {
-            return null;
-        }
-
-        @Override
-        public Lifecycle getLifecycle() {
-            return null;
-        }
-
-        @Override
-        public Set<Identifier> getIds() {
-            return null;
-        }
-        @Override
-        public boolean containsId(Identifier id) {
-            return false;
-        }
-
-        @Nullable
-        @Override
-        public Module get(int index) {
-            return null;
-        }
-
-        @Override
-        public @NotNull Iterator<Module> iterator() {
-            return new ModuleIterator();
-        }
-
-        @Override
-        public boolean contains(RegistryKey<Module> key) {
-            return false;
-        }
-
-        @Override
-        public Set<Map.Entry<RegistryKey<Module>, Module>> getEntrySet() {
-            return null;
-        }
-
-        @Override
-        public Set<RegistryKey<Module>> getKeys() {
-            return null;
-        }
-
-        @Override
-        public Optional<RegistryEntry.Reference<Module>> getRandom(Random random) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Registry<Module> freeze() {
-            return null;
-        }
-
-        @Override
-        public RegistryEntry.Reference<Module> createEntry(Module value) {
-            return null;
-        }
-
-        @Override
-        public Optional<RegistryEntry.Reference<Module>> getEntry(int rawId) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<RegistryEntry.Reference<Module>> getEntry(RegistryKey<Module> key) {
-            return Optional.empty();
-        }
-
-        @Override
-        public Stream<RegistryEntry.Reference<Module>> streamEntries() {
-            return null;
-        }
-
-        @Override
-        public Optional<RegistryEntryList.Named<Module>> getEntryList(TagKey<Module> tag) {
-            return Optional.empty();
-        }
-
-        @Override
-        public RegistryEntryList.Named<Module> getOrCreateEntryList(TagKey<Module> tag) {
-            return null;
-        }
-
-        @Override
-        public Stream<Pair<TagKey<Module>, RegistryEntryList.Named<Module>>> streamTagsAndEntries() {
-            return null;
-        }
-
-        @Override
-        public Stream<TagKey<Module>> streamTags() {
-            return null;
-        }
-
-        @Override
-        public void clearTags() {}
-
-        @Override
-        public void populateTags(Map<TagKey<Module>, List<RegistryEntry<Module>>> tagEntries) {}
-
-        private static class ModuleIterator implements Iterator<Module> {
-            private final Iterator<Module> iterator = Modules.get().getAll().iterator();
-
-            @Override
-            public boolean hasNext() {
-                return iterator.hasNext();
-            }
-
-            @Override
-            public Module next() {
-                return iterator.next();
-            }
-        }
+        add(new Swarm());
     }
 }

@@ -13,7 +13,6 @@
     "AbstractSignEditScreenAccessor",
     "AbstractSignEditScreenMixin",
     "ArmorFeatureRendererMixin",
-    "ArmorTrimMixin",
     "BackgroundRendererMixin",
     "BakedQuadMixin",
     "BannerBlockEntityRendererMixin",
@@ -74,7 +73,6 @@
     "DefaultSkinHelperMixin",
     "DisconnectedScreenMixin",
     "DrawContextMixin",
-    "DyedColorComponentMixin",
     "ElytraFeatureRendererMixin",
     "EnchantingTableBlockEntityRendererMixin",
     "EndCrystalEntityRendererMixin",
@@ -188,5 +186,9 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "mixins": [
+    "FishingBobberEntityAccessor",
+    "ShulkerBoxScreenHandlerAccessor"
+  ]
 }

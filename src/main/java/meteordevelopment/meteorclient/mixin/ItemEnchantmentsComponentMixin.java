@@ -17,6 +17,6 @@ public abstract class ItemEnchantmentsComponentMixin {
     @ModifyExpressionValue(method = "appendTooltip", at = @At(value = "FIELD", target = "Lnet/minecraft/component/type/ItemEnchantmentsComponent;showInTooltip:Z"))
     private boolean modifyShowInTooltip(boolean original) {
         BetterTooltips bt = Modules.get().get(BetterTooltips.class);
-        return (bt.isActive() && bt.enchantments.get()) || original;
+        return (bt.isActive() && bt.additional.get()) || original;
     }
 }

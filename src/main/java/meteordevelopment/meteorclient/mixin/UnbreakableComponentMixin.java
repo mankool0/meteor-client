@@ -17,6 +17,6 @@ public abstract class UnbreakableComponentMixin {
     @ModifyExpressionValue(method = "appendTooltip", at = @At(value = "FIELD", target = "Lnet/minecraft/component/type/UnbreakableComponent;showInTooltip:Z"))
     private boolean modifyShowInTooltip(boolean original) {
         BetterTooltips bt = Modules.get().get(BetterTooltips.class);
-        return (bt.isActive() && bt.unbreakable.get()) || original;
+        return (bt.isActive() && bt.additional.get()) || original;
     }
 }

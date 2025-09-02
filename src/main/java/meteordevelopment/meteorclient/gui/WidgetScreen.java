@@ -217,17 +217,8 @@ public abstract class WidgetScreen extends Screen {
 
         boolean control = MinecraftClient.IS_SYSTEM_MAC ? modifiers == GLFW_MOD_SUPER : modifiers == GLFW_MOD_CONTROL;
 
-        if (control && keyCode == GLFW_KEY_C && toClipboard()) {
-            return true;
-        } else if (control && keyCode == GLFW_KEY_V && fromClipboard()) {
-            reload();
-            if (parent instanceof WidgetScreen wScreen) {
-                wScreen.reload();
-            }
-            return true;
-        }
-
-        return false;
+        return (control && keyCode == GLFW_KEY_C && toClipboard())
+            || (control && keyCode == GLFW_KEY_V && fromClipboard());
     }
 
     public void keyRepeated(int key, int modifiers) {
@@ -244,10 +235,15 @@ public abstract class WidgetScreen extends Screen {
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        if (!Utils.canUpdate()) renderBackground(context, mouseX, mouseY, delta);
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+        if (this.client.world == null) {
+            this.renderPanoramaBackground(context, deltaTicks);
+        }
+    }
 
-        double s = mc.getWindow().getScaleFactor();
+    @Override
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        int s = (int)mc.getWindow().getScaleFactor();
         mouseX *= s;
         mouseY *= s;
 
@@ -274,7 +270,6 @@ public abstract class WidgetScreen extends Screen {
 
         if (debug) {
             MatrixStack matrices = context.getMatrices();
-
             DEBUG_RENDERER.render(root, matrices);
             if (tooltip) DEBUG_RENDERER.render(RENDERER.tooltipWidget, matrices);
         }

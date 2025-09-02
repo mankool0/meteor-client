@@ -323,24 +323,32 @@ public class BetterTooltips extends Module {
         }
     }
 
-    public void applyCompactShulkerTooltip(List<ItemStack> stacks, Consumer<Text> textConsumer) {
-        Object2IntMap<Item> counts = new Object2IntOpenHashMap<>();
-
-        for (ItemStack item : stacks) {
-            if (item.isEmpty()) continue;
-
-            int count = counts.getInt(item.getItem());
-            counts.put(item.getItem(), count + item.getCount());
+    public void applyCompactShulkerTooltip(ItemStack shulkerItem, List<Text> tooltip) {
+        if (shulkerItem.contains(DataComponentTypes.CONTAINER_LOOT)) {
+            tooltip.add(Text.literal("???????"));
         }
 
-        counts.keySet().stream().sorted(Comparator.comparingInt(value -> -counts.getInt(value))).limit(5).forEach(item -> {
-            MutableText mutableText = item.getName().copyContentOnly();
-            mutableText.append(Text.literal(" x").append(String.valueOf(counts.getInt(item))).formatted(Formatting.GRAY));
-            textConsumer.accept(mutableText);
-        });
+        if (Utils.hasItems(shulkerItem)) {
+            Utils.getItemsInContainerItem(shulkerItem, ITEMS);
 
-        if (counts.size() > 5) {
-            textConsumer.accept((Text.translatable("container.shulkerBox.more", counts.size() - 5)).formatted(Formatting.ITALIC));
+            Object2IntMap<Item> counts = new Object2IntOpenHashMap<>();
+
+            for (ItemStack item : ITEMS) {
+                if (item.isEmpty()) continue;
+
+                int count = counts.getInt(item.getItem());
+                counts.put(item.getItem(), count + item.getCount());
+            }
+
+            counts.keySet().stream().sorted(Comparator.comparingInt(value -> -counts.getInt(value))).limit(5).forEach(item -> {
+                MutableText mutableText = item.getName().copyContentOnly();
+                mutableText.append(Text.literal(" x").append(String.valueOf(counts.getInt(item))).formatted(Formatting.GRAY));
+                tooltip.add(mutableText);
+            });
+
+            if (counts.size() > 5) {
+                tooltip.add((Text.translatable("container.shulkerBox.more", counts.size() - 5)).formatted(Formatting.ITALIC));
+            }
         }
     }
 

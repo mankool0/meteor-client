@@ -136,19 +136,11 @@ public class HudElementScreen extends WindowScreen {
 
     @Override
     public boolean toClipboard() {
-        return NbtUtils.toClipboard(element.info.title, element.toTag());
+        return NbtUtils.toClipboard(element);
     }
 
     @Override
     public boolean fromClipboard() {
-        NbtCompound clipboard = NbtUtils.fromClipboard(element.toTag());
-
-        if (clipboard != null) {
-            element.fromTag(clipboard);
-            return true;
-        }
-
-        return false;
+        return NbtUtils.fromClipboard(element);
     }
-
 }

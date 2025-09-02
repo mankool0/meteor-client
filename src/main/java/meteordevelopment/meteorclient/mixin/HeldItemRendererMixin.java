@@ -94,6 +94,6 @@ public abstract class HeldItemRendererMixin {
 
     @Unique
     private boolean showSwapping(ItemStack stack1, ItemStack stack2) {
-        return !Modules.get().get(HandView.class).showSwapping() || ItemStack.areEqual(stack1, stack2);
+        return !Modules.get().get(HandView.class).skipSwapping() || ItemStack.areEqual(stack1, stack2);
     }
 }

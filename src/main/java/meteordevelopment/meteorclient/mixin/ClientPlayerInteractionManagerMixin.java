@@ -70,33 +70,6 @@ public abstract class ClientPlayerInteractionManagerMixin implements IClientPlay
         }
     }
 
-    @Inject(method = "clickSlot", at = @At("HEAD"), cancellable = true)
-    public void onClickArmorSlot(int syncId, int slotId, int button, SlotActionType actionType, PlayerEntity player, CallbackInfo ci) {
-        if (!Modules.get().get(InventoryTweaks.class).armorStorage()) return;
-
-        ScreenHandler screenHandler = player.currentScreenHandler;
-
-        if (screenHandler instanceof PlayerScreenHandler) {
-            if (slotId >= 5 && slotId <= 8) {
-                int armorSlot = (8 - slotId) + 36;
-                if (actionType == SlotActionType.PICKUP && !screenHandler.getCursorStack().isEmpty()) {
-                    clickSlot(syncId, 17, armorSlot, SlotActionType.SWAP, player); //armor slot <-> inv slot
-                    clickSlot(syncId, 17, button, SlotActionType.PICKUP, player); //inv slot <-> cursor slot
-                    clickSlot(syncId, 17, armorSlot, SlotActionType.SWAP, player); //armor slot <-> inv slot
-                    ci.cancel();
-                } else if (actionType == SlotActionType.SWAP) {
-                    if (button >= 10) {
-                        clickSlot(syncId, 45, armorSlot, SlotActionType.SWAP, player);
-                        ci.cancel();
-                    } else {
-                        clickSlot(syncId, 36 + button, armorSlot, SlotActionType.SWAP, player); //invert swap
-                        ci.cancel();
-                    }
-                }
-            }
-        }
-    }
-
     @Inject(method = "attackBlock", at = @At("HEAD"), cancellable = true)
     private void onAttackBlock(BlockPos blockPos, Direction direction, CallbackInfoReturnable<Boolean> info) {
         if (MeteorClient.EVENT_BUS.post(StartBreakingBlockEvent.get(blockPos, direction)).isCancelled()) info.cancel();

@@ -27,15 +27,15 @@ jobs:
         with:
           node-version: latest
 
-      - name: Get current dev build number
-        id: dev-build
+      - name: Get current build number
+        id: build-number
         run: |
-          cd .github/devbuilds
-          npm install
-          node get_number.js >> $GITHUB_OUTPUT
+            cd .github/builds
+            npm install
+            npm run --silent get_number >> $GITHUB_OUTPUT
 
       - name: Build
-        run: ./gradlew build -Pcommit=${{ github.sha }} -Pdevbuild=${{ steps.dev-build.outputs.number }}
+        run: ./gradlew build -Pcommit=${{ github.sha }} -Pbuild_number=${{ steps.dev-build.outputs.number }}
 
       - name: Archive Artifacts
         uses: actions/upload-artifact@v4
