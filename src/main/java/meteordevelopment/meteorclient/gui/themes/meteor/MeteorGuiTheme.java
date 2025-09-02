@@ -216,6 +216,11 @@ public class MeteorGuiTheme extends GuiTheme {
     }
 
     @Override
+    public WConfirmedMinus confirmedMinus() {
+        return w(new WMeteorConfirmedMinus());
+    }
+
+    @Override
     public WPlus plus() {
         return w(new WMeteorPlus());
     }

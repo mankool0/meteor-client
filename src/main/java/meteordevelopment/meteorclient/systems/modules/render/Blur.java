@@ -10,8 +10,14 @@ import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.game.ResolutionChangedEvent;
 import meteordevelopment.meteorclient.events.render.RenderAfterWorldEvent;
 import meteordevelopment.meteorclient.gui.WidgetScreen;
-import meteordevelopment.meteorclient.renderer.*;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.renderer.Framebuffer;
+import meteordevelopment.meteorclient.renderer.GL;
+import meteordevelopment.meteorclient.renderer.PostProcessRenderer;
+import meteordevelopment.meteorclient.renderer.Shader;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.IntSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.listeners.ConsumerListener;
@@ -99,6 +105,7 @@ public class Blur extends Module {
 
     private Shader shaderDown, shaderUp, shaderPassthrough;
     private final Framebuffer[] fbos = new Framebuffer[6];
+    private boolean initialized;
 
     private boolean enabled;
     private long fadeEndAt;
@@ -145,15 +152,14 @@ public class Blur extends Module {
         if (!enabled) return;
 
         // Initialize shader and framebuffer if running for the first time
-        if (shaderDown == null) {
-            shaderDown = new Shader("blur.vert", "blur_down.frag");
-            shaderUp = new Shader("blur.vert", "blur_up.frag");
-            shaderPassthrough = new Shader("passthrough.vert", "passthrough.frag");
+        if (!initialized) {
             for (int i = 0; i < fbos.length; i++) {
                 if (fbos[i] == null) {
                     fbos[i] = new Framebuffer(1 / Math.pow(2, i));
                 }
             }
+
+            initialized = true;
         }
 
         // Update progress
@@ -170,9 +176,6 @@ public class Blur extends Module {
         IntDoubleImmutablePair strength = strengths[(int) ((this.strength.get() - 1) * progress)];
         int iterations = strength.leftInt();
         double offset = strength.rightDouble();
-
-        // Render the blur
-        PostProcessRenderer.beginRender();
 
         // Initial downsample
         renderToFbo(fbos[0], MinecraftClient.getInstance().getFramebuffer().getColorAttachment(), shaderDown, offset);

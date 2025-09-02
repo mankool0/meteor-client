@@ -34,15 +34,15 @@ import net.minecraft.block.enums.ChestType;
 import net.minecraft.util.math.Direction;
 
 import java.util.HashSet;
-import java.util.Set;
 import java.util.List;
+import java.util.Set;
 
 public class StorageESP extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgOpened = settings.createGroup("Opened Rendering");
     private final Set<BlockPos> interactedBlocks = new HashSet<>();
 
-    public final Setting<Mode> mode = sgGeneral.add(new EnumSetting.Builder<Mode>()
+    private final Setting<Mode> mode = sgGeneral.add(new EnumSetting.Builder<Mode>()
         .name("mode")
         .description("Rendering mode.")
         .defaultValue(Mode.Shader)
@@ -138,7 +138,7 @@ public class StorageESP extends Module {
 
     private final Setting<SettingColor> other = sgGeneral.add(new ColorSetting.Builder()
         .name("other")
-        .description("The color of furnaces, dispenders, droppers and hoppers.")
+        .description("The color of furnaces, dispensers, droppers and hoppers.")
         .defaultValue(new SettingColor(140, 140, 140, 255))
         .build()
     );
@@ -162,7 +162,7 @@ public class StorageESP extends Module {
     private final Setting<SettingColor> openedColor = sgOpened.add(new ColorSetting.Builder()
         .name("opened-color")
         .description("Optional setting to change colors of opened chests, as opposed to not rendering. Disabled at zero opacity.")
-        .defaultValue(new SettingColor(203, 90, 203, 0)) /// TRANSPARENT BY DEFAULT.
+        .defaultValue(new SettingColor(203, 90, 203, 0)) // TRANSPARENT BY DEFAULT.
         .build()
     );
 
@@ -210,9 +210,7 @@ public class StorageESP extends Module {
         // Button to Clear Interacted Blocks
         WButton clear = list.add(theme.button("Clear Rendering Cache")).expandX().widget();
 
-        clear.action = () -> {
-            interactedBlocks.clear();
-        };
+        clear.action = interactedBlocks::clear;
 
         return list;
     }
@@ -243,8 +241,6 @@ public class StorageESP extends Module {
     private void onRender(Render3DEvent event) {
         count = 0;
 
-        if (mode.get() == Mode.Shader) mesh.begin();
-
         for (BlockEntity blockEntity : Utils.blockEntities()) {
             // Check if the block has been interacted with (opened)
             boolean interacted = interactedBlocks.contains(blockEntity.getPos());
@@ -265,22 +261,33 @@ public class StorageESP extends Module {
                 double a = 1;
                 if (dist <= fadeDistance.get() * fadeDistance.get()) a = dist / (fadeDistance.get() * fadeDistance.get());
 
+                if (a < 0.075) continue;
+
+                // Only start a mesh when there's something to render
+                if (count == 0 && mode.get() == Mode.Shader) {
+                    mesh.begin();
+                }
+
                 int prevLineA = lineColor.a;
                 int prevSideA = sideColor.a;
 
                 lineColor.a *= a;
                 sideColor.a *= a;
 
-                if (tracers.get() && a >= 0.075) {
+                if (tracers.get()) {
                     event.renderer.line(RenderUtils.center.x, RenderUtils.center.y, RenderUtils.center.z, blockEntity.getPos().getX() + 0.5, blockEntity.getPos().getY() + 0.5, blockEntity.getPos().getZ() + 0.5, lineColor);
                 }
 
-                if (mode.get() == Mode.Box && a >= 0.075) renderBox(event, blockEntity);
+                if (mode.get() == Mode.Box) {
+                    renderBox(event, blockEntity);
+                }
+
+                if (mode.get() == Mode.Shader) {
+                    renderShader(event, blockEntity);
+                }
 
                 lineColor.a = prevLineA;
                 sideColor.a = prevSideA;
-
-                if (mode.get() == Mode.Shader) renderShader(event, blockEntity);
 
                 count++;
             }

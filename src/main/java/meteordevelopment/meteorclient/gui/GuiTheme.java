@@ -89,6 +89,7 @@ public abstract class GuiTheme implements ISerializable<GuiTheme> {
     }
 
     public abstract WMinus minus();
+    public abstract WConfirmedMinus confirmedMinus();
     public abstract WPlus plus();
 
     public abstract WCheckbox checkbox(boolean checked);

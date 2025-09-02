@@ -19,5 +19,5 @@ public interface WorldRendererAccessor {
     void setEntityOutlinesFramebuffer(Framebuffer framebuffer);
 
     @Accessor("blockBreakingInfos")
-    Int2ObjectMap<BlockBreakingInfo> getBlockBreakingInfos();
+    Int2ObjectMap<BlockBreakingInfo> meteor$getBlockBreakingInfos();
 }
