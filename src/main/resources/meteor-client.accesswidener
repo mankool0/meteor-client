@@ -77,3 +77,7 @@ accessible   field   net/minecraft/client/render/item/ItemRenderer TRIDENT Lnet/
 accessible   field   net/minecraft/client/render/item/ItemRenderer SPYGLASS Lnet/minecraft/client/util/ModelIdentifier;
 
 accessible   class   net/minecraft/entity/effect/StatusEffect$EffectAttributeModifierCreator
+
+# Auto Fish
+accessible class net/minecraft/entity/projectile/FishingBobberEntity$State
+accessible field net/minecraft/entity/projectile/FishingBobberEntity state Lnet/minecraft/entity/projectile/FishingBobberEntity$State;
