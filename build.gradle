@@ -6,7 +6,7 @@ plugins {
 
 base {
     archivesBaseName = project.archives_base_name
-    version = project.mod_version + (project.hasProperty("build_number") ? ("-" + project.findProperty("build_number")) : "")
+    version = project.findProperty("minecraft_version") + "-" + (project.hasProperty("build_number") ? (project.findProperty("build_number")) : "local")
     group = project.maven_group
 }
 
@@ -155,7 +155,7 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             artifactId = "meteor-client"
-            version = project.hasProperty("build_number") ? (project.mod_version + "-SNAPSHOT") : project.mod_version
+            version = project.findProperty("minecraft_version") + "-" + (project.hasProperty("build_number") ? (project.findProperty("build_number")) : "local")
 
             from components.java
         }

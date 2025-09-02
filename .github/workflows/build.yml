@@ -35,10 +35,20 @@ jobs:
             npm run --silent get_number >> $GITHUB_OUTPUT
 
       - name: Build
-        run: ./gradlew build -Pcommit=${{ github.sha }} -Pbuild_number=${{ steps.dev-build.outputs.number }}
+        run: ./gradlew build -Pcommit=${{ github.sha }} -Pbuild_number=${{ steps.build-number.outputs.number }}
 
       - name: Archive Artifacts
         uses: actions/upload-artifact@v4
         with:
             name: Artifacts
             path: build/libs
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: snapshot
+          name: Dev Build
+          prerelease: true
+          files: |
+            ./build/libs/*.jar
