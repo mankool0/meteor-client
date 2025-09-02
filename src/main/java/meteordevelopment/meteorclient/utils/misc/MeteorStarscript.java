@@ -22,16 +22,16 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.world.Dimension;
 import meteordevelopment.meteorclient.utils.world.TickRate;
-import meteordevelopment.starscript.Script;
-import meteordevelopment.starscript.Section;
-import meteordevelopment.starscript.StandardLib;
-import meteordevelopment.starscript.Starscript;
-import meteordevelopment.starscript.compiler.Compiler;
-import meteordevelopment.starscript.compiler.Parser;
-import meteordevelopment.starscript.utils.Error;
-import meteordevelopment.starscript.utils.StarscriptError;
-import meteordevelopment.starscript.value.Value;
-import meteordevelopment.starscript.value.ValueMap;
+import org.meteordev.starscript.Script;
+import org.meteordev.starscript.Section;
+import org.meteordev.starscript.StandardLib;
+import org.meteordev.starscript.Starscript;
+import org.meteordev.starscript.compiler.Compiler;
+import org.meteordev.starscript.compiler.Parser;
+import org.meteordev.starscript.utils.Error;
+import org.meteordev.starscript.utils.StarscriptError;
+import org.meteordev.starscript.value.Value;
+import org.meteordev.starscript.value.ValueMap;
 import net.minecraft.SharedConstants;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.network.PlayerListEntry;
@@ -87,7 +87,7 @@ public class MeteorStarscript {
         // Meteor
         ss.set("meteor", new ValueMap()
             .set("name", MeteorClient.NAME)
-            .set("version", MeteorClient.VERSION != null ? (MeteorClient.DEV_BUILD.isEmpty() ? MeteorClient.VERSION.toString() : MeteorClient.VERSION + " " + MeteorClient.DEV_BUILD) : "")
+            .set("version", MeteorClient.VERSION != null ? (MeteorClient.BUILD_NUMBER.isEmpty() ? MeteorClient.VERSION.toString() : MeteorClient.VERSION + " " + MeteorClient.BUILD_NUMBER) : "")
             .set("modules", () -> Value.number(Modules.get().getAll().size()))
             .set("active_modules", () -> Value.number(Modules.get().getActive().size()))
             .set("is_module_active", MeteorStarscript::isModuleActive)

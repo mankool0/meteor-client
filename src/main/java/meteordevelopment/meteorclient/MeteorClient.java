@@ -48,7 +48,7 @@ public class MeteorClient implements ClientModInitializer {
     public static final ModMetadata MOD_META;
     public static final String NAME;
     public static final  Version VERSION;
-    public static final  String DEV_BUILD;
+    public static final  String BUILD_NUMBER;
 
     public static MeteorClient INSTANCE;
     public static MeteorAddon ADDON;
@@ -71,7 +71,7 @@ public class MeteorClient implements ClientModInitializer {
         if (versionString.equals("${version}")) versionString = "0.0.0";
 
         VERSION = new Version(versionString);
-        DEV_BUILD = MOD_META.getCustomValue(MeteorClient.MOD_ID + ":devbuild").getAsString();
+        BUILD_NUMBER = MOD_META.getCustomValue(MeteorClient.MOD_ID + ":build_number").getAsString();
     }
 
     @Override
