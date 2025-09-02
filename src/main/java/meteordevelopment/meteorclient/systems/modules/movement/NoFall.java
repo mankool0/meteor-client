@@ -18,6 +18,7 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
@@ -30,6 +31,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.item.MaceItem;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -80,6 +82,13 @@ public class NoFall extends Module {
         .build()
     );
 
+    private final Setting<Boolean> pauseOnMace = sgGeneral.add(new BoolSetting.Builder()
+        .name("pause-on-mace")
+        .description("Pauses NoFall when using a mace.")
+        .defaultValue(true)
+        .build()
+    );
+
     private boolean placedWater;
     private BlockPos targetPos;
     private int timer;
@@ -104,45 +113,49 @@ public class NoFall extends Module {
 
     @EventHandler
     private void onSendPacket(PacketEvent.Send event) {
+        if (pauseOnMace.get() && mc.player.getMainHandStack().getItem() instanceof MaceItem) return;
         if (mc.player.getAbilities().creativeMode
             || !(event.packet instanceof PlayerMoveC2SPacket)
             || mode.get() != Mode.Packet
-            || ((IPlayerMoveC2SPacket) event.packet).getTag() == 1337) return;
+            || ((IPlayerMoveC2SPacket) event.packet).meteor$getTag() == 1337) return;
 
 
         if (!Modules.get().isActive(Flight.class)) {
             if (mc.player.isFallFlying()) return;
             if (mc.player.getVelocity().y > -0.5) return;
-            ((PlayerMoveC2SPacketAccessor) event.packet).setOnGround(true);
+            ((PlayerMoveC2SPacketAccessor) event.packet).meteor$setOnGround(true);
         } else {
-            ((PlayerMoveC2SPacketAccessor) event.packet).setOnGround(true);
+            ((PlayerMoveC2SPacketAccessor) event.packet).meteor$setOnGround(true);
         }
     }
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
+        if (!Utils.canUpdate()) return;
+
         if (timer > 20) {
             placedWater = false;
             timer = 0;
         }
 
         if (mc.player.getAbilities().creativeMode) return;
+        if (pauseOnMace.get() && mc.player.getMainHandStack().getItem() instanceof MaceItem) return;
 
         // Airplace mode
         if (mode.get() == Mode.AirPlace) {
             // Test if fall damage setting is valid
-            if (!airPlaceMode.get().test(mc.player.fallDistance)) return;
+            if (!airPlaceMode.get().test((float) mc.player.fallDistance)) return;
 
             // Center and place block
             if (anchor.get()) PlayerUtils.centerPlayer();
 
             Rotations.rotate(mc.player.getYaw(), 90, Integer.MAX_VALUE, () -> {
                 double preY = mc.player.getVelocity().y;
-                ((IVec3d) mc.player.getVelocity()).setY(0);
+                ((IVec3d) mc.player.getVelocity()).meteor$setY(0);
 
                 BlockUtils.place(mc.player.getBlockPos().down(), InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof BlockItem), false, 0, true);
 
-                ((IVec3d) mc.player.getVelocity()).setY(preY);
+                ((IVec3d) mc.player.getVelocity()).meteor$setY(preY);
             });
         }
 
