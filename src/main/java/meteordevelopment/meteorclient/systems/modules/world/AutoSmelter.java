@@ -60,7 +60,7 @@ public class AutoSmelter extends Module {
     }
 
     private boolean fuelItemFilter(Item item) {
-        if (!Utils.canUpdate() && fuelTimeMap == null) return false;
+        if (!Utils.canUpdate()) return false;
 
         if (fuelTimeMap == null) fuelTimeMap = AbstractFurnaceBlockEntity.createFuelTimeMap();
         return fuelTimeMap.containsKey(item);
@@ -92,7 +92,7 @@ public class AutoSmelter extends Module {
 
         for (int i = 3; i < c.slots.size(); i++) {
             ItemStack item = c.slots.get(i).getStack();
-            if (!((IAbstractFurnaceScreenHandler) c).isItemSmeltable(item)) continue;
+            if (!((IAbstractFurnaceScreenHandler) c).meteor$isItemSmeltable(item)) continue;
             if (!smeltableItems.get().contains(item.getItem())) continue;
             if (!smeltableItemFilter(item.getItem())) continue;
 
