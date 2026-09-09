@@ -33,7 +33,7 @@ public class MicrosoftAccount extends Account<MicrosoftAccount> {
 
         super.login();
 
-        setSession(new User(cache.username, UndashedUuid.fromStringLenient(cache.uuid), token, Optional.empty(), Optional.empty()));
+        setSession(new User(cache.username, UndashedUuid.fromStringLenient(cache.uuid), token, Optional.empty(), Optional.empty(), User.Type.MSA));
         return true;
     }
 

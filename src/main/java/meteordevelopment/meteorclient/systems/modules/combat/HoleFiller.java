@@ -263,7 +263,7 @@ public class HoleFiller extends Module {
         if (!block.found()) return;
 
         // Probe for holes
-        BlockIterator.register(searchRadius.get(), searchRadius.get(), (blockPos, _) -> {
+        BlockIterator.register(searchRadius.get(), searchRadius.get(), (blockPos, unused1) -> {
             if (!validHole(blockPos)) return;
 
             int surroundBlocks = 0;

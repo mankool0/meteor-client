@@ -102,7 +102,7 @@ public class AutoFish extends Module {
     private void onTick(TickEvent.Pre event) {
         int bestRodSlot = findBestRod();
 
-        if (autoSwitch.get() && bestRodSlot != -1 && mc.player.getInventory().getSelectedSlot() != bestRodSlot) {
+        if (autoSwitch.get() && bestRodSlot != -1 && mc.player.getInventory().selected != bestRodSlot) {
             InvUtils.swap(bestRodSlot, false);
         }
 

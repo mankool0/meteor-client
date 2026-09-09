@@ -31,14 +31,14 @@ public class GiveCommand extends Command {
         builder.then(argument("item", ItemArgument.item(REGISTRY_ACCESS)).executes(context -> {
             if (!mc.player.getAbilities().instabuild) throw NOT_IN_CREATIVE.create();
 
-            ItemStack item = ItemArgument.getItem(context, "item").createItemStack(1);
+            ItemStack item = ItemArgument.getItem(context, "item").createItemStack(1, false);
             giveItem(item);
 
             return SINGLE_SUCCESS;
         }).then(argument("number", IntegerArgumentType.integer(1, 99)).executes(context -> {
             if (!mc.player.getAbilities().instabuild) throw NOT_IN_CREATIVE.create();
 
-            ItemStack item = ItemArgument.getItem(context, "item").createItemStack(IntegerArgumentType.getInteger(context, "number"));
+            ItemStack item = ItemArgument.getItem(context, "item").createItemStack(IntegerArgumentType.getInteger(context, "number"), false);
             giveItem(item);
 
             return SINGLE_SUCCESS;

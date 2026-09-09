@@ -10,7 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ public class StatusEffectListSetting extends Setting<List<MobEffect>> {
                 MobEffect effect = parseId(BuiltInRegistries.MOB_EFFECT, value);
                 if (effect != null) effects.add(effect);
             }
-        } catch (Exception _) {
+        } catch (Exception unused1) {
         }
 
         return effects;
@@ -50,7 +50,7 @@ public class StatusEffectListSetting extends Setting<List<MobEffect>> {
     }
 
     @Override
-    public Iterable<Identifier> getIdentifierSuggestions() {
+    public Iterable<ResourceLocation> getIdentifierSuggestions() {
         return BuiltInRegistries.MOB_EFFECT.keySet();
     }
 
@@ -59,7 +59,7 @@ public class StatusEffectListSetting extends Setting<List<MobEffect>> {
         ListTag valueTag = new ListTag();
 
         for (MobEffect effect : get()) {
-            Identifier id = BuiltInRegistries.MOB_EFFECT.getKey(effect);
+            ResourceLocation id = BuiltInRegistries.MOB_EFFECT.getKey(effect);
             if (id != null) valueTag.add(StringTag.valueOf(id.toString()));
         }
         tag.put("value", valueTag);
@@ -71,8 +71,8 @@ public class StatusEffectListSetting extends Setting<List<MobEffect>> {
     public List<MobEffect> load(CompoundTag tag) {
         get().clear();
 
-        for (Tag tagI : tag.getListOrEmpty("value")) {
-            MobEffect effect = BuiltInRegistries.MOB_EFFECT.getValue(Identifier.parse(tagI.asString().orElse("")));
+        for (Tag tagI : tag.getList("value", Tag.TAG_STRING)) {
+            MobEffect effect = BuiltInRegistries.MOB_EFFECT.getValue(ResourceLocation.parse(tagI.getAsString()));
             if (effect != null) get().add(effect);
         }
 

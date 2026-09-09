@@ -6,28 +6,25 @@
 package meteordevelopment.meteorclient.utils.tooltip;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.CommonColors;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BundleContents;
 import org.apache.commons.lang3.math.Fraction;
 
-import java.util.List;
-
 public class BundleTooltipComponent implements ClientTooltipComponent, MeteorTooltipData {
-    private static final Identifier BUNDLE_SLOT_BACKGROUND_TEXTURE = Identifier.withDefaultNamespace("container/bundle/slot_background");
-    private static final Identifier BUNDLE_PROGRESS_BAR_BORDER_TEXTURE = Identifier.withDefaultNamespace("container/bundle/bundle_progressbar_border");
-    private static final Identifier BUNDLE_PROGRESS_BAR_FILL_TEXTURE = Identifier.withDefaultNamespace("container/bundle/bundle_progressbar_fill");
-    private static final Identifier BUNDLE_PROGRESS_BAR_FULL_TEXTURE = Identifier.withDefaultNamespace("container/bundle/bundle_progressbar_full");
-    private static final Identifier BUNDLE_SLOT_HIGHLIGHT_BACK_TEXTURE = Identifier.withDefaultNamespace("container/bundle/slot_highlight_back");
-    private static final Identifier BUNDLE_SLOT_HIGHLIGHT_FRONT_TEXTURE = Identifier.withDefaultNamespace("container/bundle/slot_highlight_front");
+    private static final ResourceLocation BUNDLE_SLOT_BACKGROUND_TEXTURE = ResourceLocation.withDefaultNamespace("container/bundle/slot_background");
+    private static final ResourceLocation BUNDLE_PROGRESS_BAR_BORDER_TEXTURE = ResourceLocation.withDefaultNamespace("container/bundle/bundle_progressbar_border");
+    private static final ResourceLocation BUNDLE_PROGRESS_BAR_FILL_TEXTURE = ResourceLocation.withDefaultNamespace("container/bundle/bundle_progressbar_fill");
+    private static final ResourceLocation BUNDLE_PROGRESS_BAR_FULL_TEXTURE = ResourceLocation.withDefaultNamespace("container/bundle/bundle_progressbar_full");
+    private static final ResourceLocation BUNDLE_SLOT_HIGHLIGHT_BACK_TEXTURE = ResourceLocation.withDefaultNamespace("container/bundle/slot_highlight_back");
+    private static final ResourceLocation BUNDLE_SLOT_HIGHLIGHT_FRONT_TEXTURE = ResourceLocation.withDefaultNamespace("container/bundle/slot_highlight_front");
 
     private static final int SLOTS_PER_ROW = 8;
     private static final int SLOT_DIMENSION = 24;
@@ -71,7 +68,7 @@ public class BundleTooltipComponent implements ClientTooltipComponent, MeteorToo
     }
 
     @Override
-    public void extractImage(Font font, int x, int y, int width, int height, GuiGraphicsExtractor graphics) {
+    public void renderImage(Font font, int x, int y, int width, int height, GuiGraphics graphics) {
         int row = 0;
         int col = 0;
 
@@ -80,9 +77,9 @@ public class BundleTooltipComponent implements ClientTooltipComponent, MeteorToo
                 int slotX = x + 8 + col * SLOT_DIMENSION;
                 int slotY = y + 8 + row * SLOT_DIMENSION;
 
-                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, BUNDLE_SLOT_BACKGROUND_TEXTURE, slotX, slotY, SLOT_DIMENSION, SLOT_DIMENSION);
+                graphics.blitSprite(RenderType::guiTextured, BUNDLE_SLOT_BACKGROUND_TEXTURE, slotX, slotY, SLOT_DIMENSION, SLOT_DIMENSION);
                 drawItem(itemStack, (row * 8) + col, slotX, slotY, font, graphics);
-                graphics.itemDecorations(font, itemStack, slotX + 4, slotY + 4);
+                graphics.renderItemDecorations(font, itemStack, slotX + 4, slotY + 4);
             }
 
             col++;
@@ -99,51 +96,48 @@ public class BundleTooltipComponent implements ClientTooltipComponent, MeteorToo
         drawProgressBar(progressBarX, progressBarY, font, graphics);
     }
 
-    private void drawItem(ItemStack itemStack, int index, int x, int y, Font font, GuiGraphicsExtractor graphics) {
-        boolean bl = bundleContents.getSelectedItemIndex() == index;
+    private void drawItem(ItemStack itemStack, int index, int x, int y, Font font, GuiGraphics graphics) {
+        boolean bl = bundleContents.getSelectedItem() == index;
         if (bl) {
-            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, BUNDLE_SLOT_HIGHLIGHT_BACK_TEXTURE, x, y, 24, 24);
+            graphics.blitSprite(RenderType::guiTextured, BUNDLE_SLOT_HIGHLIGHT_BACK_TEXTURE, x, y, 24, 24);
         } else {
-            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, BUNDLE_SLOT_BACKGROUND_TEXTURE, x, y, 24, 24);
+            graphics.blitSprite(RenderType::guiTextured, BUNDLE_SLOT_BACKGROUND_TEXTURE, x, y, 24, 24);
         }
 
-        graphics.item(itemStack, x + 4, y + 4, 0);
-        graphics.itemDecorations(font, itemStack, x + 4, y + 4);
+        graphics.renderItem(itemStack, x + 4, y + 4, 0);
+        graphics.renderItemDecorations(font, itemStack, x + 4, y + 4);
         if (bl) {
-            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, BUNDLE_SLOT_HIGHLIGHT_FRONT_TEXTURE, x, y, 24, 24);
+            graphics.blitSprite(RenderType::guiTexturedOverlay, BUNDLE_SLOT_HIGHLIGHT_FRONT_TEXTURE, x, y, 24, 24);
         }
     }
 
-    private void drawSelectedItemTooltip(Font font, GuiGraphicsExtractor graphics, int x, int y, int width) {
-        if (this.bundleContents.getSelectedItemIndex() != -1) {
-            ItemStack itemStack = this.bundleContents.getSelectedItem().create();
+    private void drawSelectedItemTooltip(Font font, GuiGraphics graphics, int x, int y, int width) {
+        if (this.bundleContents.hasSelectedItem()) {
+            ItemStack itemStack = this.bundleContents.getItemUnsafe(this.bundleContents.getSelectedItem());
             Component text = itemStack.getStyledHoverName();
             int i = font.width(text.getVisualOrderText());
             int j = x + width / 2 - 12;
-            ClientTooltipComponent tooltipComponent = ClientTooltipComponent.create(text.getVisualOrderText());
-            graphics.tooltip(
-                font, List.of(tooltipComponent), j - i / 2, y - 37, DefaultTooltipPositioner.INSTANCE, itemStack.get(DataComponents.TOOLTIP_STYLE)
-            );
+            graphics.renderTooltip(font, text, j - i / 2, y - 15, itemStack.get(DataComponents.TOOLTIP_STYLE));
         }
     }
 
-    private void drawProgressBar(int x, int y, Font font, GuiGraphicsExtractor graphics) {
-        int fillAmount = Mth.clamp(Mth.mulAndTruncate(bundleContents.weight().getOrThrow(), PROGRESS_BAR_WIDTH), 0, PROGRESS_BAR_WIDTH);
+    private void drawProgressBar(int x, int y, Font font, GuiGraphics graphics) {
+        int fillAmount = Mth.clamp(Mth.mulAndTruncate(bundleContents.weight(), PROGRESS_BAR_WIDTH), 0, PROGRESS_BAR_WIDTH);
 
-        Identifier fillTexture = bundleContents.weight().getOrThrow().compareTo(Fraction.ONE) >= 0
+        ResourceLocation fillTexture = bundleContents.weight().compareTo(Fraction.ONE) >= 0
             ? BUNDLE_PROGRESS_BAR_FULL_TEXTURE
             : BUNDLE_PROGRESS_BAR_FILL_TEXTURE;
 
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, fillTexture, x + 1, y, fillAmount, PROGRESS_BAR_HEIGHT);
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, BUNDLE_PROGRESS_BAR_BORDER_TEXTURE, x, y, PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT);
+        graphics.blitSprite(RenderType::guiTextured, fillTexture, x + 1, y, fillAmount, PROGRESS_BAR_HEIGHT);
+        graphics.blitSprite(RenderType::guiTextured, BUNDLE_PROGRESS_BAR_BORDER_TEXTURE, x, y, PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT);
 
         Component label = getProgressBarLabel();
         if (label != null) {
-            graphics.centeredText(font, label, x + PROGRESS_BAR_WIDTH / 2, y + 3, CommonColors.WHITE);
+            graphics.drawCenteredString(font, label, x + PROGRESS_BAR_WIDTH / 2, y + 3, CommonColors.WHITE);
         }
     }
 
     private Component getProgressBarLabel() {
-        return bundleContents.weight().getOrThrow().compareTo(Fraction.ONE) >= 0 ? BUNDLE_FULL : Component.literal(String.format("%.2f%%", bundleContents.weight().getOrThrow().floatValue() * 100));
+        return bundleContents.weight().compareTo(Fraction.ONE) >= 0 ? BUNDLE_FULL : Component.literal(String.format("%.2f%%", bundleContents.weight().floatValue() * 100));
     }
 }

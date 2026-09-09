@@ -42,7 +42,7 @@ public class TextHud extends HudElement {
         .name("text")
         .description("Text to display with Starscript.")
         .defaultValue(MeteorClient.NAME)
-        .onChanged(_ -> recompile())
+        .onChanged(unused1 -> recompile())
         .wide()
         .renderer(StarscriptTextBoxRenderer.class)
         .build()
@@ -63,7 +63,7 @@ public class TextHud extends HudElement {
         .name("shadow")
         .description("Renders shadow behind text.")
         .defaultValue(true)
-        .onChanged(_ -> recalculateSize = true)
+        .onChanged(unused2 -> recalculateSize = true)
         .build()
     );
 
@@ -81,7 +81,7 @@ public class TextHud extends HudElement {
         .name("shown")
         .description("When this text element is shown.")
         .defaultValue(Shown.Always)
-        .onChanged(_ -> recompile())
+        .onChanged(unused3 -> recompile())
         .build()
     );
 
@@ -89,7 +89,7 @@ public class TextHud extends HudElement {
         .name("condition")
         .description("Condition to check when shown is not Always.")
         .visible(() -> shown.get() != Shown.Always)
-        .onChanged(_ -> recompile())
+        .onChanged(unused4 -> recompile())
         .renderer(StarscriptTextBoxRenderer.class)
         .build()
     );
@@ -100,7 +100,7 @@ public class TextHud extends HudElement {
         .name("custom-scale")
         .description("Applies a custom scale to this hud element.")
         .defaultValue(false)
-        .onChanged(_ -> recalculateSize = true)
+        .onChanged(unused5 -> recalculateSize = true)
         .build()
     );
 
@@ -109,7 +109,7 @@ public class TextHud extends HudElement {
         .description("Custom scale.")
         .visible(customScale::get)
         .defaultValue(1)
-        .onChanged(_ -> recalculateSize = true)
+        .onChanged(unused6 -> recalculateSize = true)
         .min(0.5)
         .sliderRange(0.5, 3)
         .build()

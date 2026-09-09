@@ -25,7 +25,7 @@ public class CommandsCommand extends Command {
 
     @Override
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
-        builder.executes(_ -> {
+        builder.executes(unused1 -> {
             ChatUtils.info("--- Commands ((highlight)%d(default)) ---", Commands.COMMANDS.size());
 
             MutableComponent commands = Component.literal("");
@@ -61,8 +61,8 @@ public class CommandsCommand extends Command {
             text.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
         text.setStyle(text
             .getStyle()
-            .withHoverEvent(new HoverEvent.ShowText(tooltip))
-            .withClickEvent(new ClickEvent.SuggestCommand(Config.get().prefix.get() + command.getName()))
+            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltip))
+            .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, Config.get().prefix.get() + command.getName()))
         );
 
         return text;

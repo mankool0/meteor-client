@@ -26,7 +26,7 @@ public class BindsCommand extends Command {
 
     @Override
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
-        builder.executes(_ -> {
+        builder.executes(unused1 -> {
             // Modules
             List<Module> modules = Modules.get().getAll().stream()
                 .filter(module -> module.keybind.isSet())
@@ -35,7 +35,7 @@ public class BindsCommand extends Command {
             ChatUtils.info("--- Bound Modules ((highlight)%d(default)) ---", modules.size());
 
             for (Module module : modules) {
-                HoverEvent hoverEvent = new HoverEvent.ShowText(getTooltip(module));
+                HoverEvent hoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, getTooltip(module));
 
                 MutableComponent text = Component.literal(module.title).withStyle(ChatFormatting.WHITE);
                 text.setStyle(text.getStyle().withHoverEvent(hoverEvent));

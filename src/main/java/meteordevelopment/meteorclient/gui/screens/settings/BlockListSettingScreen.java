@@ -12,7 +12,7 @@ import meteordevelopment.meteorclient.settings.BlockListSetting;
 import meteordevelopment.meteorclient.utils.misc.Names;
 import meteordevelopment.meteorclient.utils.render.DisplayItemUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
@@ -53,6 +53,6 @@ public class BlockListSettingScreen extends CollectionListSettingScreen<Block> {
         String path = BuiltInRegistries.BLOCK.getKey(value).getPath();
         if (!path.endsWith("_banner")) return null;
 
-        return BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(path.substring(0, path.length() - 6) + "wall_banner"));
+        return BuiltInRegistries.BLOCK.getValue(ResourceLocation.withDefaultNamespace(path.substring(0, path.length() - 6) + "wall_banner"));
     }
 }

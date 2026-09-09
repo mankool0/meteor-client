@@ -17,7 +17,6 @@ import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
-import net.minecraft.world.phys.Vec3;
 
 public class Velocity extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -151,13 +150,15 @@ public class Velocity extends Module {
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
         if (knockback.get() && event.packet instanceof ClientboundSetEntityMotionPacket packet
-            && packet.id() == mc.player.getId()) {
-            double velX = (packet.movement().x() - mc.player.getDeltaMovement().x) * knockbackHorizontal.get();
-            double velY = (packet.movement().y() - mc.player.getDeltaMovement().y) * knockbackVertical.get();
-            double velZ = (packet.movement().z() - mc.player.getDeltaMovement().z) * knockbackHorizontal.get();
-            ((ClientboundSetEntityMotionPacketAccessor) (Object) packet).meteor$setMovement(
-                new Vec3(velX + mc.player.getDeltaMovement().x, velY + mc.player.getDeltaMovement().y, velZ + mc.player.getDeltaMovement().z)
-            );
+            && packet.getId() == mc.player.getId()) {
+            double velX = (packet.getXa() - mc.player.getDeltaMovement().x) * knockbackHorizontal.get();
+            double velY = (packet.getYa() - mc.player.getDeltaMovement().y) * knockbackVertical.get();
+            double velZ = (packet.getZa() - mc.player.getDeltaMovement().z) * knockbackHorizontal.get();
+            // PORT(1.21.4): needs-mixin - ClientboundSetEntityMotionPacketAccessor must expose @Mutable @Accessor("xa"/"ya"/"za") int setters
+            // meteor$setXa/meteor$setYa/meteor$setZa (the Vec3 "movement" field does not exist on 1.21.4; xa/ya/za are ints scaled by 8000).
+            ((ClientboundSetEntityMotionPacketAccessor) (Object) packet).meteor$setXa((int) ((velX + mc.player.getDeltaMovement().x) * 8000));
+            ((ClientboundSetEntityMotionPacketAccessor) (Object) packet).meteor$setYa((int) ((velY + mc.player.getDeltaMovement().y) * 8000));
+            ((ClientboundSetEntityMotionPacketAccessor) (Object) packet).meteor$setZa((int) ((velZ + mc.player.getDeltaMovement().z) * 8000));
         }
     }
 

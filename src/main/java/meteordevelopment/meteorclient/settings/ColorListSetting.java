@@ -28,7 +28,7 @@ public class ColorListSetting extends Setting<List<SettingColor>> {
                 String[] strs = colorStr.split(",");
                 colors.add(new SettingColor(Integer.parseInt(strs[0]), Integer.parseInt(strs[1]), Integer.parseInt(strs[2]), Integer.parseInt(strs[3])));
             }
-        } catch (IndexOutOfBoundsException | NumberFormatException _) {
+        } catch (IndexOutOfBoundsException | NumberFormatException unused1) {
         }
         return colors;
     }
@@ -58,7 +58,7 @@ public class ColorListSetting extends Setting<List<SettingColor>> {
     protected List<SettingColor> load(CompoundTag tag) {
         get().clear();
 
-        for (Tag e : tag.getListOrEmpty("value")) {
+        for (Tag e : tag.getList("value", Tag.TAG_COMPOUND)) {
             get().add(new SettingColor().fromTag((CompoundTag) e));
         }
 

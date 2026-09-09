@@ -5,17 +5,17 @@
 
 package meteordevelopment.meteorclient.utils.tooltip;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
-import org.joml.Matrix3x2fStack;
 
 public class BookTooltipComponent implements ClientTooltipComponent, MeteorTooltipData {
-    private static final Identifier TEXTURE_BOOK_BACKGROUND = Identifier.parse("textures/gui/book.png");
+    private static final ResourceLocation TEXTURE_BOOK_BACKGROUND = ResourceLocation.parse("textures/gui/book.png");
 
     private final Component page;
 
@@ -39,20 +39,20 @@ public class BookTooltipComponent implements ClientTooltipComponent, MeteorToolt
     }
 
     @Override
-    public void extractImage(Font font, int x, int y, int width, int height, GuiGraphicsExtractor graphics) {
+    public void renderImage(Font font, int x, int y, int width, int height, GuiGraphics graphics) {
         // Background
-        graphics.blit(RenderPipelines.GUI_TEXTURED, TEXTURE_BOOK_BACKGROUND, x - 10, y, 0, 0, 128, 128, 179, 179);
+        graphics.blit(RenderType::guiTextured, TEXTURE_BOOK_BACKGROUND, x - 10, y, 0, 0, 128, 128, 179, 179);
 
         // Content
-        Matrix3x2fStack matrices = graphics.pose();
-        matrices.pushMatrix();
-        matrices.translate(x + 16, y + 12);
-        matrices.scale(0.7f, 0.7f);
+        PoseStack matrices = graphics.pose();
+        matrices.pushPose();
+        matrices.translate(x + 16, y + 12, 0);
+        matrices.scale(0.7f, 0.7f, 1);
         int offset = 0;
         for (FormattedCharSequence line : font.split(page, 112)) {
-            graphics.text(font, line, 0, offset, 0xFF000000, false);
+            graphics.drawString(font, line, 0, offset, 0xFF000000, false);
             offset += 8;
         }
-        matrices.popMatrix();
+        matrices.popPose();
     }
 }

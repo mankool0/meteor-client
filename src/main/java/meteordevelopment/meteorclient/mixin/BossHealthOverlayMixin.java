@@ -25,24 +25,24 @@ import java.util.Iterator;
 
 @Mixin(BossHealthOverlay.class)
 public abstract class BossHealthOverlayMixin {
-    @Inject(method = "extractRenderState", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void onRender(CallbackInfo ci) {
         if (Modules.get().get(NoRender.class).noBossBar()) ci.cancel();
     }
 
-    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "INVOKE", target = "Ljava/util/Collection;iterator()Ljava/util/Iterator;"))
+    @ModifyExpressionValue(method = "render", at = @At(value = "INVOKE", target = "Ljava/util/Collection;iterator()Ljava/util/Iterator;"))
     public Iterator<LerpingBossEvent> modifyBossBarIterator(Iterator<LerpingBossEvent> original) {
         RenderBossBarEvent.BossIterator event = MeteorClient.EVENT_BUS.post(RenderBossBarEvent.BossIterator.get(original));
         return event.iterator;
     }
 
-    @ModifyExpressionValue(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LerpingBossEvent;getName()Lnet/minecraft/network/chat/Component;"))
-    public Component modifyBossBarName(Component original, @Local(name = "event") LerpingBossEvent event) {
+    @ModifyExpressionValue(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LerpingBossEvent;getName()Lnet/minecraft/network/chat/Component;"))
+    public Component modifyBossBarName(Component original, @Local(index = 6) LerpingBossEvent event) {
         RenderBossBarEvent.BossText bossTextEvent = MeteorClient.EVENT_BUS.post(RenderBossBarEvent.BossText.get(event, original));
         return bossTextEvent.name;
     }
 
-    @ModifyConstant(method = "extractRenderState", constant = @Constant(intValue = 9, ordinal = 1))
+    @ModifyConstant(method = "render", constant = @Constant(intValue = 9, ordinal = 0))
     public int modifySpacingConstant(int j) {
         RenderBossBarEvent.BossSpacing event = MeteorClient.EVENT_BUS.post(RenderBossBarEvent.BossSpacing.get(j));
         return event.spacing;

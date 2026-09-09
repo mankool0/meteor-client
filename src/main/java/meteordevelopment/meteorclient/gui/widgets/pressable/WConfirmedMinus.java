@@ -5,7 +5,7 @@
 
 package meteordevelopment.meteorclient.gui.widgets.pressable;
 
-import net.minecraft.client.input.MouseButtonEvent;
+import meteordevelopment.meteorclient.gui.utils.MouseButtonEvent;
 
 public class WConfirmedMinus extends WMinus {
     protected boolean pressedOnce = false;

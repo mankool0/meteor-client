@@ -35,10 +35,10 @@ public class NameHistoryCommand extends Command {
         builder.then(argument("player", PlayerListEntryArgumentType.create()).executes(context -> {
             MeteorExecutor.execute(() -> {
                 PlayerInfo lookUpTarget = PlayerListEntryArgumentType.get(context);
-                UUID uuid = lookUpTarget.getProfile().id();
+                UUID uuid = lookUpTarget.getProfile().getId();
 
                 NameHistory history = Http.get("https://laby.net/api/v2/user/" + uuid + "/get-profile")
-                    .exceptionHandler(_ -> error("There was an error fetching that users name history."))
+                    .exceptionHandler(unused1 -> error("There was an error fetching that users name history."))
                     .sendJson(NameHistory.class);
 
                 if (history == null) {
@@ -47,7 +47,7 @@ public class NameHistoryCommand extends Command {
                     error("There was an error fetching that users name history.");
                 }
 
-                String name = lookUpTarget.getProfile().name();
+                String name = lookUpTarget.getProfile().getName();
                 MutableComponent initial = Component.literal(name);
                 initial.append(Component.literal(name.endsWith("s") ? "'" : "'s"));
 
@@ -55,11 +55,8 @@ public class NameHistoryCommand extends Command {
 
                 initial.setStyle(initial.getStyle()
                     .withColor(TextColor.fromRgb(nameColor.getPacked()))
-                    .withClickEvent(new ClickEvent.OpenUrl(
-                            URI.create("https://laby.net/@" + name)
-                        )
-                    )
-                    .withHoverEvent(new HoverEvent.ShowText(
+                    .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://laby.net/@" + name))
+                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
                         Component.literal("View on laby.net")
                             .withStyle(ChatFormatting.YELLOW)
                             .withStyle(ChatFormatting.ITALIC)
@@ -79,13 +76,13 @@ public class NameHistoryCommand extends Command {
                         DateFormat formatter = new SimpleDateFormat("hh:mm:ss, dd/MM/yyyy");
                         changed.append(Component.literal(formatter.format(entry.changed_at)).withStyle(ChatFormatting.WHITE));
 
-                        nameText.setStyle(nameText.getStyle().withHoverEvent(new HoverEvent.ShowText(changed)));
+                        nameText.setStyle(nameText.getStyle().withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, changed)));
                     }
 
                     if (!entry.accurate) {
                         MutableComponent text = Component.literal("*").withStyle(ChatFormatting.WHITE);
 
-                        text.setStyle(text.getStyle().withHoverEvent(new HoverEvent.ShowText(Component.literal("This name history entry is not accurate according to laby.net"))));
+                        text.setStyle(text.getStyle().withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("This name history entry is not accurate according to laby.net"))));
 
                         nameText.append(text);
                     }

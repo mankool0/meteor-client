@@ -20,7 +20,7 @@ import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.utils.misc.NbtUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import net.minecraft.client.input.MouseButtonEvent;
+import meteordevelopment.meteorclient.gui.utils.MouseButtonEvent;
 import net.minecraft.util.Mth;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
@@ -396,7 +396,7 @@ public class ColorSettingScreen extends WindowScreen {
         try {
             color = new SettingColor(Integer.parseInt(rgba[0]), Integer.parseInt(rgba[1]), Integer.parseInt(rgba[2]));
             if (rgba.length == 4) color.a = Integer.parseInt(rgba[3]);
-        } catch (NumberFormatException _) {
+        } catch (NumberFormatException unused1) {
             return null;
         }
 
@@ -412,7 +412,7 @@ public class ColorSettingScreen extends WindowScreen {
         try {
             color = new SettingColor(Integer.parseInt(hex.substring(0, 2), 16), Integer.parseInt(hex.substring(2, 4), 16), Integer.parseInt(hex.substring(4, 6), 16));
             if (hex.length() == 8) color.a = Integer.parseInt(hex.substring(6, 8), 16);
-        } catch (NumberFormatException _) {
+        } catch (NumberFormatException unused2) {
             return null;
         }
 

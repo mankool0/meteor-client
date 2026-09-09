@@ -27,7 +27,7 @@ public class FriendsCommand extends Command {
             .then(argument("player", PlayerListEntryArgumentType.create())
                 .executes(context -> {
                     GameProfile profile = PlayerListEntryArgumentType.get(context).getProfile();
-                    Friend friend = new Friend(profile.name(), profile.id());
+                    Friend friend = new Friend(profile.getName(), profile.getId());
 
                     if (Friends.get().add(friend)) {
                         ChatUtils.sendMsg(friend.hashCode(), ChatFormatting.GRAY, "Added (highlight)%s (default)to friends.".formatted(friend.getName()));
@@ -56,7 +56,7 @@ public class FriendsCommand extends Command {
             )
         );
 
-        builder.then(literal("list").executes(_ -> {
+        builder.then(literal("list").executes(unused1 -> {
                 info("--- Friends ((highlight)%s(default)) ---", Friends.get().count());
                 Friends.get().forEach(friend -> ChatUtils.info("(highlight)%s".formatted(friend.getName())));
                 return SINGLE_SUCCESS;

@@ -15,9 +15,9 @@ import meteordevelopment.meteorclient.gui.utils.CharFilter;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
 import meteordevelopment.meteorclient.gui.widgets.containers.WContainer;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import meteordevelopment.meteorclient.gui.utils.CharacterEvent;
+import meteordevelopment.meteorclient.gui.utils.KeyEvent;
+import meteordevelopment.meteorclient.gui.utils.MouseButtonEvent;
 import net.minecraft.util.Mth;
 import org.apache.commons.lang3.SystemUtils;
 

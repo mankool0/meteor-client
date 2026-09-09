@@ -6,9 +6,9 @@
 package meteordevelopment.meteorclient.utils.tooltip;
 
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.world.entity.LivingEntity;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -39,28 +39,27 @@ public class EntityTooltipComponent implements MeteorTooltipData, ClientTooltipC
     }
 
     @Override
-    public void extractImage(Font textRenderer, int x, int y, int width, int height, GuiGraphicsExtractor graphics) {
-        var state = (LivingEntityRenderState) mc.getEntityRenderDispatcher().getRenderer(entity).createRenderState(entity, 1);
-
-        state.lightCoords = 15728880;
-        state.shadowPieces.clear();
-        state.outlineColor = 0;
-
-        state.bodyRot = (float) (spin % 360);
-        state.yRot = 0;
-        state.xRot = 0;
-
+    public void renderImage(Font textRenderer, int x, int y, int width, int height, GuiGraphics graphics) {
+        // PORT(1.21.4): the 26.1 render-state based GuiGraphics.entity(...) does not exist on 1.21.4 -
+        // render the live entity through InventoryScreen.renderEntityInInventory instead.
         x += (width - getWidth(null)) / 2;
         y += 4;
 
         width = getWidth(null);
         height = getHeight(null);
 
-        float scale = Math.max(width, height) / 2f * 1.25f;
-        Vector3f translation = new Vector3f(0, 0.1f, 0);
+        float yaw = (float) (spin % 360);
+        entity.yBodyRot = yaw;
+        entity.setYRot(yaw);
+        entity.yHeadRot = yaw;
+        entity.yHeadRotO = yaw;
+        entity.setXRot(0);
+
+        float scale = Math.max(width, height) / 2f * 1.25f / Math.max(entity.getBbWidth(), entity.getBbHeight());
+        Vector3f translation = new Vector3f(0, entity.getBbHeight() / 2f + 0.1f, 0);
         Quaternionf rotation = new Quaternionf().rotateZ((float) Math.PI);
 
-        graphics.entity(state, scale, translation, rotation, null, x, y, x + width, y + height);
+        InventoryScreen.renderEntityInInventory(graphics, x + width / 2f, y + height / 2f, scale, translation, rotation, null, entity);
         spin += 3 * mc.getDeltaTracker().getGameTimeDeltaTicks();
     }
 }

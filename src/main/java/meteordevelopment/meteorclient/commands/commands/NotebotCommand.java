@@ -22,7 +22,7 @@ import net.minecraft.client.multiplayer.ClientSuggestionProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 
 import java.io.FileWriter;
@@ -46,36 +46,36 @@ public class NotebotCommand extends Command {
 
     @Override
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
-        builder.then(literal("help").executes(_ -> {
+        builder.then(literal("help").executes(unused1 -> {
             Util.getPlatform().openUri("https://github.com/MeteorDevelopment/meteor-client/wiki/Notebot-Guide");
             return SINGLE_SUCCESS;
         }));
 
-        builder.then(literal("status").executes(_ -> {
+        builder.then(literal("status").executes(unused2 -> {
             Notebot notebot = Modules.get().get(Notebot.class);
             info(notebot.getStatus());
             return SINGLE_SUCCESS;
         }));
 
-        builder.then(literal("pause").executes(_ -> {
+        builder.then(literal("pause").executes(unused3 -> {
             Notebot notebot = Modules.get().get(Notebot.class);
             notebot.pause();
             return SINGLE_SUCCESS;
         }));
 
-        builder.then(literal("resume").executes(_ -> {
+        builder.then(literal("resume").executes(unused4 -> {
             Notebot notebot = Modules.get().get(Notebot.class);
             notebot.pause();
             return SINGLE_SUCCESS;
         }));
 
-        builder.then(literal("stop").executes(_ -> {
+        builder.then(literal("stop").executes(unused5 -> {
             Notebot notebot = Modules.get().get(Notebot.class);
             notebot.stop();
             return SINGLE_SUCCESS;
         }));
 
-        builder.then(literal("randomsong").executes(_ -> {
+        builder.then(literal("randomsong").executes(unused6 -> {
             Notebot notebot = Modules.get().get(Notebot.class);
             notebot.playRandomSong();
             return SINGLE_SUCCESS;
@@ -107,7 +107,7 @@ public class NotebotCommand extends Command {
                     return SINGLE_SUCCESS;
                 })));
 
-        builder.then(literal("record").then(literal("start").executes(_ -> {
+        builder.then(literal("record").then(literal("start").executes(unused7 -> {
             ticks = -1;
             song.clear();
             MeteorClient.EVENT_BUS.subscribe(this);
@@ -115,7 +115,7 @@ public class NotebotCommand extends Command {
             return SINGLE_SUCCESS;
         })));
 
-        builder.then(literal("record").then(literal("cancel").executes(_ -> {
+        builder.then(literal("record").then(literal("cancel").executes(unused8 -> {
             MeteorClient.EVENT_BUS.unsubscribe(this);
             info("Recording cancelled");
             return SINGLE_SUCCESS;
@@ -146,7 +146,7 @@ public class NotebotCommand extends Command {
     private void onReadPacket(PacketEvent.Receive event) {
         if (event.packet instanceof ClientboundSoundPacket sound && sound.getSound().value().location().getPath().contains("note_block")) {
             if (ticks == -1) ticks = 0;
-            List<Note> notes = song.computeIfAbsent(ticks, _ -> new ArrayList<>());
+            List<Note> notes = song.computeIfAbsent(ticks, unused9 -> new ArrayList<>());
             var note = getNote(sound);
             if (note != null) {
                 notes.add(note);
@@ -177,7 +177,7 @@ public class NotebotCommand extends Command {
 
             file.close();
             info("Song saved.");
-        } catch (IOException _) {
+        } catch (IOException unused10) {
             info("Couldn't create the file.");
             MeteorClient.EVENT_BUS.unsubscribe(this);
         }

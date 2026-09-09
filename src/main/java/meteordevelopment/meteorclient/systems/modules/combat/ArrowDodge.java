@@ -16,8 +16,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.entity.projectile.arrow.Arrow;
-import net.minecraft.world.entity.projectile.arrow.SpectralArrow;
+import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.entity.projectile.SpectralArrow;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3d;
 

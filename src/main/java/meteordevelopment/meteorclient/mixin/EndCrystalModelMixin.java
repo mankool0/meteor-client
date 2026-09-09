@@ -8,7 +8,7 @@ package meteordevelopment.meteorclient.mixin;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.render.Chams;
-import net.minecraft.client.model.object.crystal.EndCrystalModel;
+import net.minecraft.client.model.EndCrystalModel;
 import net.minecraft.client.renderer.entity.state.EndCrystalRenderState;
 import net.minecraft.util.Mth;
 import org.objectweb.asm.Opcodes;

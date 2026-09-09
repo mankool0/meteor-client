@@ -272,8 +272,8 @@ public class LongJump extends Module {
 
     private double getMoveSpeed() {
         double base = 0.2873;
-        if (mc.player.hasEffect(MobEffects.SPEED)) {
-            base *= 1.0 + 0.2 * (mc.player.getEffect(MobEffects.SPEED).getAmplifier() + 1);
+        if (mc.player.hasEffect(MobEffects.MOVEMENT_SPEED)) {
+            base *= 1.0 + 0.2 * (mc.player.getEffect(MobEffects.MOVEMENT_SPEED).getAmplifier() + 1);
         }
         return base;
     }

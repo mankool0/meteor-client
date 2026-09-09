@@ -5,7 +5,7 @@
 
 package meteordevelopment.meteorclient.events.entity;
 
-import net.minecraft.world.entity.vehicle.boat.AbstractBoat;
+import net.minecraft.world.entity.vehicle.AbstractBoat;
 
 public class BoatMoveEvent {
     private static final BoatMoveEvent INSTANCE = new BoatMoveEvent();

@@ -171,8 +171,8 @@ public class Freecam extends Module {
         perspective = mc.options.getCameraType();
         speedValue = speed.get();
 
-        Utils.set(pos, mc.gameRenderer.getMainCamera().position());
-        Utils.set(prevPos, mc.gameRenderer.getMainCamera().position());
+        Utils.set(pos, mc.gameRenderer.getMainCamera().getPosition());
+        Utils.set(prevPos, mc.gameRenderer.getMainCamera().getPosition());
 
         if (mc.options.getCameraType() == CameraType.THIRD_PERSON_FRONT) {
             yaw += 180;
@@ -351,8 +351,8 @@ public class Freecam extends Module {
         if (requireDoubleClick.get() && clickTs - prevClick > 500) return;
 
         Camera cam = mc.gameRenderer.getMainCamera();
-        Vec3 posVec = cam.position();
-        Vec3 lookVec = Vec3.directionFromRotation(cam.xRot(), cam.yRot());
+        Vec3 posVec = cam.getPosition();
+        Vec3 lookVec = Vec3.directionFromRotation(cam.getXRot(), cam.getYRot());
         short maxDist = 256;
         Vec3 max = posVec.add(lookVec.scale(maxDist));
 
@@ -370,7 +370,7 @@ public class Freecam extends Module {
     private void onMouseClick(MouseClickEvent event) {
         if (checkGuiMove()) return;
 
-        if (baritoneClick.get() && event.action == KeyAction.Press && mc.options.keyAttack.matchesMouse(event.click)) {
+        if (baritoneClick.get() && event.action == KeyAction.Press && mc.options.keyAttack.matchesMouse(event.button)) {
             setGoal();
         }
 

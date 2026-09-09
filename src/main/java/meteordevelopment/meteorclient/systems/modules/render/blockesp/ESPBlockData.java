@@ -98,14 +98,14 @@ public class ESPBlockData implements IGeneric<ESPBlockData>, IChangeable, IBlock
 
     @Override
     public ESPBlockData fromTag(CompoundTag tag) {
-        shapeMode = ShapeMode.valueOf(tag.getStringOr("shapeMode", ""));
-        lineColor.fromTag(tag.getCompoundOrEmpty("lineColor"));
-        sideColor.fromTag(tag.getCompoundOrEmpty("sideColor"));
+        shapeMode = ShapeMode.valueOf(tag.getString("shapeMode"));
+        lineColor.fromTag(tag.getCompound("lineColor"));
+        sideColor.fromTag(tag.getCompound("sideColor"));
 
-        tracer = tag.getBooleanOr("tracer", false);
-        tracerColor.fromTag(tag.getCompoundOrEmpty("tracerColor"));
+        tracer = tag.getBoolean("tracer");
+        tracerColor.fromTag(tag.getCompound("tracerColor"));
 
-        changed = tag.getBooleanOr("changed", false);
+        changed = tag.getBoolean("changed");
 
         return this;
     }

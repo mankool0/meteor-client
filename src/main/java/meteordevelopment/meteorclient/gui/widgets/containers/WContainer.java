@@ -9,9 +9,9 @@ import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
 import meteordevelopment.meteorclient.gui.utils.Cell;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
 import net.minecraft.client.MouseHandler;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import meteordevelopment.meteorclient.gui.utils.CharacterEvent;
+import meteordevelopment.meteorclient.gui.utils.KeyEvent;
+import meteordevelopment.meteorclient.gui.utils.MouseButtonEvent;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -160,7 +160,7 @@ public abstract class WContainer extends WWidget {
             for (Cell<?> cell : cells) {
                 if (propagateEvents(cell.widget()) && cell.widget().mouseClicked(click, doubled)) return true;
             }
-        } catch (ConcurrentModificationException _) {
+        } catch (ConcurrentModificationException unused1) {
         }
 
         return super.mouseClicked(click, doubled);
@@ -172,7 +172,7 @@ public abstract class WContainer extends WWidget {
             for (Cell<?> cell : cells) {
                 if (propagateEvents(cell.widget()) && cell.widget().mouseReleased(click)) return true;
             }
-        } catch (ConcurrentModificationException _) {
+        } catch (ConcurrentModificationException unused2) {
         }
 
         return super.mouseReleased(click);
@@ -184,7 +184,7 @@ public abstract class WContainer extends WWidget {
             for (Cell<?> cell : cells) {
                 if (propagateEvents(cell.widget())) cell.widget().mouseMoved(mouseX, mouseY, lastMouseX, lastMouseY);
             }
-        } catch (ConcurrentModificationException _) {
+        } catch (ConcurrentModificationException unused3) {
         }
 
         super.mouseMoved(mouseX, mouseY, lastMouseX, lastMouseY);
@@ -196,7 +196,7 @@ public abstract class WContainer extends WWidget {
             for (Cell<?> cell : cells) {
                 if (propagateEvents(cell.widget()) && cell.widget().mouseScrolled(amount)) return true;
             }
-        } catch (ConcurrentModificationException _) {
+        } catch (ConcurrentModificationException unused4) {
         }
 
         return super.mouseScrolled(amount);
@@ -208,7 +208,7 @@ public abstract class WContainer extends WWidget {
             for (Cell<?> cell : cells) {
                 if (propagateEvents(cell.widget()) && cell.widget().keyPressed(input)) return true;
             }
-        } catch (ConcurrentModificationException _) {
+        } catch (ConcurrentModificationException unused5) {
         }
 
         return onKeyPressed(input);
@@ -220,7 +220,7 @@ public abstract class WContainer extends WWidget {
             for (Cell<?> cell : cells) {
                 if (propagateEvents(cell.widget()) && cell.widget().keyRepeated(input)) return true;
             }
-        } catch (ConcurrentModificationException _) {
+        } catch (ConcurrentModificationException unused6) {
         }
 
         return onKeyRepeated(input);
@@ -232,7 +232,7 @@ public abstract class WContainer extends WWidget {
             for (Cell<?> cell : cells) {
                 if (propagateEvents(cell.widget()) && cell.widget().charTyped(input)) return true;
             }
-        } catch (ConcurrentModificationException _) {
+        } catch (ConcurrentModificationException unused7) {
         }
 
         return super.charTyped(input);

@@ -5,11 +5,9 @@
 
 package meteordevelopment.meteorclient.mixin;
 
-import net.minecraft.client.multiplayer.ClientSuggestionProvider;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.LastSeenMessagesTracker;
 import net.minecraft.network.chat.SignedMessageChain;
-import net.minecraft.network.protocol.game.ClientboundCommandsPacket;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.world.flag.FeatureFlagSet;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,9 +29,4 @@ public interface ClientPacketListenerAccessor {
 
     @Accessor("enabledFeatures")
     FeatureFlagSet meteor$getEnabledFeatures();
-
-    @Accessor("COMMAND_NODE_BUILDER")
-    static ClientboundCommandsPacket.NodeBuilder<ClientSuggestionProvider> meteor$getCommandNodeFactory() {
-        return null;
-    }
 }

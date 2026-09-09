@@ -37,9 +37,9 @@ public abstract class BlockItemMixin {
         method = "place(Lnet/minecraft/world/item/context/BlockPlaceContext;)Lnet/minecraft/world/InteractionResult;",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/world/level/block/state/BlockState;is(Ljava/lang/Object;)Z"
+            target = "Lnet/minecraft/world/level/block/state/BlockState;is(Lnet/minecraft/world/level/block/Block;)Z"
         ),
-        name = "placedState")
+        index = 3)
     private BlockState modifyState(BlockState placedState, BlockPlaceContext placeContext) {
         var noGhostBlocks = Modules.get().get(NoGhostBlocks.class);
 

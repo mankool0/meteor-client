@@ -131,11 +131,11 @@ public abstract class GuiTheme implements ISerializable<GuiTheme> {
     }
 
     public WTextBox textBox(String text, String placeholder) {
-        return textBox(text, placeholder, (_, _) -> true, null);
+        return textBox(text, placeholder, (unused1, unused2) -> true, null);
     }
 
     public WTextBox textBox(String text) {
-        return textBox(text, (_, _) -> true, null);
+        return textBox(text, (unused3, unused4) -> true, null);
     }
 
     public abstract <T> WDropdown<T> dropdown(T[] values, T value);
@@ -371,13 +371,14 @@ public abstract class GuiTheme implements ISerializable<GuiTheme> {
 
     @Override
     public GuiTheme fromTag(CompoundTag tag) {
-        tag.getCompound("settings").ifPresent(settings::fromTag);
+        if (tag.contains("settings")) settings.fromTag(tag.getCompound("settings"));
 
-        tag.getCompound("windowConfigs").ifPresent(configs -> {
-            for (String id : configs.keySet()) {
-                windowConfigs.put(id, new WindowConfig().fromTag(configs.getCompound(id).get()));
+        if (tag.contains("windowConfigs")) {
+            CompoundTag configs = tag.getCompound("windowConfigs");
+            for (String id : configs.getAllKeys()) {
+                windowConfigs.put(id, new WindowConfig().fromTag(configs.getCompound(id)));
             }
-        });
+        }
 
         return this;
     }

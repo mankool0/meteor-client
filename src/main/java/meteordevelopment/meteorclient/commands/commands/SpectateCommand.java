@@ -26,14 +26,14 @@ public class SpectateCommand extends Command {
 
     @Override
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
-        builder.then(literal("reset").executes(_ -> {
+        builder.then(literal("reset").executes(unused1 -> {
             mc.setCameraEntity(mc.player);
             return SINGLE_SUCCESS;
         }));
 
         builder.then(argument("player", PlayerArgumentType.create()).executes(context -> {
             mc.setCameraEntity(PlayerArgumentType.get(context));
-            mc.player.sendSystemMessage(Component.literal("Sneak to un-spectate."));
+            mc.player.displayClientMessage(Component.literal("Sneak to un-spectate."), false);
             MeteorClient.EVENT_BUS.subscribe(shiftListener);
             return SINGLE_SUCCESS;
         }));

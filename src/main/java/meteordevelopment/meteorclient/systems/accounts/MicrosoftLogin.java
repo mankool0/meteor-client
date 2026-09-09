@@ -10,7 +10,7 @@ import com.sun.net.httpserver.HttpServer;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.utils.network.Http;
 import net.minecraft.util.Tuple;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

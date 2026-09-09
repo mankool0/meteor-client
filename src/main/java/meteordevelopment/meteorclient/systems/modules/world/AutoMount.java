@@ -21,11 +21,11 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.animal.equine.Llama;
-import net.minecraft.world.entity.animal.equine.SkeletonHorse;
-import net.minecraft.world.entity.animal.equine.ZombieHorse;
-import net.minecraft.world.entity.animal.pig.Pig;
+import net.minecraft.world.entity.Saddleable;
+import net.minecraft.world.entity.animal.horse.Llama;
+import net.minecraft.world.entity.animal.horse.SkeletonHorse;
+import net.minecraft.world.entity.animal.horse.ZombieHorse;
+import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.monster.Strider;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.phys.EntityHitResult;
@@ -69,9 +69,10 @@ public class AutoMount extends Module {
         for (Entity entity : mc.level.entitiesForRendering()) {
             if (!entities.get().contains(entity.getType())) continue;
             if (!PlayerUtils.isWithin(entity, 4)) continue;
-            if ((entity instanceof Pig || entity instanceof SkeletonHorse || entity instanceof Strider || entity instanceof ZombieHorse) && !((Mob) entity).isSaddled())
+            // PORT(1.21.4): Mob.isSaddled() does not exist on 1.21.4 - saddle state lives on the Saddleable interface.
+            if ((entity instanceof Pig || entity instanceof SkeletonHorse || entity instanceof Strider || entity instanceof ZombieHorse) && !((Saddleable) entity).isSaddled())
                 continue;
-            if (!(entity instanceof Llama) && entity instanceof Mob mobEntity && checkSaddle.get() && !mobEntity.isSaddled())
+            if (!(entity instanceof Llama) && entity instanceof Saddleable saddleable && checkSaddle.get() && !saddleable.isSaddled())
                 continue;
             interact(entity, rotate.get());
             return;
@@ -87,7 +88,6 @@ public class AutoMount extends Module {
     }
 
     private void interact(Entity entity) {
-        EntityHitResult location = new EntityHitResult(entity, entity.getBoundingBox().getCenter());
-        mc.gameMode.interact(mc.player, entity, location, InteractionHand.MAIN_HAND);
+        mc.gameMode.interact(mc.player, entity, InteractionHand.MAIN_HAND);
     }
 }

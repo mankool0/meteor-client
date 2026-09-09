@@ -134,7 +134,7 @@ public class Modules extends System<Modules> {
     }
 
     public List<Module> getGroup(Category category) {
-        return groups.computeIfAbsent(category, _ -> new ArrayList<>());
+        return groups.computeIfAbsent(category, unused1 -> new ArrayList<>());
     }
 
     public Collection<Module> getAll() {
@@ -349,10 +349,10 @@ public class Modules extends System<Modules> {
     public Modules fromTag(CompoundTag tag) {
         disableAll();
 
-        ListTag modulesTag = tag.getListOrEmpty("modules");
+        ListTag modulesTag = tag.getList("modules", Tag.TAG_COMPOUND);
         for (Tag moduleTagI : modulesTag) {
             CompoundTag moduleTag = (CompoundTag) moduleTagI;
-            Module module = get(moduleTag.getStringOr("name", ""));
+            Module module = get(moduleTag.getString("name"));
             if (module != null) module.fromTag(moduleTag);
         }
 

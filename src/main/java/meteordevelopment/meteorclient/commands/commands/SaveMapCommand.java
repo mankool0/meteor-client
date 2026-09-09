@@ -51,7 +51,7 @@ public class SaveMapCommand extends Command {
 
     @Override
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
-        builder.executes(_ -> {
+        builder.executes(unused1 -> {
             saveMap(128);
 
             return SINGLE_SUCCESS;

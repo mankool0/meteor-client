@@ -8,7 +8,6 @@ package meteordevelopment.meteorclient.systems.modules.render;
 import meteordevelopment.meteorclient.events.render.RenderBlockEntityEvent;
 import meteordevelopment.meteorclient.events.world.ChunkOcclusionEvent;
 import meteordevelopment.meteorclient.events.world.ParticleEvent;
-import meteordevelopment.meteorclient.mixin.BlockEntityRenderStateAccessor;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -256,7 +255,7 @@ public class NoRender extends Module {
         .name("cave-culling")
         .description("Disables Minecraft's cave culling algorithm.")
         .defaultValue(false)
-        .onChanged(_ -> mc.levelRenderer.allChanged())
+        .onChanged(unused1 -> mc.levelRenderer.allChanged())
         .build()
     );
 
@@ -305,7 +304,7 @@ public class NoRender extends Module {
         .name("texture-rotations")
         .description("Changes texture rotations and model offsets to use a constant value instead of the block position.")
         .defaultValue(false)
-        .onChanged(_ -> mc.levelRenderer.allChanged())
+        .onChanged(unused2 -> mc.levelRenderer.allChanged())
         .build()
     );
 
@@ -560,7 +559,7 @@ public class NoRender extends Module {
 
     @EventHandler
     private void onRenderBlockEntity(RenderBlockEntityEvent event) {
-        if (blockEntities.get().contains(((BlockEntityRenderStateAccessor) event.blockEntityState).meteor$getBlockState().getBlock())) event.cancel();
+        if (blockEntities.get().contains(event.blockEntity.getBlockState().getBlock())) event.cancel();
     }
 
     // Entity

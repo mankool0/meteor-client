@@ -7,7 +7,7 @@ package meteordevelopment.meteorclient.mixin;
 
 import com.mojang.authlib.GameProfile;
 import meteordevelopment.meteorclient.mixininterface.IGuiMessageVisible;
-import net.minecraft.client.multiplayer.chat.GuiMessage;
+import net.minecraft.client.GuiMessage;
 import net.minecraft.util.FormattedCharSequence;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,7 +30,7 @@ public abstract class GuiMessageVisibleMixin implements IGuiMessageVisible {
     public String meteor$getText() {
         StringBuilder sb = new StringBuilder();
 
-        content.accept((_, _, codePoint) -> {
+        content.accept((unused1, unused2, codePoint) -> {
             sb.appendCodePoint(codePoint);
             return true;
         });

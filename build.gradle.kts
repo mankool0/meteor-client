@@ -44,7 +44,7 @@ val jij: Configuration by configurations.creating
 
 configurations {
     // include mods
-    implementation.configure {
+    named("modImplementation").configure {
         extendsFrom(modInclude)
     }
     include.configure {
@@ -63,22 +63,26 @@ configurations {
 dependencies {
     // Fabric
     minecraft(libs.minecraft)
-    implementation(libs.fabric.loader)
+    "mappings"(loom.officialMojangMappings())
+    "modImplementation"(libs.fabric.loader)
 
     val fapiVersion = libs.versions.fabric.api.get()
     modInclude(fabricApi.module("fabric-api-base", fapiVersion))
-    modInclude(fabricApi.module("fabric-resource-loader-v1", fapiVersion))
+    modInclude(fabricApi.module("fabric-resource-loader-v0", fapiVersion))
 
     // Compat fixes
-    compileOnly(fabricApi.module("fabric-renderer-indigo", fapiVersion))
-    compileOnly(libs.sodium) { isTransitive = false }
-    compileOnly(libs.lithium) { isTransitive = false }
-    compileOnly(libs.iris) { isTransitive = false }
-    compileOnly(libs.viafabricplus) { isTransitive = false }
-    compileOnly(libs.viafabricplus.api) { isTransitive = false }
+    "modCompileOnly"(fabricApi.module("fabric-renderer-indigo", fapiVersion))
+    "modCompileOnly"(libs.sodium) { isTransitive = false }
+    "modCompileOnly"(libs.lithium) { isTransitive = false }
+    "modCompileOnly"(libs.iris) { isTransitive = false }
+    "modCompileOnly"(libs.viafabricplus) { isTransitive = false }
+    "modCompileOnly"(libs.viafabricplus.api) { isTransitive = false }
 
-    compileOnly(libs.baritone)
-    compileOnly(libs.modmenu)
+    "modCompileOnly"(libs.baritone)
+    "modCompileOnly"(libs.modmenu)
+
+    // Annotations (provided transitively by newer fabric-api; explicit on 1.21.4)
+    compileOnly("org.jspecify:jspecify:1.0.0")
 
     // Libraries (JAR-in-JAR)
     jij(libs.orbit)
@@ -136,6 +140,9 @@ loom {
 }
 
 fun toMinecraftCompat(version: String): String {
+    // Legacy (pre-2026) versions like 1.21.4 pin the exact version
+    if (version.startsWith("1.")) return version
+
     val match = Regex("""^(\d{2})\.([1-9]\d*)(?:\.([1-9]\d*))?$""")
         .matchEntire(version)
         ?: error("Invalid Minecraft version format: $version. Expected YY.D or YY.D.H")
@@ -190,7 +197,8 @@ tasks {
         options.compilerArgs.addAll(
             listOf(
                 "-Xlint:deprecation",
-                "-Xlint:unchecked"
+                "-Xlint:unchecked",
+                "-Xmaxerrs", "10000"
             )
         )
     }
@@ -234,4 +242,9 @@ publishing {
             }
         }
     }
+}
+
+// Local, git-ignored deploy helper. No-op unless a deploy.gradle exists.
+if (file("deploy.gradle").exists()) {
+    apply(from = "deploy.gradle")
 }

@@ -7,7 +7,6 @@ package meteordevelopment.meteorclient.mixin;
 
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderBuffers;
-import net.minecraft.client.renderer.fog.FogRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
@@ -15,7 +14,4 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface GameRendererAccessor {
     @Accessor("renderBuffers")
     RenderBuffers meteor$renderBuffers();
-
-    @Accessor("fogRenderer")
-    FogRenderer meteor$fogRenderer();
 }

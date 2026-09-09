@@ -8,15 +8,15 @@ package meteordevelopment.meteorclient.utils.render;
 import meteordevelopment.meteorclient.utils.render.DisplayItemUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastManager;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -28,7 +28,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class MeteorToast implements Toast {
     private static final int TITLE_COLOR = Color.fromRGBA(145, 61, 226, 255);
     private static final int TEXT_COLOR = Color.fromRGBA(220, 220, 220, 255);
-    private static final Identifier TEXTURE = Identifier.parse("toast/advancement");
+    private static final ResourceLocation TEXTURE = ResourceLocation.parse("toast/advancement");
     private static final long DEFAULT_DURATION = 6000;
     private static final SimpleSoundInstance DEFAULT_SOUND = SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_CHIME.value(), 1.2f, 1);
 
@@ -108,19 +108,19 @@ public class MeteorToast implements Toast {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, Font font, long fullyVisibleForMs) {
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, TEXTURE, 0, 0, width(), height());
+    public void render(GuiGraphics graphics, Font font, long fullyVisibleForMs) {
+        graphics.blitSprite(RenderType::guiTextured, TEXTURE, 0, 0, width(), height());
 
         int textX = icon != null ? 28 : 12;
         int titleY = 12;
 
         if (text != null) {
-            graphics.text(font, text, textX, 18, TEXT_COLOR, false);
+            graphics.drawString(font, text, textX, 18, TEXT_COLOR, false);
             titleY = 7;
         }
 
-        graphics.text(font, title, textX, titleY, TITLE_COLOR, false);
+        graphics.drawString(font, title, textX, titleY, TITLE_COLOR, false);
 
-        if (icon != null) graphics.item(icon, 8, 8);
+        if (icon != null) graphics.renderItem(icon, 8, 8);
     }
 }

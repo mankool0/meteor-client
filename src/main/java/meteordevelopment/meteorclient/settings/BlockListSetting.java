@@ -10,7 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 
 import java.util.ArrayList;
@@ -43,7 +43,7 @@ public class BlockListSetting extends Setting<List<Block>> {
                 Block block = parseId(BuiltInRegistries.BLOCK, value);
                 if (block != null && (filter == null || filter.test(block))) blocks.add(block);
             }
-        } catch (Exception _) {
+        } catch (Exception unused1) {
         }
 
         return blocks;
@@ -55,7 +55,7 @@ public class BlockListSetting extends Setting<List<Block>> {
     }
 
     @Override
-    public Iterable<Identifier> getIdentifierSuggestions() {
+    public Iterable<ResourceLocation> getIdentifierSuggestions() {
         return BuiltInRegistries.BLOCK.keySet();
     }
 
@@ -74,9 +74,9 @@ public class BlockListSetting extends Setting<List<Block>> {
     protected List<Block> load(CompoundTag tag) {
         get().clear();
 
-        ListTag valueTag = tag.getListOrEmpty("value");
+        ListTag valueTag = tag.getList("value", Tag.TAG_STRING);
         for (Tag tagI : valueTag) {
-            Block block = BuiltInRegistries.BLOCK.getValue(Identifier.parse(tagI.asString().orElse("")));
+            Block block = BuiltInRegistries.BLOCK.getValue(ResourceLocation.parse(tagI.getAsString()));
 
             if (filter == null || filter.test(block)) get().add(block);
         }

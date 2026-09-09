@@ -67,11 +67,11 @@ public class Accounts extends System<Accounts> implements Iterable<Account<?>> {
 
     @Override
     public Accounts fromTag(CompoundTag tag) {
-        MeteorExecutor.execute(() -> accounts = NbtUtils.listFromTag(tag.getListOrEmpty("accounts"), tag1 -> {
+        MeteorExecutor.execute(() -> accounts = NbtUtils.listFromTag(tag.getList("accounts", 10), tag1 -> {
             CompoundTag t = (CompoundTag) tag1;
             if (!t.contains("type")) return null;
 
-            AccountType type = AccountType.valueOf(t.getStringOr("type", ""));
+            AccountType type = AccountType.valueOf(t.getString("type"));
 
             try {
                 return switch (type) {
@@ -80,7 +80,7 @@ public class Accounts extends System<Accounts> implements Iterable<Account<?>> {
                     case TheAltening -> new TheAlteningAccount(null).fromTag(t);
                     case Session -> new SessionAccount(null).fromTag(t);
                 };
-            } catch (NbtException _) {
+            } catch (NbtException unused1) {
                 return null;
             }
         }));

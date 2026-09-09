@@ -6,10 +6,8 @@
 package meteordevelopment.meteorclient.gui.renderer.packer;
 
 import com.mojang.blaze3d.platform.TextureUtil;
-import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.TextureFormat;
 import meteordevelopment.meteorclient.renderer.Texture;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.stb.STBImageResize;
@@ -31,7 +29,7 @@ public class TexturePacker {
 
     private final List<Image> images = new ArrayList<>();
 
-    public GuiTexture add(Identifier id) {
+    public GuiTexture add(ResourceLocation id) {
         try {
             InputStream in = mc.getResourceManager().getResource(id).get().open();
             GuiTexture texture = new GuiTexture();
@@ -80,7 +78,7 @@ public class TexturePacker {
         int height = (int) (srcHeight * scaleFactor);
 
         ByteBuffer imageBuffer = BufferUtils.createByteBuffer(width * height * 4);
-        STBImageResize.stbir_resize_uint8_linear(srcImageBuffer, srcWidth, srcHeight, 0, imageBuffer, width, height, 0, 4);
+        STBImageResize.stbir_resize_uint8(srcImageBuffer, srcWidth, srcHeight, 0, imageBuffer, width, height, 0, 4);
 
         TextureRegion region = new TextureRegion(width, height);
         texture.add(region);
@@ -142,7 +140,7 @@ public class TexturePacker {
 
         ((Buffer) buffer).rewind();
 
-        Texture texture = new Texture(width, height, TextureFormat.RGBA8, FilterMode.LINEAR, FilterMode.LINEAR);
+        Texture texture = new Texture(width, height, Texture.Format.RGBA8, Texture.Filter.LINEAR, Texture.Filter.LINEAR);
         texture.upload(buffer);
 
         return texture;

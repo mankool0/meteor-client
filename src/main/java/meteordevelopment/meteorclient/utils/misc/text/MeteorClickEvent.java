@@ -5,26 +5,22 @@
 
 package meteordevelopment.meteorclient.utils.misc.text;
 
-import meteordevelopment.meteorclient.mixin.ScreenMixin;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.ClickEvent;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * This class does nothing except ensure that {@link ClickEvent}'s containing Meteor Client commands can only be executed if they come from the client.
  *
- * @see ScreenMixin#onDefaultHandleClickEvent(ClickEvent, Minecraft, Screen, CallbackInfo)
+ * @see meteordevelopment.meteorclient.mixin.ScreenMixin
  */
-public class MeteorClickEvent implements ClickEvent {
+public class MeteorClickEvent extends ClickEvent {
     public final String value;
 
     public MeteorClickEvent(String value) {
-        this.value = value;
+        this(Action.RUN_COMMAND, value);
     }
 
-    @Override
-    public Action action() {
-        return Action.RUN_COMMAND;
+    public MeteorClickEvent(Action action, String value) {
+        super(action, value);
+        this.value = value;
     }
 }

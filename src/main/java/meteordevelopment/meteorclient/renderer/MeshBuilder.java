@@ -5,9 +5,6 @@
 
 package meteordevelopment.meteorclient.renderer;
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import net.fabricmc.loader.api.FabricLoader;
@@ -17,6 +14,7 @@ import org.lwjgl.BufferUtils;
 import java.nio.ByteBuffer;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
+import static org.lwjgl.opengl.GL32C.*;
 import static org.lwjgl.system.MemoryUtil.*;
 
 public class MeshBuilder {
@@ -24,7 +22,7 @@ public class MeshBuilder {
 
     public double alpha = 1;
 
-    private final VertexFormat format;
+    private final MeteorRenderPipeline pipeline;
     private final int primitiveVerticesSize;
     private final int primitiveIndicesCount;
 
@@ -39,18 +37,17 @@ public class MeshBuilder {
     private boolean building;
     private double cameraX, cameraZ;
 
-    public MeshBuilder(RenderPipeline pipeline) {
-        this(pipeline.getVertexFormat(), pipeline.getVertexFormatMode());
+    private int vao, vbo, ibo;
+    private boolean gpuInitialized;
+
+    public MeshBuilder(MeteorRenderPipeline pipeline) {
+        this.pipeline = pipeline;
+        primitiveVerticesSize = pipeline.vertexSize;
+        primitiveIndicesCount = pipeline.drawMode.indicesCount;
     }
 
-    public MeshBuilder(VertexFormat format, VertexFormat.Mode drawMode) {
-        this.format = format;
-        primitiveVerticesSize = format.getVertexSize();
-        primitiveIndicesCount = drawMode.primitiveLength;
-    }
-
-    public MeshBuilder(VertexFormat format, VertexFormat.Mode drawMode, int vertexCount, int indexCount) {
-        this(format, drawMode);
+    public MeshBuilder(MeteorRenderPipeline pipeline, int vertexCount, int indexCount) {
+        this(pipeline);
         allocateBuffers(vertexCount, indexCount);
     }
 
@@ -64,7 +61,7 @@ public class MeshBuilder {
         building = true;
 
         if (Utils.rendering3D) {
-            Vec3 camera = mc.gameRenderer.getMainCamera().position();
+            Vec3 camera = mc.gameRenderer.getMainCamera().getPosition();
 
             cameraX = camera.x;
             cameraZ = camera.z;
@@ -218,18 +215,76 @@ public class MeshBuilder {
         return building;
     }
 
-    public GpuBuffer getVertexBuffer() {
-        vertices.limit(getVerticesOffset());
-        return format.uploadImmediateVertexBuffer(vertices);
-    }
-
-    public GpuBuffer getIndexBuffer() {
-        indices.limit(indicesCount * Integer.BYTES);
-        return format.uploadImmediateIndexBuffer(indices);
-    }
-
     public int getIndicesCount() {
         return indicesCount;
+    }
+
+    public MeteorRenderPipeline getPipeline() {
+        return pipeline;
+    }
+
+    /** Uploads the current buffers and issues the draw call. GL state and shader must already be set up. */
+    public void draw() {
+        if (indicesCount <= 0) return;
+
+        if (!gpuInitialized) initGpu();
+
+        // Bind our vao before touching the index buffer. The GL_ELEMENT_ARRAY_BUFFER binding is part of
+        // vertex array object state, so uploading indices while Minecraft's vao is still bound would
+        // overwrite its element buffer and make its next draw call read indices from a null client pointer.
+        GL.bindVertexArray(vao);
+
+        GL.bindVertexBuffer(vbo);
+        vertices.limit(getVerticesOffset());
+        GL.bufferData(GL_ARRAY_BUFFER, vertices, GL_DYNAMIC_DRAW);
+        vertices.limit(vertices.capacity());
+
+        GL.bindIndexBuffer(ibo);
+        indices.limit(indicesCount * Integer.BYTES);
+        GL.bufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_DYNAMIC_DRAW);
+        indices.limit(indices.capacity());
+
+        GL.drawElements(pipeline.drawMode.getGL(), indicesCount, GL_UNSIGNED_INT);
+
+        GL.bindVertexBuffer(0);
+        GL.bindVertexArray(0);
+    }
+
+    public void destroy() {
+        if (!gpuInitialized) return;
+
+        GL.deleteBuffer(ibo);
+        GL.deleteBuffer(vbo);
+        GL.deleteVertexArray(vao);
+
+        gpuInitialized = false;
+    }
+
+    private void initGpu() {
+        vao = GL.genVertexArray();
+        GL.bindVertexArray(vao);
+
+        vbo = GL.genBuffer();
+        GL.bindVertexBuffer(vbo);
+
+        ibo = GL.genBuffer();
+        GL.bindIndexBuffer(ibo);
+
+        int stride = pipeline.vertexSize;
+        int offset = 0;
+        for (int i = 0; i < pipeline.attribs.length; i++) {
+            MeteorRenderPipeline.Attrib attrib = pipeline.attribs[i];
+
+            GL.enableVertexAttribute(i);
+            GL.vertexAttribute(i, attrib.count, attrib.getType(), attrib.normalized, stride, offset);
+
+            offset += attrib.size;
+        }
+
+        GL.bindVertexBuffer(0);
+        GL.bindVertexArray(0);
+
+        gpuInitialized = true;
     }
 
     private int getVerticesOffset() {

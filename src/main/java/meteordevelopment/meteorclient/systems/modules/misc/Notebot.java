@@ -780,7 +780,7 @@ public class Notebot extends Module {
                     if (blockState.getBlock() != Blocks.NOTE_BLOCK) continue;
 
                     // Copied from ServerPlayNetworkHandler#onPlayerInteractBlock
-                    if (!mc.player.isWithinBlockInteractionRange(pos, 1)) continue;
+                    if (!mc.player.canInteractWithBlock(pos, 1)) continue;
 
                     if (!isValidScanSpot(pos)) continue;
 
@@ -927,7 +927,7 @@ public class Notebot extends Module {
         if (mc.gameMode == null) return;
         try {
             mc.gameMode.startPrediction(mc.level, sequence -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN, sequence));
-        } catch (NullPointerException _) {
+        } catch (NullPointerException unused1) {
         }
     }
 

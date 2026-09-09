@@ -20,9 +20,9 @@ import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
-import net.minecraft.resources.Identifier;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Quaternionf;
@@ -55,20 +55,18 @@ public class HudRenderer {
         })
         .build(CacheLoader.from(HudRenderer::loadFont));
 
-    public GuiGraphicsExtractor graphics;
+    public GuiGraphics graphics;
     public double delta;
 
     private HudRenderer() {
         MeteorClient.EVENT_BUS.subscribe(this);
     }
 
-    public void begin(GuiGraphicsExtractor graphics) {
+    public void begin(GuiGraphics graphics) {
         Renderer2D.COLOR.begin();
 
         this.graphics = graphics;
         this.delta = Utils.frameTime;
-
-        graphics.nextStratum();
 
         if (!hud.hasCustomFont()) {
             VanillaTextRenderer.INSTANCE.scaleIndividually = true;
@@ -89,7 +87,7 @@ public class HudRenderer {
                         .attachments(mc.getMainRenderTarget())
                         .pipeline(MeteorRenderPipelines.UI_TEXT)
                         .mesh(fontHolder.getMesh())
-                        .sampler("u_Texture", fontHolder.font.texture.getTextureView(), fontHolder.font.texture.getSampler())
+                        .sampler("u_Texture", fontHolder.font.texture)
                         .end();
                 } else {
                     it.remove();
@@ -105,8 +103,6 @@ public class HudRenderer {
 
         for (Runnable task : postTasks) task.run();
         postTasks.clear();
-
-        graphics.nextStratum();
 
         graphics = null;
     }
@@ -127,10 +123,17 @@ public class HudRenderer {
         Renderer2D.COLOR.triangle(x1, y1, x2, y2, x3, y3, color);
     }
 
-    public void texture(Identifier id, double x, double y, double width, double height, Color color) {
+    public void texture(ResourceLocation id, double x, double y, double width, double height, Color color) {
         Renderer2D.TEXTURE.begin();
         Renderer2D.TEXTURE.texQuad(x, y, width, height, color);
-        Renderer2D.TEXTURE.render(mc.getTextureManager().getTexture(id).getTextureView(), mc.getTextureManager().getTexture(id).getSampler());
+        Renderer2D.TEXTURE.end();
+
+        MeshRenderer.begin()
+            .attachments(mc.getMainRenderTarget())
+            .pipeline(MeteorRenderPipelines.UI_TEXTURED)
+            .mesh(Renderer2D.TEXTURE.triangles)
+            .sampler("u_Texture", id)
+            .end();
     }
 
     public double text(String text, double x, double y, Color color, boolean shadow, double scale) {
@@ -214,7 +217,7 @@ public class HudRenderer {
     }
 
     public void item(ItemStack itemStack, int x, int y, float scale, boolean overlay, String countOverlay) {
-        RenderUtils.drawItem(graphics, itemStack, x, y, scale, overlay, countOverlay, true);
+        RenderUtils.drawItem(graphics, itemStack, x, y, scale, overlay, countOverlay);
     }
 
     public void item(ItemStack itemStack, int x, int y, float scale, boolean overlay) {
@@ -236,15 +239,7 @@ public class HudRenderer {
         entity.yHeadRot = entity.getYRot();
         entity.yHeadRotO = entity.getYRot();
 
-        var state = (LivingEntityRenderState) mc.getEntityRenderDispatcher().getRenderer(entity).createRenderState(entity, 1);
-
-        entity.yBodyRot = previousBodyYaw;
-        entity.setYRot(previousYaw);
-        entity.setXRot(previousPitch);
-        entity.yHeadRot = lastLastHeadYaw;
-        entity.yHeadRotO = lastHeadYaw;
-
-        float s = 1.0f / mc.getWindow().getGuiScale();
+        float s = 1.0f / (float) mc.getWindow().getGuiScale();
         int x1 = (int) (x * s);
         int y1 = (int) (y * s);
         int x2 = (int) ((x + width) * s);
@@ -254,7 +249,16 @@ public class HudRenderer {
         Vector3f translation = new Vector3f(0, 1f, 0);
         Quaternionf rotation = new Quaternionf().rotateZ((float) Math.PI);
 
-        graphics.entity(state, scale, translation, rotation, null, x1, y1, x2, y2);
+        // PORT(1.21.4): GuiGraphics.entity(...) does not exist, render through InventoryScreen like ref-1214 did
+        graphics.enableScissor(x1, y1, x2, y2);
+        InventoryScreen.renderEntityInInventory(graphics, (x1 + x2) / 2f, (y1 + y2) / 2f, scale, translation, rotation, null, entity);
+        graphics.disableScissor();
+
+        entity.yBodyRot = previousBodyYaw;
+        entity.setYRot(previousYaw);
+        entity.setXRot(previousPitch);
+        entity.yHeadRot = lastLastHeadYaw;
+        entity.yHeadRotO = lastHeadYaw;
     }
 
     private FontHolder getFontHolder(double scale, boolean render) {

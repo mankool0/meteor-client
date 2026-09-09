@@ -16,6 +16,8 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.state.MapRenderState;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
@@ -23,7 +25,6 @@ import net.minecraft.world.item.MapItem;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix3x2fStack;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -150,13 +151,15 @@ public class MapHud extends HudElement {
         renderer.post(() -> {
             mc.getMapRenderer().extractRenderState(mapComponent, mapState, renderState);
 
-            Matrix3x2fStack matrices = renderer.graphics.pose();
-            matrices.pushMatrix();
-            matrices.scale(1f / mc.getWindow().getGuiScale());
-            matrices.translate(this.x, this.y);
-            matrices.scale(scale.get().floatValue());
-            renderer.graphics.map(renderState);
-            matrices.popMatrix();
+            PoseStack matrices = renderer.graphics.pose();
+            matrices.pushPose();
+            float invScale = 1f / (float) mc.getWindow().getGuiScale();
+            matrices.scale(invScale, invScale, 1);
+            matrices.translate(this.x, this.y, 0);
+            float mapScale = scale.get().floatValue();
+            matrices.scale(mapScale, mapScale, 1);
+            renderer.graphics.drawSpecial(bufferSource -> mc.getMapRenderer().render(renderState, matrices, bufferSource, false, LightTexture.FULL_BRIGHT));
+            matrices.popPose();
         });
     }
 

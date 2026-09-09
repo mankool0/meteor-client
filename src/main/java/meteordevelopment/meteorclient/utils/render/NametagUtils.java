@@ -5,11 +5,12 @@
 
 package meteordevelopment.meteorclient.utils.render;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.systems.RenderSystem;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.render.Zoom;
 import meteordevelopment.meteorclient.utils.Utils;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;
 import org.joml.*;
 
@@ -34,7 +35,7 @@ public class NametagUtils {
         model.set(modelView);
         NametagUtils.projection.set(RenderUtils.projection);
 
-        Utils.set(camera, mc.gameRenderer.getMainCamera().position());
+        Utils.set(camera, mc.gameRenderer.getMainCamera().getPosition());
         cameraNegated.set(camera);
         cameraNegated.negate();
 
@@ -85,14 +86,13 @@ public class NametagUtils {
         begin(matrices, pos);
     }
 
-    public static void begin(Vector3d pos, GuiGraphicsExtractor graphics) {
+    public static void begin(Vector3d pos, GuiGraphics graphics) {
         begin(pos);
 
-        Matrix3x2fStack matrices = graphics.pose();
-        matrices.pushMatrix();
-        matrices.scale(1.0f / mc.getWindow().getGuiScale());
-        matrices.translate((float) pos.x, (float) pos.y);
-        matrices.scale((float) scale, (float) scale);
+        PoseStack matrices = graphics.pose();
+        matrices.pushPose();
+        matrices.translate((float) pos.x, (float) pos.y, 0);
+        matrices.scale((float) scale, (float) scale, 1);
     }
 
     private static void begin(Matrix4fStack matrices, Vector3d pos) {
@@ -105,9 +105,9 @@ public class NametagUtils {
         RenderSystem.getModelViewStack().popMatrix();
     }
 
-    public static void end(GuiGraphicsExtractor graphics) {
+    public static void end(GuiGraphics graphics) {
         end();
-        graphics.pose().popMatrix();
+        graphics.pose().popPose();
     }
 
     private static double getScale(Vector3d pos) {

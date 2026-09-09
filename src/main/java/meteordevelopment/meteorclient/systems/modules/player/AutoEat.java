@@ -178,7 +178,7 @@ public class AutoEat extends Module {
     }
 
     private void startEating() {
-        prevSlot = mc.player.getInventory().getSelectedSlot();
+        prevSlot = mc.player.getInventory().selected;
         eat();
         if (!eating) return;
 
@@ -328,8 +328,8 @@ public class AutoEat extends Module {
     }
 
     public enum ThresholdMode {
-        Health((health, _) -> health),
-        Hunger((_, hunger) -> hunger),
+        Health((health, unused1) -> health),
+        Hunger((unused2, hunger) -> hunger),
         Any((health, hunger) -> health || hunger),
         Both((health, hunger) -> health && hunger);
 

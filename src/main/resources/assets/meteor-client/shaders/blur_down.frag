@@ -5,20 +5,17 @@ precision lowp float;
 in vec2 uv;
 out vec4 color;
 
-uniform sampler2D u_Texture;
-
-layout (std140) uniform BlurData {
-    vec2 u_HalfTexelSize;
-    float u_Offset;
-};
+uniform sampler2D uTexture;
+uniform vec2 uHalfTexelSize;
+uniform float uOffset;
 
 void main() {
     color = (
-        texture(u_Texture, uv) * 4 +
-        texture(u_Texture, uv - u_HalfTexelSize * u_Offset) +
-        texture(u_Texture, uv + u_HalfTexelSize * u_Offset) +
-        texture(u_Texture, uv + vec2(u_HalfTexelSize.x, -u_HalfTexelSize.y) * u_Offset) +
-        texture(u_Texture, uv - vec2(u_HalfTexelSize.x, -u_HalfTexelSize.y) * u_Offset)
+        texture(uTexture, uv) * 4 +
+        texture(uTexture, uv - uHalfTexelSize.xy * uOffset) +
+        texture(uTexture, uv + uHalfTexelSize.xy * uOffset) +
+        texture(uTexture, uv + vec2(uHalfTexelSize.x, -uHalfTexelSize.y) * uOffset) +
+        texture(uTexture, uv - vec2(uHalfTexelSize.x, -uHalfTexelSize.y) * uOffset)
     ) / 8;
     color.a = 1;
 }

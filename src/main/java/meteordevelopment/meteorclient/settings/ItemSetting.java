@@ -7,7 +7,7 @@ package meteordevelopment.meteorclient.settings;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 
 import java.util.function.Consumer;
@@ -33,7 +33,7 @@ public class ItemSetting extends Setting<Item> {
     }
 
     @Override
-    public Iterable<Identifier> getIdentifierSuggestions() {
+    public Iterable<ResourceLocation> getIdentifierSuggestions() {
         return BuiltInRegistries.ITEM.keySet();
     }
 
@@ -46,7 +46,7 @@ public class ItemSetting extends Setting<Item> {
 
     @Override
     public Item load(CompoundTag tag) {
-        value = BuiltInRegistries.ITEM.getValue(Identifier.parse(tag.getStringOr("value", "")));
+        value = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(tag.getString("value")));
 
         if (filter != null && !filter.test(value)) {
             for (Item item : BuiltInRegistries.ITEM) {

@@ -94,7 +94,7 @@ public class AutoMend extends Module {
     }
 
     private int getSlot() {
-        for (int i = 0; i < mc.player.getInventory().getNonEquipmentItems().size(); i++) {
+        for (int i = 0; i < mc.player.getInventory().items.size(); i++) {
             ItemStack itemStack = mc.player.getInventory().getItem(i);
             if (blacklist.get().contains(itemStack.getItem())) continue;
 
@@ -107,7 +107,7 @@ public class AutoMend extends Module {
     }
 
     private int getEmptySlot() {
-        for (int i = 0; i < mc.player.getInventory().getNonEquipmentItems().size(); i++) {
+        for (int i = 0; i < mc.player.getInventory().items.size(); i++) {
             if (mc.player.getInventory().getItem(i).isEmpty()) return i;
         }
 

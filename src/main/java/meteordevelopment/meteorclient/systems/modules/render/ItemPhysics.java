@@ -19,16 +19,16 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.client.resources.model.cuboid.ItemTransform;
-import net.minecraft.client.resources.model.geometry.BakedQuad;
+import net.minecraft.client.renderer.block.model.ItemTransform;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.item.ItemEntity;
 import org.joml.Vector3f;
-import org.joml.Vector3fc;
-
-import java.util.List;
 
 public class ItemPhysics extends Module {
+    private static final Direction[] FACES = { null, Direction.UP, Direction.DOWN, Direction.EAST, Direction.NORTH, Direction.SOUTH, Direction.WEST };
     private static final float PIXEL_SIZE = 1f / 16f;
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -40,7 +40,7 @@ public class ItemPhysics extends Module {
         .build()
     );
 
-    private final RandomSource random = RandomSource.createThreadLocalInstance();
+    private final RandomSource random = RandomSource.createNewThreadLocalInstance();
     private boolean skipTransformation;
 
     public ItemPhysics() {
@@ -60,7 +60,9 @@ public class ItemPhysics extends Module {
 
         for (int i = 0; i < ((ItemStackRenderStateAccessor) event.renderState.item).meteor$getActiveLayerCount(); i++) {
             ItemStackRenderState.LayerRenderState layer = ((ItemStackRenderStateAccessor) event.renderState.item).meteor$getLayers()[i];
-            ModelInfo info = getInfo(layer.prepareQuadList());
+            // PORT(1.21.4): needs-mixin - LayerRenderStateAccessor must expose @Accessor("model") BakedModel meteor$getModel()
+            // and change meteor$getTransform() to @Invoker("transform") (LayerRenderState has no "itemTransform" field on 1.21.4).
+            ModelInfo info = getInfo(((LayerRenderStateAccessor) layer).meteor$getModel());
 
             matrices.pushPose();
             applyTransformation(matrices, ((LayerRenderStateAccessor) layer).meteor$getTransform());
@@ -116,7 +118,7 @@ public class ItemPhysics extends Module {
                 translate(matrices, info, x, 0, z);
             }
 
-            event.renderState.item.submit(matrices, event.renderCommandQueue, event.light, OverlayTexture.NO_OVERLAY, event.renderState.outlineColor);
+            event.renderState.item.render(matrices, event.vertexConsumerProvider, event.light, OverlayTexture.NO_OVERLAY);
 
             matrices.popPose();
 
@@ -139,12 +141,12 @@ public class ItemPhysics extends Module {
 
     private void applyTransformation(PoseStack matrices, ItemTransform transform) {
         transform = new ItemTransform(
-            transform.rotation(),
-            new Vector3f(transform.translation().x(), 0, transform.translation().z()),
-            transform.scale()
+            transform.rotation,
+            new Vector3f(transform.translation.x(), 0, transform.translation.z()),
+            transform.scale
         );
 
-        transform.apply(false, matrices.last());
+        transform.apply(false, matrices);
     }
 
     private void offsetInWater(PoseStack matrices, ItemEntity entity) {
@@ -153,20 +155,31 @@ public class ItemPhysics extends Module {
         }
     }
 
-    private ModelInfo getInfo(List<BakedQuad> quads) {
+    private ModelInfo getInfo(BakedModel model) {
         float minX = Float.MAX_VALUE, maxX = Float.MIN_VALUE;
         float minY = Float.MAX_VALUE, maxY = Float.MIN_VALUE;
         float minZ = Float.MAX_VALUE, maxZ = Float.MIN_VALUE;
 
-        for (BakedQuad quad : quads) {
-            for (int i = 0; i < 4; i++) {
-                Vector3fc vec = quad.position(i);
-                minY = Math.min(minY, vec.y());
-                maxY = Math.max(maxY, vec.y());
-                minZ = Math.min(minZ, vec.z());
-                maxZ = Math.max(maxZ, vec.z());
-                minX = Math.min(minX, vec.x());
-                maxX = Math.max(maxX, vec.x());
+        if (model != null) {
+            for (Direction face : FACES) {
+                for (BakedQuad quad : model.getQuads(null, face, random)) {
+                    // PORT(1.21.4): BakedQuad has no position(i) - vertex data is packed ints, 8 per vertex, position floats at 0/1/2.
+                    int[] vertices = quad.getVertices();
+
+                    for (int i = 0; i < 4; i++) {
+                        int j = i * 8;
+                        float vecX = Float.intBitsToFloat(vertices[j]);
+                        float vecY = Float.intBitsToFloat(vertices[j + 1]);
+                        float vecZ = Float.intBitsToFloat(vertices[j + 2]);
+
+                        minY = Math.min(minY, vecY);
+                        maxY = Math.max(maxY, vecY);
+                        minZ = Math.min(minZ, vecZ);
+                        maxZ = Math.max(maxZ, vecZ);
+                        minX = Math.min(minX, vecX);
+                        maxX = Math.max(maxX, vecX);
+                    }
+                }
             }
         }
 

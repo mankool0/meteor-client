@@ -12,7 +12,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 
@@ -77,7 +77,7 @@ public class EntityTypeListSetting extends Setting<Set<EntityType<?>>> {
                     }
                 }
             }
-        } catch (Exception _) {
+        } catch (Exception unused1) {
         }
 
         return entities;
@@ -116,9 +116,9 @@ public class EntityTypeListSetting extends Setting<Set<EntityType<?>>> {
     public Set<EntityType<?>> load(CompoundTag tag) {
         get().clear();
 
-        ListTag valueTag = tag.getListOrEmpty("value");
+        ListTag valueTag = tag.getList("value", Tag.TAG_STRING);
         for (Tag tagI : valueTag) {
-            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(Identifier.parse(tagI.asString().orElse("")));
+            EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.getValue(ResourceLocation.parse(tagI.getAsString()));
             if (filter == null || filter.test(type)) get().add(type);
         }
 

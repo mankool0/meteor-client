@@ -170,12 +170,12 @@ public class Settings implements ISerializable<Settings>, Iterable<SettingGroup>
     public Settings fromTag(CompoundTag tag) {
         reset();
 
-        ListTag groupsTag = tag.getListOrEmpty("groups");
+        ListTag groupsTag = tag.getList("groups", Tag.TAG_COMPOUND);
 
         for (Tag t : groupsTag) {
             CompoundTag groupTag = (CompoundTag) t;
 
-            SettingGroup sg = getGroup(groupTag.getStringOr("name", ""));
+            SettingGroup sg = getGroup(groupTag.getString("name"));
             if (sg != null) sg.fromTag(groupTag);
         }
 

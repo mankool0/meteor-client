@@ -9,7 +9,7 @@ import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.renderer.Fonts;
 import meteordevelopment.meteorclient.renderer.text.*;
 import meteordevelopment.meteorclient.utils.files.ByteBufferUtils;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 import org.lwjgl.BufferUtils;

@@ -140,7 +140,7 @@ public class PacketMine extends Module {
         blocks.clear();
 
         if (shouldUpdateSlot) {
-            mc.player.connection.send(new ServerboundSetCarriedItemPacket(mc.player.getInventory().getSelectedSlot()));
+            mc.player.connection.send(new ServerboundSetCarriedItemPacket(mc.player.getInventory().selected));
             shouldUpdateSlot = false;
         }
     }
@@ -170,7 +170,7 @@ public class PacketMine extends Module {
         blocks.removeIf(MyBlock::shouldRemove);
 
         if (shouldUpdateSlot) {
-            mc.player.connection.send(new ServerboundSetCarriedItemPacket(mc.player.getInventory().getSelectedSlot()));
+            mc.player.connection.send(new ServerboundSetCarriedItemPacket(mc.player.getInventory().selected));
             shouldUpdateSlot = false;
             swapped = false;
         }
@@ -181,7 +181,7 @@ public class PacketMine extends Module {
 
             if (block.isReady() && !swapped && autoSwitch.get() && (!mc.player.isUsingItem() || !notOnUse.get())) {
                 FindItemResult slot = InvUtils.findFastestTool(block.blockState);
-                if (!slot.found() || mc.player.getInventory().getSelectedSlot() == slot.slot()) return;
+                if (!slot.found() || mc.player.getInventory().selected == slot.slot()) return;
                 mc.player.connection.send(new ServerboundSetCarriedItemPacket(slot.slot()));
                 swapped = true;
                 shouldUpdateSlot = true;
@@ -237,7 +237,7 @@ public class PacketMine extends Module {
             if (!mining) return 0;
 
             FindItemResult fir = InvUtils.findFastestTool(blockState);
-            return BlockUtils.getBreakDelta(fir.found() ? fir.slot() : mc.player.getInventory().getSelectedSlot(), blockState) * ((mc.player.tickCount - startTime) + 1);
+            return BlockUtils.getBreakDelta(fir.found() ? fir.slot() : mc.player.getInventory().selected, blockState) * ((mc.player.tickCount - startTime) + 1);
         }
 
         public void mine() {

@@ -66,7 +66,7 @@ public class Friends extends System<Friends> implements Iterable<Friend> {
     }
 
     public Friend get(PlayerInfo player) {
-        return get(player.getProfile().name());
+        return get(player.getProfile().getName());
     }
 
     public boolean isFriend(Player player) {
@@ -107,14 +107,14 @@ public class Friends extends System<Friends> implements Iterable<Friend> {
     public Friends fromTag(CompoundTag tag) {
         friends.clear();
 
-        for (Tag itemTag : tag.getListOrEmpty("friends")) {
+        for (Tag itemTag : tag.getList("friends", Tag.TAG_COMPOUND)) {
             CompoundTag friendTag = (CompoundTag) itemTag;
             if (!friendTag.contains("name")) continue;
 
-            String name = friendTag.getStringOr("name", "");
+            String name = friendTag.getString("name");
             if (get(name) != null) continue;
 
-            String uuid = friendTag.getStringOr("id", "");
+            String uuid = friendTag.getString("id");
             Friend friend = !uuid.isBlank()
                 ? new Friend(name, UndashedUuid.fromStringLenient(uuid))
                 : new Friend(name);

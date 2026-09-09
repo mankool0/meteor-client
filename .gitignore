@@ -13,6 +13,9 @@ logs
 *.iws
 *.ipr
 *.iml
+
+# Local, git-ignored deploy helper (see guarded apply in build.gradle.kts)
+deploy.gradle
 .idea/*
 !.idea/copyright/*
 !.idea/scopes/*

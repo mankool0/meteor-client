@@ -5,21 +5,14 @@
 
 package meteordevelopment.meteorclient.systems.modules.render;
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
-import com.mojang.blaze3d.buffers.Std140Builder;
-import com.mojang.blaze3d.buffers.Std140SizeCalculator;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.GpuTextureView;
-import com.mojang.blaze3d.textures.TextureFormat;
 import it.unimi.dsi.fastutil.ints.IntFloatImmutablePair;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.game.ResolutionChangedEvent;
 import meteordevelopment.meteorclient.events.render.RenderAfterWorldEvent;
 import meteordevelopment.meteorclient.gui.WidgetScreen;
-import meteordevelopment.meteorclient.renderer.FixedUniformStorage;
+import meteordevelopment.meteorclient.renderer.Framebuffer;
 import meteordevelopment.meteorclient.renderer.MeshRenderer;
+import meteordevelopment.meteorclient.renderer.MeteorRenderPipeline;
 import meteordevelopment.meteorclient.renderer.MeteorRenderPipelines;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
@@ -31,9 +24,6 @@ import meteordevelopment.orbit.listeners.ConsumerListener;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.DynamicUniformStorage;
-
-import java.nio.ByteBuffer;
 
 public class Blur extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -112,46 +102,24 @@ public class Blur extends Module {
         .build()
     );
 
-    private final GpuTextureView[] fbos = new GpuTextureView[6];
-    private GpuBufferSlice[] ubos;
+    private final Framebuffer[] fbos = new Framebuffer[6];
 
     private boolean enabled;
     private long fadeEndAt;
-    private float previousOffset = -1;
 
     public Blur() {
         super(Categories.Render, "blur", "Blurs background when in GUI screens.");
-
-        // Initialize fbos for the first time
-        for (int i = 0; i < fbos.length; i++) {
-            fbos[i] = createFbo(i);
-        }
 
         // The listeners need to run even when the module is not enabled
         MeteorClient.EVENT_BUS.subscribe(new ConsumerListener<>(ResolutionChangedEvent.class, event -> {
             // Resize all fbos
             for (int i = 0; i < fbos.length; i++) {
-                if (fbos[i] != null) {
-                    fbos[i].close();
-                }
-
-                fbos[i] = createFbo(i);
+                if (fbos[i] != null) fbos[i].resize();
+                else fbos[i] = new Framebuffer(1 / Math.pow(2, i));
             }
-
-            // Invalidate ubos
-            previousOffset = -1;
         }));
 
         MeteorClient.EVENT_BUS.subscribe(new ConsumerListener<>(RenderAfterWorldEvent.class, event -> onRenderAfterWorld()));
-    }
-
-    private GpuTextureView createFbo(int i) {
-        double scale = 1 / Math.pow(2, i);
-
-        int width = (int) (mc.getWindow().getWidth() * scale);
-        int height = (int) (mc.getWindow().getHeight() * scale);
-
-        return RenderSystem.getDevice().createTextureView(RenderSystem.getDevice().createTexture("Blur - " + i, 15, TextureFormat.RGBA8, width, height, 1, 1));
     }
 
     private void onRenderAfterWorld() {
@@ -177,6 +145,11 @@ public class Blur extends Module {
 
         if (!enabled) return;
 
+        // Initialize framebuffers if running for the first time
+        for (int i = 0; i < fbos.length; i++) {
+            if (fbos[i] == null) fbos[i] = new Framebuffer(1 / Math.pow(2, i));
+        }
+
         // Update progress
         double progress = 1;
 
@@ -192,23 +165,17 @@ public class Blur extends Module {
         int iterations = strength.leftInt();
         float offset = strength.rightFloat();
 
-        // Update uniforms
-        if (previousOffset != offset) {
-            updateUniforms(offset);
-            previousOffset = offset;
-        }
-
         // Initial downsample
-        renderToFbo(fbos[0], mc.getMainRenderTarget().getColorTextureView(), MeteorRenderPipelines.BLUR_DOWN, ubos[0]);
+        renderToFbo(fbos[0], mc.getMainRenderTarget().getColorTextureId(), MeteorRenderPipelines.BLUR_DOWN, offset);
 
         // Downsample
         for (int i = 0; i < iterations; i++) {
-            renderToFbo(fbos[i + 1], fbos[i], MeteorRenderPipelines.BLUR_DOWN, ubos[i + 1]);
+            renderToFbo(fbos[i + 1], fbos[i].texture, MeteorRenderPipelines.BLUR_DOWN, offset);
         }
 
         // Upsample
         for (int i = iterations; i >= 1; i--) {
-            renderToFbo(fbos[i - 1], fbos[i], MeteorRenderPipelines.BLUR_UP, ubos[i - 1]);
+            renderToFbo(fbos[i - 1], fbos[i].texture, MeteorRenderPipelines.BLUR_UP, offset);
         }
 
         // Render output
@@ -216,17 +183,18 @@ public class Blur extends Module {
             .attachments(mc.getMainRenderTarget())
             .pipeline(MeteorRenderPipelines.BLUR_PASSTHROUGH)
             .fullscreen()
-            .sampler("u_Texture", fbos[0], RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR)) // todo ???
+            .sampler("uTexture", fbos[0].texture)
             .end();
     }
 
-    private void renderToFbo(GpuTextureView targetFbo, GpuTextureView sourceTexture, RenderPipeline pipeline, GpuBufferSlice ubo) {
+    private void renderToFbo(Framebuffer targetFbo, int sourceTexture, MeteorRenderPipeline pipeline, float offset) {
         MeshRenderer.begin()
-            .attachments(targetFbo, null)
+            .attachments(targetFbo)
             .pipeline(pipeline)
             .fullscreen()
-            .uniform("BlurData", ubo)
-            .sampler("u_Texture", sourceTexture, RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR))
+            .uniform("uHalfTexelSize", 0.5 / targetFbo.width, 0.5 / targetFbo.height)
+            .uniform("uOffset", offset)
+            .sampler("uTexture", sourceTexture)
             .end();
     }
 
@@ -242,37 +210,4 @@ public class Blur extends Module {
         return false;
     }
 
-    // Uniforms
-
-    private void updateUniforms(float offset) {
-        UNIFORM_STORAGE.clear();
-
-        BlurUniformData[] uboData = new BlurUniformData[6];
-        for (int i = 0; i < uboData.length; i++) {
-            GpuTextureView fbo = fbos[i];
-            uboData[i] = new BlurUniformData(
-                0.5f / fbo.getWidth(0), 0.5f / fbo.getHeight(0),
-                offset
-            );
-        }
-
-        ubos = UNIFORM_STORAGE.writeAll(uboData);
-    }
-
-    private static final int UNIFORM_SIZE = new Std140SizeCalculator()
-        .putVec2()
-        .putFloat()
-        .get();
-
-    private static final FixedUniformStorage<BlurUniformData> UNIFORM_STORAGE = new FixedUniformStorage<>("Meteor - Blur UBO", UNIFORM_SIZE, 6);
-
-    private record BlurUniformData(float halfTexelSizeX, float halfTexelSizeY,
-                                   float offset) implements DynamicUniformStorage.DynamicUniform {
-        @Override
-        public void write(ByteBuffer buffer) {
-            Std140Builder.intoBuffer(buffer)
-                .putVec2(halfTexelSizeX, halfTexelSizeY)
-                .putFloat(offset);
-        }
-    }
 }

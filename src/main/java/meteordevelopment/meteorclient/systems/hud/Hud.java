@@ -47,7 +47,7 @@ public class Hud extends System<Hud> implements Iterable<HudElement> {
         .name("custom-font")
         .description("Text will use custom font.")
         .defaultValue(true)
-        .onChanged(_ -> {
+        .onChanged(unused1 -> {
             for (HudElement element : elements) element.onFontChanged();
         })
         .build()
@@ -231,7 +231,7 @@ public class Hud extends System<Hud> implements Iterable<HudElement> {
         if (Utils.isLoading()) return;
 
         if (!(active || HudEditorScreen.isOpen()) || shouldHideHud()) return;
-        if ((mc.options.hideGui || mc.debugEntries.isOverlayVisible()) && !HudEditorScreen.isOpen()) return;
+        if ((mc.options.hideGui || mc.getDebugOverlay().showDebugScreen()) && !HudEditorScreen.isOpen()) return;
 
         HudRenderer.INSTANCE.begin(event.graphics);
 
@@ -293,17 +293,17 @@ public class Hud extends System<Hud> implements Iterable<HudElement> {
             return this;
         }
 
-        tag.getBoolean("active").ifPresent(active1 -> active = active1);
-        settings.fromTag(tag.getCompoundOrEmpty("settings"));
+        if (tag.contains("active")) active = tag.getBoolean("active");
+        settings.fromTag(tag.getCompound("settings"));
 
         // Elements
         elements.clear();
 
-        for (Tag e : tag.getListOrEmpty("elements")) {
+        for (Tag e : tag.getList("elements", Tag.TAG_COMPOUND)) {
             CompoundTag c = (CompoundTag) e;
             if (c.getString("name").isEmpty()) continue;
 
-            HudElementInfo<?> info = infos.get(c.getString("name").get());
+            HudElementInfo<?> info = infos.get(c.getString("name"));
             if (info != null) {
                 HudElement element = info.create();
                 element.fromTag(c);

@@ -19,7 +19,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.EntityType;
@@ -98,23 +98,23 @@ public class RegistryEntryReferenceArgumentType<T> implements ArgumentType<Holde
         if (registryKey.isFor(registryRef)) {
             return reference;
         } else {
-            throw INVALID_TYPE_EXCEPTION.create(registryKey.identifier(), registryKey.registry(), registryRef.identifier());
+            throw INVALID_TYPE_EXCEPTION.create(registryKey.location(), registryKey.registry(), registryRef.location());
         }
     }
 
     @Override
     public Holder.Reference<T> parse(StringReader reader) throws CommandSyntaxException {
-        Identifier identifier = Identifier.read(reader);
+        ResourceLocation identifier = ResourceLocation.read(reader);
         ResourceKey<T> registryKey = ResourceKey.create(this.registryRef, identifier);
         return Minecraft.getInstance().getConnection().registryAccess()
             .lookupOrThrow(this.registryRef)
             .get(registryKey)
-            .orElseThrow(() -> NOT_FOUND_EXCEPTION.createWithContext(reader, identifier, this.registryRef.identifier()));
+            .orElseThrow(() -> NOT_FOUND_EXCEPTION.createWithContext(reader, identifier, this.registryRef.location()));
     }
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        return SharedSuggestionProvider.suggestResource(Minecraft.getInstance().getConnection().registryAccess().lookupOrThrow(this.registryRef).listElementIds().map(ResourceKey::identifier), builder);
+        return SharedSuggestionProvider.suggestResource(Minecraft.getInstance().getConnection().registryAccess().lookupOrThrow(this.registryRef).listElementIds().map(ResourceKey::location), builder);
     }
 
     @Override

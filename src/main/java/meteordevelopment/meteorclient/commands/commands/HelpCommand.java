@@ -30,7 +30,7 @@ public class HelpCommand extends Command {
             return SINGLE_SUCCESS;
         }));
 
-        builder.executes(_ -> {
+        builder.executes(unused1 -> {
             showHelp(this);
             return SINGLE_SUCCESS;
         });

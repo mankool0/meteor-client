@@ -44,7 +44,7 @@ public class EntityUtils {
     }
 
     public static boolean isAttackable(EntityType<?> type) {
-        return type != EntityType.AREA_EFFECT_CLOUD && type != EntityType.ARROW && type != EntityType.FALLING_BLOCK && type != EntityType.FIREWORK_ROCKET && type != EntityType.ITEM && type != EntityType.LLAMA_SPIT && type != EntityType.SPECTRAL_ARROW && type != EntityType.ENDER_PEARL && type != EntityType.EXPERIENCE_BOTTLE && type != EntityType.SPLASH_POTION && type != EntityType.LINGERING_POTION && type != EntityType.TRIDENT && type != EntityType.LIGHTNING_BOLT && type != EntityType.FISHING_BOBBER && type != EntityType.EXPERIENCE_ORB && type != EntityType.EGG;
+        return type != EntityType.AREA_EFFECT_CLOUD && type != EntityType.ARROW && type != EntityType.FALLING_BLOCK && type != EntityType.FIREWORK_ROCKET && type != EntityType.ITEM && type != EntityType.LLAMA_SPIT && type != EntityType.SPECTRAL_ARROW && type != EntityType.ENDER_PEARL && type != EntityType.EXPERIENCE_BOTTLE && type != EntityType.POTION && type != EntityType.TRIDENT && type != EntityType.LIGHTNING_BOLT && type != EntityType.FISHING_BOBBER && type != EntityType.EXPERIENCE_ORB && type != EntityType.EGG;
     }
 
     public static boolean isRideable(EntityType<?> type) {
@@ -58,7 +58,6 @@ public class EntityUtils {
             type == EntityType.LLAMA ||
             type == EntityType.TRADER_LLAMA ||
             type == EntityType.CAMEL ||
-            type == EntityType.CAMEL_HUSK ||
             type == EntityType.MINECART ||
             type == EntityType.OAK_BOAT ||
             type == EntityType.SPRUCE_BOAT ||
@@ -79,10 +78,7 @@ public class EntityUtils {
             type == EntityType.OAK_CHEST_BOAT ||
             type == EntityType.PALE_OAK_CHEST_BOAT ||
             type == EntityType.SPRUCE_CHEST_BOAT ||
-            type == EntityType.BAMBOO_CHEST_RAFT ||
-            type == EntityType.NAUTILUS ||
-            type == EntityType.ZOMBIE_NAUTILUS ||
-            type == EntityType.HAPPY_GHAST;
+            type == EntityType.BAMBOO_CHEST_RAFT; // PORT(1.21.4): CAMEL_HUSK, NAUTILUS, ZOMBIE_NAUTILUS, HAPPY_GHAST do not exist on 1.21.4
     }
 
     public static float getTotalHealth(LivingEntity target) {
@@ -145,8 +141,8 @@ public class EntityUtils {
     }
 
     public static boolean isInRenderDistance(double posX, double posZ) {
-        double x = Math.abs(mc.gameRenderer.getMainCamera().position().x - posX);
-        double z = Math.abs(mc.gameRenderer.getMainCamera().position().z - posZ);
+        double x = Math.abs(mc.gameRenderer.getMainCamera().getPosition().x - posX);
+        double z = Math.abs(mc.gameRenderer.getMainCamera().getPosition().z - posZ);
         double d = (mc.options.renderDistance().get() + 1) * 16;
 
         return x < d && z < d;

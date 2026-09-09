@@ -8,11 +8,15 @@ package meteordevelopment.meteorclient.mixin;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.EntityControl;
-import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.animal.horse.AbstractHorse;
+import net.minecraft.world.entity.monster.Strider;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(Mob.class)
+// PORT(1.21.4): Mob.isSaddled() does not exist on 1.21.4 - saddle state lives on the Saddleable interface,
+// implemented independently by AbstractHorse (and its subclass Camel), Pig and Strider.
+@Mixin({AbstractHorse.class, Pig.class, Strider.class})
 public abstract class MobMixin {
     @ModifyReturnValue(method = "isSaddled", at = @At("RETURN"))
     private boolean isSaddled(boolean original) {

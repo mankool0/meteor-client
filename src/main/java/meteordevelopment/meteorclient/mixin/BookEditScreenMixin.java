@@ -38,7 +38,7 @@ public abstract class BookEditScreenMixin extends Screen {
     private int currentPage;
 
     @Shadow
-    protected abstract void updatePageContent();
+    protected abstract void updateLocalCopy();
 
     @Shadow
     protected abstract void pageForward();
@@ -53,7 +53,7 @@ public abstract class BookEditScreenMixin extends Screen {
     @Inject(method = "init", at = @At("TAIL"))
     private void onInit(CallbackInfo ci) {
         addRenderableWidget(
-            new Button.Builder(Component.literal("Copy"), _ -> {
+            new Button.Builder(Component.literal("Copy"), unused1 -> {
                 ListTag listTag = new ListTag();
                 pages.stream().map(StringTag::valueOf).forEach(listTag::add);
 
@@ -70,9 +70,9 @@ public abstract class BookEditScreenMixin extends Screen {
                 }
 
                 try {
-                    GLFW.glfwSetClipboardString(mc.getWindow().handle(), Base64.getEncoder().encodeToString(bytes.array));
+                    GLFW.glfwSetClipboardString(mc.getWindow().getWindow(), Base64.getEncoder().encodeToString(bytes.array));
                 } catch (OutOfMemoryError exception) {
-                    GLFW.glfwSetClipboardString(mc.getWindow().handle(), exception.toString());
+                    GLFW.glfwSetClipboardString(mc.getWindow().getWindow(), exception.toString());
                 }
             })
                 .pos(4, 4)
@@ -81,14 +81,14 @@ public abstract class BookEditScreenMixin extends Screen {
         );
 
         addRenderableWidget(
-            new Button.Builder(Component.literal("Paste"), _ -> {
-                String clipboard = GLFW.glfwGetClipboardString(mc.getWindow().handle());
+            new Button.Builder(Component.literal("Paste"), unused2 -> {
+                String clipboard = GLFW.glfwGetClipboardString(mc.getWindow().getWindow());
                 if (clipboard == null) return;
 
                 byte[] bytes;
                 try {
                     bytes = Base64.getDecoder().decode(clipboard);
-                } catch (IllegalArgumentException _) {
+                } catch (IllegalArgumentException unused3) {
                     return;
                 }
                 DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytes));
@@ -96,20 +96,20 @@ public abstract class BookEditScreenMixin extends Screen {
                 try {
                     CompoundTag tag = NbtIo.readCompressed(in, NbtAccounter.unlimitedHeap());
 
-                    ListTag listTag = tag.getListOrEmpty("pages").copy();
+                    ListTag listTag = tag.getList("pages", 8).copy();
 
                     pages.clear();
                     for (int i = 0; i < listTag.size(); ++i) {
-                        pages.add(listTag.getStringOr(i, ""));
+                        pages.add(listTag.getString(i));
                     }
 
                     if (pages.isEmpty()) {
                         pages.add("");
                     }
 
-                    currentPage = tag.getIntOr("currentPage", 0);
+                    currentPage = tag.getInt("currentPage");
 
-                    updatePageContent();
+                    updateLocalCopy();
                 } catch (IOException e) {
                     MeteorClient.LOG.error("Error reading the data from your clipboard", e);
                 }

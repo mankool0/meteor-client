@@ -25,12 +25,12 @@ public class PotionSaver extends Module {
         .name("effects")
         .description("The effects to preserve.")
         .defaultValue(
-            STRENGTH.value(),
+            DAMAGE_BOOST.value(),
             ABSORPTION.value(),
-            RESISTANCE.value(),
+            DAMAGE_RESISTANCE.value(),
             FIRE_RESISTANCE.value(),
-            SPEED.value(),
-            HASTE.value(),
+            MOVEMENT_SPEED.value(),
+            DIG_SPEED.value(),
             REGENERATION.value(),
             WATER_BREATHING.value(),
             SATURATION.value(),

@@ -95,7 +95,7 @@ public class SettingColor extends Color {
     @Override
     public SettingColor fromTag(CompoundTag tag) {
         super.fromTag(tag);
-        rainbow = tag.getBooleanOr("rainbow", false);
+        rainbow = tag.getBoolean("rainbow");
         return this;
     }
 

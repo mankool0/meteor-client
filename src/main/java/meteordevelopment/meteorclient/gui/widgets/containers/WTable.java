@@ -176,7 +176,7 @@ public class WTable extends WContainer {
                 if (columnWidths.size() <= i) columnWidths.add(cellWidth);
                 else columnWidths.set(i, Math.max(columnWidths.getDouble(i), cellWidth));
 
-                if (cell.group != null) columnGroups.computeIfAbsent(cell.group, _ -> new IntArrayList()).add(i);
+                if (cell.group != null) columnGroups.computeIfAbsent(cell.group, unused1 -> new IntArrayList()).add(i);
 
                 // Calculate row expandX count
                 if (cell.expandCellX) rowExpandXCount++;

@@ -23,7 +23,7 @@ import net.minecraft.network.protocol.login.LoginProtocols;
 import net.minecraft.network.protocol.ping.PingPacketTypes;
 import net.minecraft.network.protocol.status.StatusPacketTypes;
 import net.minecraft.network.protocol.status.StatusProtocols;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,8 +33,8 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("unused")
 public class PacketUtils {
-    private static final Map<Identifier, PacketType<? extends @NotNull Packet<?>>> CLIENTBOUND_PACKETS_MAP;
-    private static final Map<Identifier, PacketType<? extends @NotNull Packet<?>>> SERVERBOUND_PACKETS_MAP;
+    private static final Map<ResourceLocation, PacketType<? extends @NotNull Packet<?>>> CLIENTBOUND_PACKETS_MAP;
+    private static final Map<ResourceLocation, PacketType<? extends @NotNull Packet<?>>> SERVERBOUND_PACKETS_MAP;
     private static final Set<PacketType<? extends @NotNull Packet<?>>> CLIENTBOUND_PACKETS;
     private static final Set<PacketType<? extends @NotNull Packet<?>>> SERVERBOUND_PACKETS;
 
@@ -50,31 +50,31 @@ public class PacketUtils {
         return SERVERBOUND_PACKETS;
     }
 
-    public static @Nullable PacketType<? extends @NotNull Packet<?>> getClientboundPacket(Identifier id) {
+    public static @Nullable PacketType<? extends @NotNull Packet<?>> getClientboundPacket(ResourceLocation id) {
         return CLIENTBOUND_PACKETS_MAP.get(id);
     }
 
-    public static @Nullable PacketType<? extends @NotNull Packet<?>> getServerboundPacket(Identifier id) {
+    public static @Nullable PacketType<? extends @NotNull Packet<?>> getServerboundPacket(ResourceLocation id) {
         return SERVERBOUND_PACKETS_MAP.get(id);
     }
 
-    public static @Nullable PacketType<? extends @NotNull Packet<?>> getPacket(Identifier id) {
+    public static @Nullable PacketType<? extends @NotNull Packet<?>> getPacket(ResourceLocation id) {
         @Nullable PacketType<? extends @NotNull Packet<?>> clientbound = getClientboundPacket(id);
         return clientbound != null ? clientbound : getServerboundPacket(id);
     }
 
     public static @Nullable PacketType<? extends @NotNull Packet<?>> getPacket(String name) {
         if (name.startsWith("clientbound/")) {
-            @Nullable Identifier identifier = Identifier.tryParse(name.substring(12));
+            @Nullable ResourceLocation identifier = ResourceLocation.tryParse(name.substring(12));
             return CLIENTBOUND_PACKETS_MAP.get(identifier);
         }
 
         if (name.startsWith("serverbound/")) {
-            @Nullable Identifier identifier = Identifier.tryParse(name.substring(12));
+            @Nullable ResourceLocation identifier = ResourceLocation.tryParse(name.substring(12));
             return SERVERBOUND_PACKETS_MAP.get(identifier);
         }
 
-        @Nullable Identifier identifier = Identifier.tryParse(name);
+        @Nullable ResourceLocation identifier = ResourceLocation.tryParse(name);
         if (identifier != null) {
             @Nullable PacketType<? extends @NotNull Packet<?>> type = getPacket(identifier);
             if (type != null) return type;
@@ -84,25 +84,25 @@ public class PacketUtils {
     }
 
     static {
-        ImmutableMap.Builder<@NotNull Identifier, @NotNull PacketType<? extends @NotNull Packet<?>>> clientbound = ImmutableMap.builder();
-        ImmutableMap.Builder<@NotNull Identifier, @NotNull PacketType<? extends @NotNull Packet<?>>> serverbound = ImmutableMap.builder();
+        ImmutableMap.Builder<@NotNull ResourceLocation, @NotNull PacketType<? extends @NotNull Packet<?>>> clientbound = ImmutableMap.builder();
+        ImmutableMap.Builder<@NotNull ResourceLocation, @NotNull PacketType<? extends @NotNull Packet<?>>> serverbound = ImmutableMap.builder();
 
-        Stream.of(
+        Stream.<ProtocolInfo.Unbound<?, ?>>of(
                 StatusProtocols.CLIENTBOUND_TEMPLATE,
                 LoginProtocols.CLIENTBOUND_TEMPLATE,
                 ConfigurationProtocols.CLIENTBOUND_TEMPLATE,
                 GameProtocols.CLIENTBOUND_TEMPLATE
-            ).map(ProtocolInfo.DetailsProvider::details)
-            .forEach(details -> details.listPackets((type, _) -> clientbound.put(type.id(), type)));
+            )
+            .forEach(template -> template.listPackets((type, unused1) -> clientbound.put(type.id(), type)));
 
-        Stream.of(
+        Stream.<ProtocolInfo.Unbound<?, ?>>of(
                 HandshakeProtocols.SERVERBOUND_TEMPLATE,
                 StatusProtocols.SERVERBOUND_TEMPLATE,
                 LoginProtocols.SERVERBOUND_TEMPLATE,
                 ConfigurationProtocols.SERVERBOUND_TEMPLATE,
                 GameProtocols.SERVERBOUND_TEMPLATE
-            ).map(ProtocolInfo.DetailsProvider::details)
-            .forEach(details -> details.listPackets((type, _) -> serverbound.put(type.id(), type)));
+            )
+            .forEach(template -> template.listPackets((type, unused2) -> serverbound.put(type.id(), type)));
 
         CLIENTBOUND_PACKETS_MAP = clientbound.buildKeepingLast();
         SERVERBOUND_PACKETS_MAP = serverbound.buildKeepingLast();
@@ -118,17 +118,17 @@ public class PacketUtils {
     private static final Map<String, PacketType<? extends @NotNull Packet<?>>> LEGACY_PACKET_MAPPINGS;
 
     static {
+        // PORT(1.21.4): entries for packets that do not exist on 1.21.4 (dialogs, code of conduct, game rules,
+        // debug subscriptions, test/instance blocks, waypoints, low disk space, change game mode) were removed.
         ImmutableMap.Builder<@NotNull String, @NotNull PacketType<? extends @NotNull Packet<?>>> builder = ImmutableMap.builder();
         builder.put("ClientIntentionPacket", HandshakePacketTypes.CLIENT_INTENTION);
         builder.put("ServerboundMovePlayerPacket.Pos", GamePacketTypes.SERVERBOUND_MOVE_PLAYER_POS);
         builder.put("ServerboundMovePlayerPacket.PosRot", GamePacketTypes.SERVERBOUND_MOVE_PLAYER_POS_ROT);
         builder.put("ServerboundMovePlayerPacket.Rot", GamePacketTypes.SERVERBOUND_MOVE_PLAYER_ROT);
-        builder.put("ServerboundAcceptCodeOfConductPacket", ConfigurationPacketTypes.SERVERBOUND_ACCEPT_CODE_OF_CONDUCT);
         builder.put("ServerboundAcceptTeleportationPacket", GamePacketTypes.SERVERBOUND_ACCEPT_TELEPORTATION);
-        builder.put("ServerboundAttackPacket", GamePacketTypes.SERVERBOUND_ATTACK);
+        builder.put("ServerboundAttackPacket", GamePacketTypes.SERVERBOUND_INTERACT);
         builder.put("ServerboundBlockEntityTagQueryPacket", GamePacketTypes.SERVERBOUND_BLOCK_ENTITY_TAG_QUERY);
         builder.put("ServerboundChangeDifficultyPacket", GamePacketTypes.SERVERBOUND_CHANGE_DIFFICULTY);
-        builder.put("ServerboundChangeGameModePacket", GamePacketTypes.SERVERBOUND_CHANGE_GAME_MODE);
         builder.put("ServerboundChatAckPacket", GamePacketTypes.SERVERBOUND_CHAT_ACK);
         builder.put("ServerboundChatCommandPacket", GamePacketTypes.SERVERBOUND_CHAT_COMMAND);
         builder.put("ServerboundChatCommandSignedPacket", GamePacketTypes.SERVERBOUND_CHAT_COMMAND_SIGNED);
@@ -145,10 +145,8 @@ public class PacketUtils {
         builder.put("ServerboundContainerClosePacket", GamePacketTypes.SERVERBOUND_CONTAINER_CLOSE);
         builder.put("ServerboundContainerSlotStateChangedPacket", GamePacketTypes.SERVERBOUND_CONTAINER_SLOT_STATE_CHANGED);
         builder.put("ServerboundCookieResponsePacket", CookiePacketTypes.SERVERBOUND_COOKIE_RESPONSE);
-        builder.put("ServerboundCustomClickActionPacket", CommonPacketTypes.SERVERBOUND_CUSTOM_CLICK_ACTION);
         builder.put("ServerboundCustomPayloadPacket", CommonPacketTypes.SERVERBOUND_CUSTOM_PAYLOAD);
         builder.put("ServerboundCustomQueryAnswerPacket", LoginPacketTypes.SERVERBOUND_CUSTOM_QUERY_ANSWER);
-        builder.put("ServerboundDebugSubscriptionRequestPacket", GamePacketTypes.SERVERBOUND_DEBUG_SUBSCRIPTION_REQUEST);
         builder.put("ServerboundEditBookPacket", GamePacketTypes.SERVERBOUND_EDIT_BOOK);
         builder.put("ServerboundEntityTagQueryPacket", GamePacketTypes.SERVERBOUND_ENTITY_TAG_QUERY);
         builder.put("ServerboundFinishConfigurationPacket", ConfigurationPacketTypes.SERVERBOUND_FINISH_CONFIGURATION);
@@ -184,16 +182,13 @@ public class PacketUtils {
         builder.put("ServerboundSetCommandBlockPacket", GamePacketTypes.SERVERBOUND_SET_COMMAND_BLOCK);
         builder.put("ServerboundSetCommandMinecartPacket", GamePacketTypes.SERVERBOUND_SET_COMMAND_MINECART);
         builder.put("ServerboundSetCreativeModeSlotPacket", GamePacketTypes.SERVERBOUND_SET_CREATIVE_MODE_SLOT);
-        builder.put("ServerboundSetGameRulePacket", GamePacketTypes.SERVERBOUND_SET_GAME_RULE);
         builder.put("ServerboundSetJigsawBlockPacket", GamePacketTypes.SERVERBOUND_SET_JIGSAW_BLOCK);
         builder.put("ServerboundSetStructureBlockPacket", GamePacketTypes.SERVERBOUND_SET_STRUCTURE_BLOCK);
-        builder.put("ServerboundSetTestBlockPacket", GamePacketTypes.SERVERBOUND_SET_TEST_BLOCK);
         builder.put("ServerboundSignUpdatePacket", GamePacketTypes.SERVERBOUND_SIGN_UPDATE);
-        builder.put("ServerboundSpectateEntityPacket", GamePacketTypes.SERVERBOUND_SPECTATE_ENTITY);
+        builder.put("ServerboundSpectateEntityPacket", GamePacketTypes.SERVERBOUND_TELEPORT_TO_ENTITY);
         builder.put("ServerboundStatusRequestPacket", StatusPacketTypes.SERVERBOUND_STATUS_REQUEST);
         builder.put("ServerboundSwingPacket", GamePacketTypes.SERVERBOUND_SWING);
         builder.put("ServerboundTeleportToEntityPacket", GamePacketTypes.SERVERBOUND_TELEPORT_TO_ENTITY);
-        builder.put("ServerboundTestInstanceBlockActionPacket", GamePacketTypes.SERVERBOUND_TEST_INSTANCE_BLOCK_ACTION);
         builder.put("ServerboundUseItemOnPacket", GamePacketTypes.SERVERBOUND_USE_ITEM_ON);
         builder.put("ServerboundUseItemPacket", GamePacketTypes.SERVERBOUND_USE_ITEM);
         builder.put("ServerboundMovePlayerPacket.StatusOnly", GamePacketTypes.SERVERBOUND_MOVE_PLAYER_STATUS_ONLY);
@@ -212,9 +207,7 @@ public class PacketUtils {
         builder.put("ClientboundChunkBatchFinishedPacket", GamePacketTypes.CLIENTBOUND_CHUNK_BATCH_FINISHED);
         builder.put("ClientboundChunkBatchStartPacket", GamePacketTypes.CLIENTBOUND_CHUNK_BATCH_START);
         builder.put("ClientboundChunksBiomesPacket", GamePacketTypes.CLIENTBOUND_CHUNKS_BIOMES);
-        builder.put("ClientboundClearDialogPacket", CommonPacketTypes.CLIENTBOUND_CLEAR_DIALOG);
         builder.put("ClientboundClearTitlesPacket", GamePacketTypes.CLIENTBOUND_CLEAR_TITLES);
-        builder.put("ClientboundCodeOfConductPacket", ConfigurationPacketTypes.CLIENTBOUND_CODE_OF_CONDUCT);
         builder.put("ClientboundCommandSuggestionsPacket", GamePacketTypes.CLIENTBOUND_COMMAND_SUGGESTIONS);
         builder.put("ClientboundCommandsPacket", GamePacketTypes.CLIENTBOUND_COMMANDS);
         builder.put("ClientboundContainerClosePacket", GamePacketTypes.CLIENTBOUND_CONTAINER_CLOSE);
@@ -228,10 +221,6 @@ public class PacketUtils {
         builder.put("ClientboundCustomQueryPacket", LoginPacketTypes.CLIENTBOUND_CUSTOM_QUERY);
         builder.put("ClientboundCustomReportDetailsPacket", CommonPacketTypes.CLIENTBOUND_CUSTOM_REPORT_DETAILS);
         builder.put("ClientboundDamageEventPacket", GamePacketTypes.CLIENTBOUND_DAMAGE_EVENT);
-        builder.put("ClientboundDebugBlockValuePacket", GamePacketTypes.CLIENTBOUND_DEBUG_BLOCK_VALUE);
-        builder.put("ClientboundDebugChunkValuePacket", GamePacketTypes.CLIENTBOUND_DEBUG_CHUNK_VALUE);
-        builder.put("ClientboundDebugEntityValuePacket", GamePacketTypes.CLIENTBOUND_DEBUG_ENTITY_VALUE);
-        builder.put("ClientboundDebugEventPacket", GamePacketTypes.CLIENTBOUND_DEBUG_EVENT);
         builder.put("ClientboundDebugSamplePacket", GamePacketTypes.CLIENTBOUND_DEBUG_SAMPLE);
         builder.put("ClientboundDeleteChatPacket", GamePacketTypes.CLIENTBOUND_DELETE_CHAT);
         builder.put("ClientboundDisconnectPacket", CommonPacketTypes.CLIENTBOUND_DISCONNECT);
@@ -242,8 +231,6 @@ public class PacketUtils {
         builder.put("ClientboundFinishConfigurationPacket", ConfigurationPacketTypes.CLIENTBOUND_FINISH_CONFIGURATION);
         builder.put("ClientboundForgetLevelChunkPacket", GamePacketTypes.CLIENTBOUND_FORGET_LEVEL_CHUNK);
         builder.put("ClientboundGameEventPacket", GamePacketTypes.CLIENTBOUND_GAME_EVENT);
-        builder.put("ClientboundGameRuleValuesPacket", GamePacketTypes.CLIENTBOUND_GAME_RULE_VALUES);
-        builder.put("ClientboundGameTestHighlightPosPacket", GamePacketTypes.CLIENTBOUND_GAME_TEST_HIGHLIGHT_POS);
         builder.put("ClientboundHelloPacket", LoginPacketTypes.CLIENTBOUND_HELLO);
         builder.put("ClientboundHurtAnimationPacket", GamePacketTypes.CLIENTBOUND_HURT_ANIMATION);
         builder.put("ClientboundInitializeBorderPacket", GamePacketTypes.CLIENTBOUND_INITIALIZE_BORDER);
@@ -256,10 +243,9 @@ public class PacketUtils {
         builder.put("ClientboundLoginDisconnectPacket", LoginPacketTypes.CLIENTBOUND_LOGIN_DISCONNECT);
         builder.put("ClientboundLoginFinishedPacket", LoginPacketTypes.CLIENTBOUND_LOGIN_FINISHED);
         builder.put("ClientboundLoginPacket", GamePacketTypes.CLIENTBOUND_LOGIN);
-        builder.put("ClientboundLowDiskSpaceWarningPacket", GamePacketTypes.CLIENTBOUND_LOW_DISK_SPACE_WARNING);
         builder.put("ClientboundMapItemDataPacket", GamePacketTypes.CLIENTBOUND_MAP_ITEM_DATA);
         builder.put("ClientboundMerchantOffersPacket", GamePacketTypes.CLIENTBOUND_MERCHANT_OFFERS);
-        builder.put("ClientboundMountScreenOpenPacket", GamePacketTypes.CLIENTBOUND_MOUNT_SCREEN_OPEN);
+        builder.put("ClientboundMountScreenOpenPacket", GamePacketTypes.CLIENTBOUND_HORSE_SCREEN_OPEN);
         builder.put("ClientboundMoveMinecartPacket", GamePacketTypes.CLIENTBOUND_MOVE_MINECART_ALONG_TRACK);
         builder.put("ClientboundMoveVehiclePacket", GamePacketTypes.CLIENTBOUND_MOVE_VEHICLE);
         builder.put("ClientboundOpenBookPacket", GamePacketTypes.CLIENTBOUND_OPEN_BOOK);
@@ -325,7 +311,6 @@ public class PacketUtils {
         builder.put("ClientboundSetTimePacket", GamePacketTypes.CLIENTBOUND_SET_TIME);
         builder.put("ClientboundSetTitleTextPacket", GamePacketTypes.CLIENTBOUND_SET_TITLE_TEXT);
         builder.put("ClientboundSetTitlesAnimationPacket", GamePacketTypes.CLIENTBOUND_SET_TITLES_ANIMATION);
-        builder.put("ClientboundShowDialogPacket", CommonPacketTypes.CLIENTBOUND_SHOW_DIALOG);
         builder.put("ClientboundSoundEntityPacket", GamePacketTypes.CLIENTBOUND_SOUND_ENTITY);
         builder.put("ClientboundSoundPacket", GamePacketTypes.CLIENTBOUND_SOUND);
         builder.put("ClientboundStartConfigurationPacket", GamePacketTypes.CLIENTBOUND_START_CONFIGURATION);
@@ -337,10 +322,8 @@ public class PacketUtils {
         builder.put("ClientboundTagQueryPacket", GamePacketTypes.CLIENTBOUND_TAG_QUERY);
         builder.put("ClientboundTakeItemEntityPacket", GamePacketTypes.CLIENTBOUND_TAKE_ITEM_ENTITY);
         builder.put("ClientboundTeleportEntityPacket", GamePacketTypes.CLIENTBOUND_TELEPORT_ENTITY);
-        builder.put("ClientboundTestInstanceBlockStatus", GamePacketTypes.CLIENTBOUND_TEST_INSTANCE_BLOCK_STATUS);
         builder.put("ClientboundTickingStatePacket", GamePacketTypes.CLIENTBOUND_TICKING_STATE);
         builder.put("ClientboundTickingStepPacket", GamePacketTypes.CLIENTBOUND_TICKING_STEP);
-        builder.put("ClientboundTrackedWaypointPacket", GamePacketTypes.CLIENTBOUND_WAYPOINT);
         builder.put("ClientboundTransferPacket", CommonPacketTypes.CLIENTBOUND_TRANSFER);
         builder.put("ClientboundUpdateAdvancementsPacket", GamePacketTypes.CLIENTBOUND_UPDATE_ADVANCEMENTS);
         builder.put("ClientboundUpdateAttributesPacket", GamePacketTypes.CLIENTBOUND_UPDATE_ATTRIBUTES);

@@ -12,23 +12,27 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.render.Xray;
 import meteordevelopment.meteorclient.systems.modules.world.Ambience;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
-import net.minecraft.client.renderer.block.FluidRenderer;
-import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.client.renderer.block.LiquidBlockRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.util.ARGB;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(FluidRenderer.class)
+// PORT(1.21.4): The 26.1.2 FluidRenderer/FluidRenderer.Output/ChunkSectionLayer split does not exist here.
+// On 1.21.4 this class is LiquidBlockRenderer and tesselate() writes straight into a single VertexConsumer
+// (no per-call chunk render layer selection), so forcing the fluid onto the translucent layer for
+// partial-alpha xray/wallhack can't be done from within this mixin (there's no equivalent of
+// FluidRenderer.Output.getBuilder(ChunkSectionLayer) to redirect). Vanilla layer choice for a fluid's
+// BlockState is made before tesselate() is even called (via ItemBlockRenderTypes/RenderLayers on 26.1.2's
+// ancestor), which is out of scope for this file.
+@Mixin(LiquidBlockRenderer.class)
 public abstract class FluidRendererMixin {
     @Unique
     private static final ThreadLocal<Integer> ALPHAS = ThreadLocal.withInitial(() -> -1);
@@ -39,13 +43,14 @@ public abstract class FluidRendererMixin {
     @Unique
     private Xray xray;
 
-    @Inject(method = "<init>", at = @At("TAIL"))
-    private void onInit(CallbackInfo ci) {
-        xray = Modules.get().get(Xray.class);
+    @Unique
+    private Xray getXray() {
+        if (xray == null) xray = Modules.get().get(Xray.class);
+        return xray;
     }
 
     @Inject(method = "tesselate", at = @At("HEAD"), cancellable = true)
-    private void onTesselate(BlockAndTintGetter level, BlockPos pos, FluidRenderer.Output output, BlockState blockState, FluidState fluidState, CallbackInfo ci) {
+    private void onTesselate(BlockAndTintGetter level, BlockPos pos, VertexConsumer vertexConsumer, BlockState blockState, FluidState fluidState, CallbackInfo ci) {
         Ambience ambience = Modules.get().get(Ambience.class);
         AMBIENT.set(ambience.isActive() && ambience.customLavaColor.get() && fluidState.is(FluidTags.LAVA));
 
@@ -59,12 +64,12 @@ public abstract class FluidRendererMixin {
         }
 
         ALPHAS.set(alpha);
-        FORCE_XRAY_FLUID_SIDES.set(xray.isActive());
+        FORCE_XRAY_FLUID_SIDES.set(getXray().isActive());
     }
 
     @WrapOperation(
         method = "tesselate",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/block/FluidRenderer;isFaceOccludedByNeighbor(Lnet/minecraft/core/Direction;FLnet/minecraft/world/level/block/state/BlockState;)Z")
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/block/LiquidBlockRenderer;isFaceOccludedByNeighbor(Lnet/minecraft/core/Direction;FLnet/minecraft/world/level/block/state/BlockState;)Z")
     )
     private boolean onIsFaceOccludedByNeighbor(Direction direction, float height, BlockState neighborState, Operation<Boolean> original) {
         boolean occluded = original.call(direction, height, neighborState);
@@ -72,45 +77,21 @@ public abstract class FluidRendererMixin {
         if (!occluded) return false;
         if (direction.getAxis().isVertical()) return true;
         if (!FORCE_XRAY_FLUID_SIDES.get()) return true;
-        return !xray.isBlocked(neighborState.getBlock(), null);
+        return !getXray().isBlocked(neighborState.getBlock(), null);
     }
 
     @Inject(method = "vertex", at = @At("HEAD"), cancellable = true)
-    private void onVertex(VertexConsumer builder, float x, float y, float z, int color, float u, float v, int lightCoords, CallbackInfo ci) {
+    private void onVertex(VertexConsumer vertexConsumer, float x, float y, float z, float red, float green, float blue, float u, float v, int light, CallbackInfo ci) {
         int alpha = ALPHAS.get();
 
         if (AMBIENT.get()) {
             Color c = Modules.get().get(Ambience.class).lavaColor.get();
-            vertex(builder, x, y, z, c.r, c.g, c.b, (alpha != -1 ? alpha : c.a), u, v, lightCoords);
+            vertex(vertexConsumer, x, y, z, c.r, c.g, c.b, (alpha != -1 ? alpha : c.a), u, v, light);
             ci.cancel();
         } else if (alpha != -1) {
-            int red = ARGB.red(color);
-            int green = ARGB.green(color);
-            int blue = ARGB.blue(color);
-
-            vertex(builder, x, y, z, red, green, blue, alpha, u, v, lightCoords);
+            vertex(vertexConsumer, x, y, z, (int) (red * 255), (int) (green * 255), (int) (blue * 255), alpha, u, v, light);
             ci.cancel();
         }
-    }
-
-    @ModifyArg(
-        method = "tesselate",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/block/FluidRenderer$Output;getBuilder(Lnet/minecraft/client/renderer/chunk/ChunkSectionLayer;)Lcom/mojang/blaze3d/vertex/VertexConsumer;"),
-        index = 0
-    )
-    private ChunkSectionLayer onGetBuilderLayer(ChunkSectionLayer layer) {
-        int alpha = ALPHAS.get();
-        if (alpha > 0 && alpha < 255) return ChunkSectionLayer.TRANSLUCENT;
-
-        if (AMBIENT.get()) {
-            Ambience ambience = Modules.get().get(Ambience.class);
-            int a = ambience.lavaColor.get().a;
-            if (ambience.isActive() && ambience.customLavaColor.get() && a > 0 && a < 255) {
-                return ChunkSectionLayer.TRANSLUCENT;
-            }
-        }
-
-        return layer;
     }
 
     @Unique

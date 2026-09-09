@@ -43,7 +43,7 @@ public class FileSetting extends Setting<File> {
     @Override
     protected File load(CompoundTag tag) {
         if (tag.contains("file")) {
-            set(new File(tag.getStringOr("file", "")));
+            set(new File(tag.getString("file")));
         }
 
         return get();

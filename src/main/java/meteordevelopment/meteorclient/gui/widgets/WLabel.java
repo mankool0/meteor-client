@@ -7,7 +7,7 @@ package meteordevelopment.meteorclient.gui.widgets;
 
 import meteordevelopment.meteorclient.gui.widgets.pressable.WPressable;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.client.input.MouseButtonEvent;
+import meteordevelopment.meteorclient.gui.utils.MouseButtonEvent;
 
 public abstract class WLabel extends WPressable {
     public Color color;

@@ -8,7 +8,7 @@ package meteordevelopment.meteorclient.utils.player;
 import meteordevelopment.meteorclient.mixininterface.IMultiPlayerGameMode;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
@@ -93,7 +93,7 @@ public class InvUtils {
         }
 
         if (testInMainHand(isGood)) {
-            return new FindItemResult(mc.player.getInventory().getSelectedSlot(), mc.player.getMainHandItem().getCount());
+            return new FindItemResult(mc.player.getInventory().selected, mc.player.getMainHandItem().getCount());
         }
 
         return find(isGood, 0, 8);
@@ -148,10 +148,10 @@ public class InvUtils {
     public static boolean swap(int slot, boolean swapBack) {
         if (slot == SlotUtils.OFFHAND) return true;
         if (slot < 0 || slot > 8) return false;
-        if (swapBack && previousSlot == -1) previousSlot = mc.player.getInventory().getSelectedSlot();
+        if (swapBack && previousSlot == -1) previousSlot = mc.player.getInventory().selected;
         else if (!swapBack) previousSlot = -1;
 
-        mc.player.getInventory().setSelectedSlot(slot);
+        mc.player.getInventory().selected = slot;
         ((IMultiPlayerGameMode) mc.gameMode).meteor$syncSelected();
         return true;
     }
@@ -165,13 +165,13 @@ public class InvUtils {
     }
 
     public static Action move() {
-        ACTION.type = ContainerInput.PICKUP;
+        ACTION.type = ClickType.PICKUP;
         ACTION.two = true;
         return ACTION;
     }
 
     public static Action click() {
-        ACTION.type = ContainerInput.PICKUP;
+        ACTION.type = ClickType.PICKUP;
         return ACTION;
     }
 
@@ -180,34 +180,34 @@ public class InvUtils {
      * From should be the slot in the hotbar, to should be the slot you're switching an item from.
      */
     public static Action quickSwap() {
-        ACTION.type = ContainerInput.SWAP;
+        ACTION.type = ClickType.SWAP;
         return ACTION;
     }
 
     public static Action shiftClick() {
-        ACTION.type = ContainerInput.QUICK_MOVE;
+        ACTION.type = ClickType.QUICK_MOVE;
         return ACTION;
     }
 
     public static Action drop() {
-        ACTION.type = ContainerInput.THROW;
+        ACTION.type = ClickType.THROW;
         ACTION.data = 1;
         return ACTION;
     }
 
     public static Action dropOne() {
-        ACTION.type = ContainerInput.THROW;
+        ACTION.type = ClickType.THROW;
         ACTION.data = 0;
         return ACTION;
     }
 
     public static void dropHand() {
         if (!mc.player.containerMenu.getCarried().isEmpty())
-            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, AbstractContainerMenu.SLOT_CLICKED_OUTSIDE, 0, ContainerInput.PICKUP, mc.player);
+            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, AbstractContainerMenu.SLOT_CLICKED_OUTSIDE, 0, ClickType.PICKUP, mc.player);
     }
 
     public static class Action {
-        private ContainerInput type = null;
+        private ClickType type = null;
         private boolean two = false;
         private int from = -1;
         private int to = -1;
@@ -322,7 +322,7 @@ public class InvUtils {
         private void run() {
             boolean hadEmptyCursor = mc.player.containerMenu.getCarried().isEmpty();
 
-            if (type == ContainerInput.SWAP) {
+            if (type == ClickType.SWAP) {
                 data = from;
                 from = to;
             }
@@ -332,7 +332,7 @@ public class InvUtils {
                 if (two) click(to);
             }
 
-            ContainerInput preType = type;
+            ClickType preType = type;
             boolean preTwo = two;
             int preFrom = from;
             int preTo = to;
@@ -343,7 +343,7 @@ public class InvUtils {
             to = -1;
             data = 0;
 
-            if (!isRecursive && hadEmptyCursor && preType == ContainerInput.PICKUP && preTwo && (preFrom != -1 && preTo != -1) && !mc.player.containerMenu.getCarried().isEmpty()) {
+            if (!isRecursive && hadEmptyCursor && preType == ClickType.PICKUP && preTwo && (preFrom != -1 && preTo != -1) && !mc.player.containerMenu.getCarried().isEmpty()) {
                 isRecursive = true;
                 InvUtils.click().slotId(preFrom);
                 isRecursive = false;
@@ -351,7 +351,7 @@ public class InvUtils {
         }
 
         private void click(int id) {
-            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, id, data, type, mc.player);
+            mc.gameMode.handleInventoryMouseClick(mc.player.containerMenu.containerId, id, data, type, mc.player);
         }
     }
 }

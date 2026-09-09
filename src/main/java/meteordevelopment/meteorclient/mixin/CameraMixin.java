@@ -5,10 +5,7 @@
 
 package meteordevelopment.meteorclient.mixin;
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
-import meteordevelopment.meteorclient.MeteorClient;
-import meteordevelopment.meteorclient.events.render.GetFovEvent;
 import meteordevelopment.meteorclient.mixininterface.ICamera;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.render.CameraTweaks;
@@ -17,6 +14,8 @@ import meteordevelopment.meteorclient.systems.modules.render.Freecam;
 import meteordevelopment.meteorclient.systems.modules.render.NoRender;
 import meteordevelopment.meteorclient.systems.modules.world.HighwayBuilder;
 import net.minecraft.client.Camera;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.material.FogType;
 import org.spongepowered.asm.mixin.Mixin;
@@ -47,7 +46,7 @@ public abstract class CameraMixin implements ICamera {
         if (Modules.get().get(NoRender.class).noLiquidOverlay()) cir.setReturnValue(FogType.NONE);
     }
 
-    @ModifyVariable(method = "getMaxZoom", at = @At("HEAD"), argsOnly = true, name = "cameraDist")
+    @ModifyVariable(method = "getMaxZoom", at = @At("HEAD"), argsOnly = true, ordinal = 0)
     private float modifyGetMaxZoom(float cameraDist) {
         if (Modules.get().get(Freecam.class).isActive()) return 0;
 
@@ -62,15 +61,15 @@ public abstract class CameraMixin implements ICamera {
         }
     }
 
-    @Inject(method = "alignWithEntity", at = @At("TAIL"))
-    private void onAlignWithEntityTail(float partialTicks, CallbackInfo ci) {
+    @Inject(method = "setup", at = @At("TAIL"))
+    private void onSetupTail(BlockGetter level, Entity entity, boolean thirdPerson, boolean inverseView, float partialTicks, CallbackInfo ci) {
         if (Modules.get().isActive(Freecam.class)) {
             this.detached = true;
         }
     }
 
-    @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V"))
-    private void onAlignSetPosArgs(Args args, @Local(argsOnly = true, name = "partialTicks") float partialTicks) {
+    @ModifyArgs(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V"))
+    private void onAlignSetPosArgs(Args args, @Local(argsOnly = true, ordinal = 0) float partialTicks) {
         Freecam freecam = Modules.get().get(Freecam.class);
 
         if (freecam.isActive()) {
@@ -80,8 +79,8 @@ public abstract class CameraMixin implements ICamera {
         }
     }
 
-    @ModifyArgs(method = "alignWithEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V"))
-    private void onAlignSetRotationArgs(Args args, @Local(argsOnly = true, name = "partialTicks") float partialTicks) {
+    @ModifyArgs(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V"))
+    private void onAlignSetRotationArgs(Args args, @Local(argsOnly = true, ordinal = 0) float partialTicks) {
         Freecam freecam = Modules.get().get(Freecam.class);
         FreeLook freeLook = Modules.get().get(FreeLook.class);
 
@@ -95,11 +94,6 @@ public abstract class CameraMixin implements ICamera {
             args.set(0, freeLook.cameraYaw);
             args.set(1, freeLook.cameraPitch);
         }
-    }
-
-    @ModifyReturnValue(method = "calculateFov", at = @At("RETURN"))
-    private float modifyFov(float original) {
-        return MeteorClient.EVENT_BUS.post(GetFovEvent.get(original)).fov;
     }
 
     @Override

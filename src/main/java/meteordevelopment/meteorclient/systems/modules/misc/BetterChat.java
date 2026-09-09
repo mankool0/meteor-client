@@ -25,16 +25,16 @@ import meteordevelopment.meteorclient.utils.misc.text.MeteorClickEvent;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.PlayerFaceExtractor;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.PlayerFaceRenderer;
 import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.client.multiplayer.chat.GuiMessage;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.GuiMessage;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.UnknownNullability;
 
 import java.text.SimpleDateFormat;
@@ -79,7 +79,7 @@ public class BetterChat extends Module {
         .description("Shows seconds in the chat message timestamps")
         .defaultValue(false)
         .visible(timestamps::get)
-        .onChanged(_ -> updateDateFormat())
+        .onChanged(unused1 -> updateDateFormat())
         .build()
     );
 
@@ -141,7 +141,7 @@ public class BetterChat extends Module {
         .name("regex-filter")
         .description("Regex filter used for filtering chat messages.")
         .visible(filterRegex::get)
-        .onChanged(_ -> compileFilterRegexList())
+        .onChanged(unused2 -> compileFilterRegexList())
         .build()
     );
 
@@ -398,7 +398,7 @@ public class BetterChat extends Module {
 
     // Player Heads
 
-    private record CustomHeadEntry(String prefix, Identifier texture) {
+    private record CustomHeadEntry(String prefix, ResourceLocation texture) {
     }
 
     private static final List<CustomHeadEntry> CUSTOM_HEAD_ENTRIES = new ArrayList<>();
@@ -411,7 +411,7 @@ public class BetterChat extends Module {
     /**
      * Registers a custom player head to render based on a message prefix
      */
-    public static void registerCustomHead(String prefix, Identifier texture) {
+    public static void registerCustomHead(String prefix, ResourceLocation texture) {
         CUSTOM_HEAD_ENTRIES.add(new CustomHeadEntry(prefix, texture));
     }
 
@@ -426,7 +426,7 @@ public class BetterChat extends Module {
     }
 
 
-    public void beforeDrawMessage(GuiGraphicsExtractor graphics, int y, int color) {
+    public void beforeDrawMessage(GuiGraphics graphics, int y, int color) {
         if (!isActive() || !playerHeads.get() || line == null) return;
 
         // Only draw the first line of multi line messages
@@ -441,7 +441,7 @@ public class BetterChat extends Module {
         line = null;
     }
 
-    private void drawTexture(GuiGraphicsExtractor graphics, IGuiMessage line, int y, int color) {
+    private void drawTexture(GuiGraphics graphics, IGuiMessage line, int y, int color) {
         String text = line.meteor$getText().trim();
 
         // Custom
@@ -450,13 +450,13 @@ public class BetterChat extends Module {
         try {
             Matcher m = TIMESTAMP_REGEX.matcher(text);
             if (m.find()) startOffset = m.end() + 1;
-        } catch (IllegalStateException _) {
+        } catch (IllegalStateException unused3) {
         }
 
         for (CustomHeadEntry entry : CUSTOM_HEAD_ENTRIES) {
             // Check prefix
             if (text.startsWith(entry.prefix(), startOffset)) {
-                graphics.blit(RenderPipelines.GUI_TEXTURED, entry.texture(), 0, y, 0, 0, 8, 8, 64, 64, 64, 64, color);
+                graphics.blit(RenderType::guiTextured, entry.texture(), 0, y, 0, 0, 8, 8, 64, 64, 64, 64, color);
                 return;
             }
         }
@@ -465,10 +465,10 @@ public class BetterChat extends Module {
         GameProfile sender = getSender(line, text);
         if (sender == null) return;
 
-        PlayerInfo entry = mc.getConnection().getPlayerInfo(sender.id());
+        PlayerInfo entry = mc.getConnection().getPlayerInfo(sender.getId());
         if (entry == null) return;
 
-        PlayerFaceExtractor.extractRenderState(graphics, entry.getSkin(), 0, y, 8, color);
+        PlayerFaceRenderer.draw(graphics, entry.getSkin(), 0, y, 8, color);
     }
 
     private GameProfile getSender(IGuiMessage line, String text) {
@@ -533,7 +533,7 @@ public class BetterChat extends Module {
         for (int i = 0; i < regexFilters.get().size(); i++) {
             try {
                 filterRegexList.add(Pattern.compile(regexFilters.get().get(i)));
-            } catch (PatternSyntaxException _) {
+            } catch (PatternSyntaxException unused4) {
                 String removed = regexFilters.get().remove(i);
                 error("Removing Invalid regex: %s", removed);
             }
@@ -577,7 +577,7 @@ public class BetterChat extends Module {
         sendButton.setStyle(sendButton.getStyle()
             .applyFormat(ChatFormatting.DARK_RED)
             .withClickEvent(new MeteorClickEvent(Commands.get("say").toString(message)))
-            .withHoverEvent(new HoverEvent.ShowText(
+            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
                 hintBaseText
             )));
         return sendButton;

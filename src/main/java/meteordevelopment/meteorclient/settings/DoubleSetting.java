@@ -32,7 +32,7 @@ public class DoubleSetting extends Setting<Double> {
     protected Double parseImpl(String str) {
         try {
             return Double.parseDouble(str.trim());
-        } catch (NumberFormatException _) {
+        } catch (NumberFormatException unused1) {
             return null;
         }
     }
@@ -51,7 +51,7 @@ public class DoubleSetting extends Setting<Double> {
 
     @Override
     public Double load(CompoundTag tag) {
-        set(tag.getDoubleOr("value", 0.0));
+        set(tag.getDouble("value"));
 
         return get();
     }

@@ -35,7 +35,7 @@ public class Macro implements ISerializable<Macro> {
     public Setting<List<String>> messages = sgGeneral.add(new StringListSetting.Builder()
         .name("messages")
         .description("The messages for the macro to send.")
-        .onChanged(_ -> dirty = true)
+        .onChanged(unused1 -> dirty = true)
         .renderer(StarscriptTextBoxRenderer.class)
         .build()
     );
@@ -96,7 +96,7 @@ public class Macro implements ISerializable<Macro> {
     @Override
     public Macro fromTag(CompoundTag tag) {
         if (tag.contains("settings")) {
-            settings.fromTag(tag.getCompoundOrEmpty("settings"));
+            settings.fromTag(tag.getCompound("settings"));
         }
 
         return this;

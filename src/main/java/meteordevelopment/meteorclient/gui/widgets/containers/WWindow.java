@@ -10,7 +10,7 @@ import meteordevelopment.meteorclient.gui.utils.Cell;
 import meteordevelopment.meteorclient.gui.utils.WindowConfig;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WTriangle;
-import net.minecraft.client.input.MouseButtonEvent;
+import meteordevelopment.meteorclient.gui.utils.MouseButtonEvent;
 import net.minecraft.util.Mth;
 
 import java.util.function.Consumer;

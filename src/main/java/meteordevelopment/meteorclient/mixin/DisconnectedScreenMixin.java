@@ -43,11 +43,11 @@ public abstract class DisconnectedScreenMixin extends Screen {
         AutoReconnect autoReconnect = Modules.get().get(AutoReconnect.class);
 
         if (autoReconnect.lastServerConnection != null && !autoReconnect.button.get()) {
-            reconnectBtn = new Button.Builder(Component.literal(getText()), _ -> tryConnecting()).build();
+            reconnectBtn = new Button.Builder(Component.literal(getText()), unused1 -> tryConnecting()).build();
             layout.addChild(reconnectBtn);
 
             layout.addChild(
-                new Button.Builder(Component.literal("Toggle Auto Reconnect"), _ -> {
+                new Button.Builder(Component.literal("Toggle Auto Reconnect"), unused2 -> {
                     autoReconnect.toggle();
                     reconnectBtn.setMessage(Component.literal(getText()));
                     time = autoReconnect.time.get() * 20;

@@ -5,10 +5,7 @@ in vec2 v_OneTexel;
 
 uniform sampler2D u_Texture;
 uniform sampler2D u_TextureI;
-
-layout (std140) uniform ImageData {
-    vec4 u_Color;
-};
+uniform vec4 u_Color;
 
 out vec4 color;
 

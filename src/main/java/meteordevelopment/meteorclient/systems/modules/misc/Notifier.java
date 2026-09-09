@@ -35,7 +35,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl;
+import net.minecraft.world.entity.projectile.ThrownEnderpearl;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.*;
@@ -338,7 +338,7 @@ public class Notifier extends Module {
             while (timer >= notificationDelay.get() && !messageQueue.isEmpty()) {
                 timer = 0;
                 if (simpleNotifications.get()) {
-                    mc.player.sendSystemMessage(messageQueue.removeFirst());
+                    mc.player.displayClientMessage(messageQueue.removeFirst(), false);
                 } else {
                     ChatUtils.sendMsg(messageQueue.removeFirst());
                 }
@@ -361,7 +361,7 @@ public class Notifier extends Module {
     }
 
     private int getChatId(Entity entity) {
-        return chatIdMap.computeIfAbsent(entity.getUUID(), _ -> random.nextInt());
+        return chatIdMap.computeIfAbsent(entity.getUUID(), unused1 -> random.nextInt());
     }
 
     private void createJoinNotifications(ClientboundPlayerInfoUpdatePacket packet) {
@@ -373,12 +373,12 @@ public class Notifier extends Module {
                     ChatFormatting.GRAY + "["
                         + ChatFormatting.GREEN + "+"
                         + ChatFormatting.GRAY + "] "
-                        + entry.profile().name()
+                        + entry.profile().getName()
                 ));
             } else {
                 messageQueue.addLast(Component.literal(
                     ChatFormatting.WHITE
-                        + entry.profile().name()
+                        + entry.profile().getName()
                         + ChatFormatting.GRAY + " joined."
                 ));
             }
@@ -397,12 +397,12 @@ public class Notifier extends Module {
                     ChatFormatting.GRAY + "["
                         + ChatFormatting.RED + "-"
                         + ChatFormatting.GRAY + "] "
-                        + toRemove.getProfile().name()
+                        + toRemove.getProfile().getName()
                 ));
             } else {
                 messageQueue.addLast(Component.literal(
                     ChatFormatting.WHITE
-                        + toRemove.getProfile().name()
+                        + toRemove.getProfile().getName()
                         + ChatFormatting.GRAY + " left."
                 ));
             }

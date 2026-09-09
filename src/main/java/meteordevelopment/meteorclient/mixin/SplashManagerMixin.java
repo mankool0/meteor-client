@@ -8,7 +8,6 @@ package meteordevelopment.meteorclient.mixin;
 import meteordevelopment.meteorclient.systems.config.Config;
 import net.minecraft.client.gui.components.SplashRenderer;
 import net.minecraft.client.resources.SplashManager;
-import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -32,7 +31,7 @@ public abstract class SplashManagerMixin {
         if (Config.get() == null || !Config.get().titleScreenSplashes.get()) return;
 
         if (override)
-            cir.setReturnValue(new SplashRenderer(Component.literal(meteorSplashes.get(random.nextInt(meteorSplashes.size())))));
+            cir.setReturnValue(new SplashRenderer(meteorSplashes.get(random.nextInt(meteorSplashes.size()))));
         override = !override;
     }
 

@@ -18,22 +18,21 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(SoundEngine.class)
 public abstract class SoundEngineMixin {
     @Shadow
     public abstract void stop(SoundInstance soundInstance);
 
-    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)Lnet/minecraft/client/sounds/SoundEngine$PlayResult;", at = @At("HEAD"), cancellable = true)
-    private void onPlay(SoundInstance instance, CallbackInfoReturnable<SoundEngine.PlayResult> cir) {
+    @Inject(method = "play(Lnet/minecraft/client/resources/sounds/SoundInstance;)V", at = @At("HEAD"), cancellable = true)
+    private void onPlay(SoundInstance instance, CallbackInfo cir) {
         PlaySoundEvent event = MeteorClient.EVENT_BUS.post(PlaySoundEvent.get(instance));
 
         if (event.isCancelled()) cir.cancel();
     }
 
-    @Inject(method = "tickInGameSound()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/sounds/TickableSoundInstance;tick()V", ordinal = 0))
-    private void onTick(CallbackInfo ci, @Local(name = "instance") TickableSoundInstance instance) {
+    @Inject(method = "tickNonPaused()V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/sounds/TickableSoundInstance;tick()V", ordinal = 0))
+    private void onTick(CallbackInfo ci, @Local(index = 2) TickableSoundInstance instance) {
         if (Modules.get().get(SoundBlocker.class).shouldBlock(instance)) stop(instance);
     }
 }

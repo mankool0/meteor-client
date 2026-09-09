@@ -176,7 +176,7 @@ public class Burrow extends Module {
     @EventHandler
     private void onKey(KeyInputEvent event) {
         if (instant.get() && !shouldBurrow) {
-            if (event.action == KeyAction.Press && mc.options.keyJump.matches(event.input)) {
+            if (event.action == KeyAction.Press && mc.options.keyJump.matches(event.key, event.scancode)) {
                 shouldBurrow = true;
             }
             blockPos.set(mc.player.blockPosition());
@@ -207,7 +207,7 @@ public class Burrow extends Module {
         if (instant.get()) {
             mc.player.connection.send(new ServerboundMovePlayerPacket.Pos(mc.player.getX(), mc.player.getY() + rubberbandHeight.get(), mc.player.getZ(), false, mc.player.horizontalCollision));
         } else {
-            mc.player.absSnapTo(mc.player.getX(), mc.player.getY() + rubberbandHeight.get(), mc.player.getZ());
+            mc.player.absMoveTo(mc.player.getX(), mc.player.getY() + rubberbandHeight.get(), mc.player.getZ());
         }
     }
 
@@ -217,7 +217,7 @@ public class Burrow extends Module {
             case Anvil ->
                 InvUtils.findInHotbar(itemStack -> net.minecraft.world.level.block.Block.byItem(itemStack.getItem()) instanceof AnvilBlock);
             case Held ->
-                new FindItemResult(mc.player.getInventory().getSelectedSlot(), mc.player.getMainHandItem().getCount());
+                new FindItemResult(mc.player.getInventory().selected, mc.player.getMainHandItem().getCount());
             default -> InvUtils.findInHotbar(Items.OBSIDIAN, Items.CRYING_OBSIDIAN);
         };
     }

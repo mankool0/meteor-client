@@ -28,13 +28,13 @@ import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.options.*;
 import net.minecraft.client.gui.screens.options.controls.ControlsScreen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
-import net.minecraft.client.gui.screens.worldselection.AbstractGameRulesScreen;
+import net.minecraft.client.gui.screens.worldselection.EditGameRulesScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
 import net.minecraft.client.gui.screens.worldselection.EditWorldScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.realms.RealmsScreen;
 import net.minecraft.util.Tuple;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 import org.meteordev.starscript.Script;
 
 import java.util.ArrayList;
@@ -55,7 +55,7 @@ public class DiscordPresence extends Module {
         .name("line-1-messages")
         .description("Messages used for the first line.")
         .defaultValue("{player}", "{server}")
-        .onChanged(_ -> recompileLine1())
+        .onChanged(unused1 -> recompileLine1())
         .renderer(StarscriptTextBoxRenderer.class)
         .build()
     );
@@ -82,7 +82,7 @@ public class DiscordPresence extends Module {
         .name("line-2-messages")
         .description("Messages used for the second line.")
         .defaultValue("Meteor on Crack!", "{round(server.tps, 1)} TPS", "Playing on {server.difficulty} difficulty.", "{server.player_count} Players online")
-        .onChanged(_ -> recompileLine2())
+        .onChanged(unused2 -> recompileLine2())
         .renderer(StarscriptTextBoxRenderer.class)
         .build()
     );
@@ -249,12 +249,12 @@ public class DiscordPresence extends Module {
 
                 if (mc.screen instanceof TitleScreen) rpc.setState("Looking at title screen");
                 else if (mc.screen instanceof SelectWorldScreen) rpc.setState("Selecting world");
-                else if (mc.screen instanceof CreateWorldScreen || mc.screen instanceof AbstractGameRulesScreen)
+                else if (mc.screen instanceof CreateWorldScreen || mc.screen instanceof EditGameRulesScreen)
                     rpc.setState("Creating world");
                 else if (mc.screen instanceof EditWorldScreen) rpc.setState("Editing world");
                 else if (mc.screen instanceof LevelLoadingScreen) rpc.setState("Loading world");
                 else if (mc.screen instanceof JoinMultiplayerScreen) rpc.setState("Selecting server");
-                else if (mc.screen instanceof ManageServerScreen) rpc.setState("Adding server");
+                else if (mc.screen instanceof EditServerScreen) rpc.setState("Adding server");
                 else if (mc.screen instanceof ConnectScreen || mc.screen instanceof DirectJoinServerScreen)
                     rpc.setState("Connecting to server");
                 else if (mc.screen instanceof WidgetScreen) rpc.setState("Browsing Meteor's GUI");

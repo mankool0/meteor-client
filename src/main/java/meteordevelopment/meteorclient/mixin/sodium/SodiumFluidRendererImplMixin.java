@@ -21,9 +21,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(value = FluidRendererImpl.class, remap = false)
 public abstract class SodiumFluidRendererImplMixin {
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
-    private void onRender(LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos blockPos, BlockPos offset, TranslucentGeometryCollector collector, ChunkBuildBuffers buffers, CallbackInfo ci) {
-        int alpha = Xray.getFluidAlpha(fluidState, blockPos);
+    private void onRender(LevelSlice level, BlockState blockState, FluidState fluidState, BlockPos blockPos, BlockPos offset, TranslucentGeometryCollector collector, ChunkBuildBuffers buffers, CallbackInfo info) {
+        int alpha = Xray.getAlpha(fluidState.createLegacyBlock(), blockPos);
 
-        if (alpha == 0) ci.cancel();
+        if (alpha == 0) info.cancel();
     }
 }

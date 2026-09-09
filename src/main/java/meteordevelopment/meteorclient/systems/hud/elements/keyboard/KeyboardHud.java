@@ -78,7 +78,7 @@ public class KeyboardHud extends HudElement {
         .min(0.5)
         .sliderRange(0.5, 5)
         .decimalPlaces(1)
-        .onChanged(_ -> calculateSize())
+        .onChanged(unused1 -> calculateSize())
         .build()
     );
 
@@ -90,7 +90,7 @@ public class KeyboardHud extends HudElement {
         .sliderRange(0, 10)
         .decimalPlaces(1)
         .visible(() -> preset.get() != Preset.Custom)
-        .onChanged(_ -> onPresetChanged(preset.get()))
+        .onChanged(unused2 -> onPresetChanged(preset.get()))
         .build()
     );
 
@@ -99,7 +99,7 @@ public class KeyboardHud extends HudElement {
         .description("Physical keyboard layout (ANSI or ISO).")
         .defaultValue(KeyboardLayout.ANSI)
         .visible(() -> preset.get() == Preset.Keyboard)
-        .onChanged(_ -> onPresetChanged(preset.get()))
+        .onChanged(unused3 -> onPresetChanged(preset.get()))
         .build()
     );
 
@@ -108,7 +108,7 @@ public class KeyboardHud extends HudElement {
         .description("Shows clicks per second on keys.")
         .defaultValue(false)
         .visible(() -> preset.get() != Preset.Custom)
-        .onChanged(_ -> onPresetChanged(preset.get()))
+        .onChanged(unused4 -> onPresetChanged(preset.get()))
         .build()
     );
 
@@ -260,7 +260,7 @@ public class KeyboardHud extends HudElement {
     @EventHandler(priority = EventPriority.HIGH)
     private void onKey(KeyInputEvent event) {
         for (Key key : keys) {
-            if (key.matches(event.input.key(), event.input.scancode(), true)) {
+            if (key.matches(event.key(), event.scancode(), true)) {
                 key.update(event.action);
             }
         }
@@ -269,7 +269,7 @@ public class KeyboardHud extends HudElement {
     @EventHandler(priority = EventPriority.HIGH)
     private void onMouseClick(MouseClickEvent event) {
         for (Key key : keys) {
-            if (key.matches(event.input.button(), -1, false)) {
+            if (key.matches(event.button(), -1, false)) {
                 key.update(event.action);
             }
         }
@@ -673,13 +673,13 @@ public class KeyboardHud extends HudElement {
         }
 
         public Key(CompoundTag compound) {
-            this.keybind = Keybind.none().fromTag(compound.getCompoundOrEmpty("key"));
-            this.name = compound.getStringOr("name", "");
-            this.x = compound.getDoubleOr("x", 0);
-            this.y = compound.getDoubleOr("y", 0);
-            this.width = compound.getDoubleOr("width", 60);
-            this.height = compound.getDoubleOr("height", 60);
-            this.showCps = compound.getBooleanOr("showCps", false);
+            this.keybind = Keybind.none().fromTag(compound.getCompound("key"));
+            this.name = compound.getString("name");
+            this.x = compound.getDouble("x");
+            this.y = compound.getDouble("y");
+            this.width = compound.contains("width") ? compound.getDouble("width") : 60;
+            this.height = compound.contains("height") ? compound.getDouble("height") : 60;
+            this.showCps = compound.getBoolean("showCps");
         }
 
         Key(KeyMapping binding, String name, double x, double y, double width, double height) {
@@ -736,7 +736,7 @@ public class KeyboardHud extends HudElement {
         }
 
         public boolean isNativelyPressed() {
-            long window = mc.getWindow().handle();
+            long window = mc.getWindow().getWindow();
             if (keybind != null) {
                 if (!keybind.isSet()) return false;
                 return keybind.isKey()
@@ -852,7 +852,7 @@ public class KeyboardHud extends HudElement {
 
     public class CustomKeyListSetting extends Setting<List<Key>> {
         public CustomKeyListSetting() {
-            super("custom-keys", "Configure the custom keys display.", List.of(), _ -> onPresetChanged(preset.get()), _ -> {
+            super("custom-keys", "Configure the custom keys display.", List.of(), unused5 -> onPresetChanged(preset.get()), unused6 -> {
             }, () -> preset.get() == Preset.Custom);
         }
 
@@ -887,8 +887,8 @@ public class KeyboardHud extends HudElement {
         protected List<Key> load(CompoundTag tag) {
             get().clear();
 
-            for (Tag tagI : tag.getListOrEmpty("value")) {
-                tagI.asCompound().ifPresent(CompoundTag -> get().add(new Key(CompoundTag)));
+            for (Tag tagI : tag.getList("value", Tag.TAG_COMPOUND)) {
+                if (tagI instanceof CompoundTag compound) get().add(new Key(compound));
             }
 
             return get();

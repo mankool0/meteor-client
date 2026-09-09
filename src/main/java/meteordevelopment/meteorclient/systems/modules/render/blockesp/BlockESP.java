@@ -41,7 +41,7 @@ public class BlockESP extends Module {
     private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
         .name("blocks")
         .description("Blocks to search for.")
-        .onChanged(_ -> {
+        .onChanged(unused1 -> {
             if (isActive() && Utils.canUpdate()) onActivate();
         })
         .build()
@@ -125,17 +125,17 @@ public class BlockESP extends Module {
     }
 
     private void updateChunk(int x, int z) {
-        ESPChunk chunk = chunks.get(ChunkPos.pack(x, z));
+        ESPChunk chunk = chunks.get(ChunkPos.asLong(x, z));
         if (chunk != null) chunk.update();
     }
 
     private void updateBlock(int x, int y, int z) {
-        ESPChunk chunk = chunks.get(ChunkPos.pack(x >> 4, z >> 4));
+        ESPChunk chunk = chunks.get(ChunkPos.asLong(x >> 4, z >> 4));
         if (chunk != null) chunk.update(x, y, z);
     }
 
     public ESPBlock getBlock(int x, int y, int z) {
-        ESPChunk chunk = chunks.get(ChunkPos.pack(x >> 4, z >> 4));
+        ESPChunk chunk = chunks.get(ChunkPos.asLong(x >> 4, z >> 4));
         return chunk == null ? null : chunk.get(x, y, z);
     }
 
@@ -165,14 +165,14 @@ public class BlockESP extends Module {
 
             if (schunk.size() > 0) {
                 synchronized (chunks) {
-                    chunks.put(chunk.getPos().pack(), schunk);
+                    chunks.put(chunk.getPos().toLong(), schunk);
                     schunk.update();
 
                     // Update neighbour chunks
-                    updateChunk(chunk.getPos().x() - 1, chunk.getPos().z());
-                    updateChunk(chunk.getPos().x() + 1, chunk.getPos().z());
-                    updateChunk(chunk.getPos().x(), chunk.getPos().z() - 1);
-                    updateChunk(chunk.getPos().x(), chunk.getPos().z() + 1);
+                    updateChunk(chunk.getPos().x - 1, chunk.getPos().z);
+                    updateChunk(chunk.getPos().x + 1, chunk.getPos().z);
+                    updateChunk(chunk.getPos().x, chunk.getPos().z - 1);
+                    updateChunk(chunk.getPos().x, chunk.getPos().z + 1);
                 }
             }
         });
@@ -187,7 +187,7 @@ public class BlockESP extends Module {
 
         int chunkX = bx >> 4;
         int chunkZ = bz >> 4;
-        long key = ChunkPos.pack(chunkX, chunkZ);
+        long key = ChunkPos.asLong(chunkX, chunkZ);
 
         boolean added = blocks.get().contains(event.newState.getBlock()) && !blocks.get().contains(event.oldState.getBlock());
         boolean removed = !added && !blocks.get().contains(event.newState.getBlock()) && blocks.get().contains(event.oldState.getBlock());

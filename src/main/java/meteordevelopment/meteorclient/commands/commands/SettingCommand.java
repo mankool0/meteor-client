@@ -33,7 +33,7 @@ public class SettingCommand extends Command {
         // Open hud screen
         builder.then(
             literal("hud")
-                .executes(_ -> {
+                .executes(unused1 -> {
                     TabScreen screen = Tabs.get(HudTab.class).createScreen(GuiThemes.get());
                     screen.parent = null;
 
@@ -45,7 +45,7 @@ public class SettingCommand extends Command {
         // Open config screen
         builder.then(
             literal("config")
-                .executes(_ -> {
+                .executes(unused2 -> {
                     TabScreen screen = Tabs.get(ConfigTab.class).createScreen(GuiThemes.get());
                     screen.parent = null;
 
@@ -65,7 +65,7 @@ public class SettingCommand extends Command {
                         ChatUtils.infoPrefix("Config", "Setting (highlight)%s(default) is (highlight)%s(default).", setting.title, setting.get());
 
                         return SINGLE_SUCCESS;
-                    }).suggests((_, suggestionsBuilder) ->
+                    }).suggests((unused3, suggestionsBuilder) ->
                         SettingArgumentType.listSuggestions(suggestionsBuilder, Config.get().settings)
                     )
                     .then(

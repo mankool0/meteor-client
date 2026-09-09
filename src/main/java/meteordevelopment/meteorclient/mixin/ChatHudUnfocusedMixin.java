@@ -5,57 +5,20 @@
 
 package meteordevelopment.meteorclient.mixin;
 
-import com.llamalad7.mixinextras.injector.ModifyReceiver;
-import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.systems.modules.misc.BetterChat;
-import net.minecraft.client.gui.ActiveTextCollector;
-import net.minecraft.client.gui.ActiveTextCollector.Parameters;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.TextAlignment;
-import net.minecraft.util.ARGB;
-import net.minecraft.util.FormattedCharSequence;
-import org.spongepowered.asm.mixin.Final;
+import net.minecraft.client.gui.components.ChatComponent;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(targets = "net.minecraft.client.gui.components.ChatComponent$DrawingBackgroundGraphicsAccess", remap = false)
+// PORT(1.21.4): This mixin used to target the 26.1 ChatComponent$DrawingBackgroundGraphicsAccess inner
+// type (the "unfocused"/background render pass of the newer dual-pass ActiveTextCollector rendering
+// architecture). Neither that type nor ActiveTextCollector exist on 1.21.4 - ChatComponent has a single
+// render(GuiGraphics, int, int, int, boolean) method, used for both the focused and unfocused states,
+// with exactly one place where line text is drawn. That single injection point can only safely be owned
+// by one mixin (two @ModifyReceiver/@ModifyArg handlers from different mixin classes on the exact same
+// instruction risk colliding), so the "player heads" logic that used to live in this class (and its
+// sibling ChatHudInteractableMixin, which handled the "focused" pass) has been merged into
+// ChatHudInteractableMixin, which now handles player heads for all chat rendering regardless of focus.
+// This class is kept as an intentional no-op so the mixin config (meteor-client.mixins.json) does not
+// need to be touched.
+@Mixin(ChatComponent.class)
 public abstract class ChatHudUnfocusedMixin {
-    @Unique
-    private static BetterChat betterChat;
-
-    @Final
-    @Shadow
-    private GuiGraphicsExtractor graphics;
-
-    // Offset text to make room for player heads
-    @ModifyArg(method = "handleMessage", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/ActiveTextCollector;accept(Lnet/minecraft/client/gui/TextAlignment;IILnet/minecraft/client/gui/ActiveTextCollector$Parameters;Lnet/minecraft/util/FormattedCharSequence;)V"), index = 1)
-    private int modifyX(int x) {
-        return getBetterChat().modifyChatWidth(x);
-    }
-
-    // Player Heads for unfocused chat - draw before text
-    @ModifyReceiver(method = "handleMessage", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/ActiveTextCollector;accept(Lnet/minecraft/client/gui/TextAlignment;IILnet/minecraft/client/gui/ActiveTextCollector$Parameters;Lnet/minecraft/util/FormattedCharSequence;)V"))
-    private ActiveTextCollector onRender_beforeDrawText(ActiveTextCollector instance, TextAlignment alignment, int x, int y, Parameters transformation, FormattedCharSequence orderedText) {
-        getBetterChat().beforeDrawMessage(graphics, y, ARGB.white(transformation.opacity()));
-        return instance;
-    }
-
-    // Clean up after drawing
-    @Inject(method = "handleMessage", at = @At("TAIL"))
-    private void onRender_afterDrawText(int textTop, float opacity, FormattedCharSequence message, CallbackInfoReturnable<Boolean> cir) {
-        getBetterChat().afterDrawMessage();
-    }
-
-    @Unique
-    private static BetterChat getBetterChat() {
-        if (betterChat == null) {
-            betterChat = Modules.get().get(BetterChat.class);
-        }
-        return betterChat;
-    }
 }

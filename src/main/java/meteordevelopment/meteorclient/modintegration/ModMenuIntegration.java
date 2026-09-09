@@ -13,6 +13,6 @@ import meteordevelopment.meteorclient.gui.screens.ModulesScreen;
 public class ModMenuIntegration implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return _ -> new ModulesScreen(GuiThemes.get());
+        return unused1 -> new ModulesScreen(GuiThemes.get());
     }
 }

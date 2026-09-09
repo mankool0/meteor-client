@@ -5,13 +5,11 @@
 
 package meteordevelopment.meteorclient.gui.renderer;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import meteordevelopment.meteorclient.mixininterface.IGpuDevice;
-
 import java.util.ArrayList;
 import java.util.List;
 
 import static meteordevelopment.meteorclient.utils.Utils.getWindowHeight;
+import static org.lwjgl.opengl.GL11.glScissor;
 
 public class Scissor {
     public int x, y;
@@ -33,11 +31,7 @@ public class Scissor {
         return this;
     }
 
-    public void push() {
-        ((IGpuDevice) RenderSystem.getDevice()).meteor$pushScissor(x, getWindowHeight() - y - height, width, height);
-    }
-
-    public void pop() {
-        ((IGpuDevice) RenderSystem.getDevice()).meteor$popScissor();
+    public void apply() {
+        glScissor(x, getWindowHeight() - y - height, width, height);
     }
 }

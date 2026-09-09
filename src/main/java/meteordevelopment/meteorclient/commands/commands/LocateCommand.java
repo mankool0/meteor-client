@@ -74,8 +74,8 @@ public class LocateCommand extends Command {
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
         // Overworld structures
 
-        builder.then(literal("buried_treasure").executes(_ -> {
-            ItemStack stack = mc.player.getInventory().getSelectedItem();
+        builder.then(literal("buried_treasure").executes(unused1 -> {
+            ItemStack stack = mc.player.getInventory().getSelected();
             if (stack.getItem() != Items.FILLED_MAP
                 || stack.get(DataComponents.ITEM_NAME) == null
                 || !stack.get(DataComponents.ITEM_NAME).getString().equals(Component.translatable("filled_map.buried_treasure").getString())) {
@@ -104,8 +104,8 @@ public class LocateCommand extends Command {
             return SINGLE_SUCCESS;
         }));
 
-        builder.then(literal("mansion").executes(_ -> {
-            ItemStack stack = mc.player.getInventory().getSelectedItem();
+        builder.then(literal("mansion").executes(unused2 -> {
+            ItemStack stack = mc.player.getInventory().getSelected();
             if (stack.getItem() != Items.FILLED_MAP
                 || stack.get(DataComponents.ITEM_NAME) == null
                 || !stack.get(DataComponents.ITEM_NAME).getString().equals(Component.translatable("filled_map.mansion").getString())) {
@@ -134,8 +134,8 @@ public class LocateCommand extends Command {
             return SINGLE_SUCCESS;
         }));
 
-        builder.then(literal("monument").executes(_ -> {
-            ItemStack stack = mc.player.getInventory().getSelectedItem();
+        builder.then(literal("monument").executes(unused3 -> {
+            ItemStack stack = mc.player.getInventory().getSelected();
             if (stack.getItem() == Items.FILLED_MAP
                 && stack.get(DataComponents.ITEM_NAME) != null
                 && stack.get(DataComponents.ITEM_NAME).getString().equals(Component.translatable("filled_map.monument").getString())) {
@@ -179,7 +179,7 @@ public class LocateCommand extends Command {
             return SINGLE_SUCCESS;
         }));
 
-        builder.then(literal("stronghold").executes(_ -> {
+        builder.then(literal("stronghold").executes(unused4 -> {
             boolean foundEye = InvUtils.testInHotbar(Items.ENDER_EYE);
 
             if (foundEye) {
@@ -209,7 +209,7 @@ public class LocateCommand extends Command {
 
         // Nether structures
 
-        builder.then(literal("nether_fortress").executes(_ -> {
+        builder.then(literal("nether_fortress").executes(unused5 -> {
             if (mc.level.dimension() != Level.NETHER) {
                 error("You need to be in the nether to locate a nether fortress.");
                 return SINGLE_SUCCESS;
@@ -234,7 +234,7 @@ public class LocateCommand extends Command {
 
         // End structures
 
-        builder.then(literal("end_city").executes(_ -> {
+        builder.then(literal("end_city").executes(unused6 -> {
             if (mc.level.dimension() != Level.END) {
                 error("You need to be in the end to locate an end city.");
                 return SINGLE_SUCCESS;
@@ -259,8 +259,8 @@ public class LocateCommand extends Command {
 
         // Misc structures
 
-        builder.then(literal("lodestone").executes(_ -> {
-            ItemStack stack = mc.player.getInventory().getSelectedItem();
+        builder.then(literal("lodestone").executes(unused7 -> {
+            ItemStack stack = mc.player.getInventory().getSelected();
             if (stack.getItem() != Items.COMPASS) {
                 error("You need to hold a (highlight)lodestone(default) compass!");
                 return SINGLE_SUCCESS;
@@ -289,7 +289,7 @@ public class LocateCommand extends Command {
             return SINGLE_SUCCESS;
         }));
 
-        builder.then(literal("cancel").executes(_ -> {
+        builder.then(literal("cancel").executes(unused8 -> {
             cancel();
             return SINGLE_SUCCESS;
         }));

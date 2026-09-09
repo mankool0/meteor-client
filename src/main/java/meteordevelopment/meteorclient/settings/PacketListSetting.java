@@ -45,7 +45,7 @@ public class PacketListSetting extends Setting<Set<PacketType<? extends @NotNull
                 PacketType<? extends @NotNull Packet<?>> packet = PacketUtils.getPacket(value.trim());
                 if (packet != null && (filter == null || filter.test(packet))) packets.add(packet);
             }
-        } catch (Exception _) {
+        } catch (Exception unused1) {
         }
 
         return packets;
@@ -81,7 +81,7 @@ public class PacketListSetting extends Setting<Set<PacketType<? extends @NotNull
         Tag valueTag = tag.get("value");
         if (valueTag instanceof ListTag listTag) {
             for (Tag t : listTag) {
-                PacketType<? extends @NotNull Packet<?>> packet = PacketUtils.getPacket(t.asString().orElse(""));
+                PacketType<? extends @NotNull Packet<?>> packet = PacketUtils.getPacket(t.getAsString());
                 if (packet != null && (filter == null || filter.test(packet))) get().add(packet);
             }
         }

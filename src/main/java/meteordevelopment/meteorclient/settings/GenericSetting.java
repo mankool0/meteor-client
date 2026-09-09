@@ -45,7 +45,7 @@ public class GenericSetting<T extends IGeneric<T>> extends Setting<T> {
 
     @Override
     public T load(CompoundTag tag) {
-        get().fromTag(tag.getCompoundOrEmpty("value"));
+        get().fromTag(tag.getCompound("value"));
 
         return get();
     }

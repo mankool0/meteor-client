@@ -5,7 +5,7 @@
 
 package meteordevelopment.meteorclient.mixin;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager;
 import meteordevelopment.meteorclient.mixininterface.ICapabilityTracker;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

@@ -80,7 +80,7 @@ public abstract class ClientPacketListenerMixin extends ClientCommonPacketListen
     }
 
     // the server sends a GameJoin packet after the reconfiguration phase
-    @Inject(method = "handleConfigurationStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V", shift = At.Shift.AFTER))
+    @Inject(method = "handleConfigurationStart", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V", shift = At.Shift.AFTER))
     private void onHandleConfigurationStart(ClientboundStartConfigurationPacket packet, CallbackInfo ci) {
         MeteorClient.EVENT_BUS.post(GameLeftEvent.get());
     }
@@ -113,7 +113,7 @@ public abstract class ClientPacketListenerMixin extends ClientCommonPacketListen
         }
     }
 
-    @Inject(method = "handleExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/network/PacketProcessor;)V", shift = At.Shift.AFTER))
+    @Inject(method = "handleExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/PacketUtils;ensureRunningOnSameThread(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;Lnet/minecraft/util/thread/BlockableEventLoop;)V", shift = At.Shift.AFTER))
     private void onHandleExplosionVelocity(ClientboundExplodePacket packet, CallbackInfo ci) {
         Velocity velocity = Modules.get().get(Velocity.class);
         if (!velocity.explosions.get()) return;
@@ -159,7 +159,7 @@ public abstract class ClientPacketListenerMixin extends ClientCommonPacketListen
     }
 
     @Inject(method = "sendChat", at = @At("HEAD"), cancellable = true)
-    private void onSendChatMessage(String message, CallbackInfo ci, @Local(argsOnly = true, name = "content") LocalRef<String> messageRef) {
+    private void onSendChatMessage(String message, CallbackInfo ci, @Local(argsOnly = true, ordinal = 0) LocalRef<String> messageRef) {
         if (!message.startsWith(Config.get().prefix.get()) && !(BaritoneUtils.IS_AVAILABLE && message.startsWith(BaritoneUtils.getPrefix()))) {
             SendMessageEvent event = MeteorClient.EVENT_BUS.post(SendMessageEvent.get(message));
 

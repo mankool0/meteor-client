@@ -370,7 +370,7 @@ public class AttributeSwap extends Module {
         if (awaitingBack) return;
 
         if (slotIndex < 0 || slotIndex > 8) return;
-        if (slotIndex == mc.player.getInventory().getSelectedSlot()) return;
+        if (slotIndex == mc.player.getInventory().selected) return;
 
         if (!InvUtils.swap(slotIndex, swapBack.get())) return;
 
@@ -414,9 +414,9 @@ public class AttributeSwap extends Module {
         boolean isLiving = target instanceof LivingEntity;
         boolean isPlayer = target instanceof Player;
         boolean isOnFire = target != null && target.isOnFire();
-        boolean isUndead = target != null && target.typeHolder().is(EntityTypeTags.SENSITIVE_TO_SMITE);
-        boolean isArthropod = target != null && target.typeHolder().is(EntityTypeTags.SENSITIVE_TO_BANE_OF_ARTHROPODS);
-        boolean isAquatic = target != null && target.typeHolder().is(EntityTypeTags.SENSITIVE_TO_IMPALING);
+        boolean isUndead = target != null && target.getType().is(EntityTypeTags.SENSITIVE_TO_SMITE);
+        boolean isArthropod = target != null && target.getType().is(EntityTypeTags.SENSITIVE_TO_BANE_OF_ARTHROPODS);
+        boolean isAquatic = target != null && target.getType().is(EntityTypeTags.SENSITIVE_TO_IMPALING);
         boolean hasFireResistance = isLiving && (((LivingEntity) target).hasEffect(MobEffects.FIRE_RESISTANCE) || hasFireProtectionArmor((LivingEntity) target));
         double armor = isLiving ? ((LivingEntity) target).getAttributeValue(Attributes.ARMOR) : 0;
         float health = isLiving ? ((LivingEntity) target).getHealth() : 0;
@@ -425,7 +425,7 @@ public class AttributeSwap extends Module {
         double bestScore = getItemScore(currentStack, isFalling, durability, isLiving, isPlayer, isOnFire, hasFireResistance, isUndead, isArthropod, isAquatic, armor, health);
 
         for (int i = 0; i < 9; i++) {
-            if (i == mc.player.getInventory().getSelectedSlot()) continue;
+            if (i == mc.player.getInventory().selected) continue;
 
             ItemStack stack = mc.player.getInventory().getItem(i);
             if (stack.isEmpty() && !durability) continue;
@@ -441,18 +441,7 @@ public class AttributeSwap extends Module {
     }
 
     private int getSmartSpearSlot(boolean requireLunge) {
-        for (int i = 0; i < 9; i++) {
-            if (i == mc.player.getInventory().getSelectedSlot()) continue;
-            ItemStack stack = mc.player.getInventory().getItem(i);
-            if (!stack.is(ItemTags.SPEARS)) continue;
-
-            boolean hasLunge = Utils.getEnchantmentLevel(stack, Enchantments.LUNGE) > 0;
-            if (requireLunge && !hasLunge) continue;
-            if (!requireLunge && excludeLungeFromHitbox.get() && hasLunge) continue;
-
-            return i;
-        }
-
+        // PORT(1.21.4): spears (ItemTags.SPEARS) and Enchantments.LUNGE do not exist on 1.21.4 - spear swapping disabled.
         return -1;
     }
 
@@ -625,7 +614,8 @@ public class AttributeSwap extends Module {
     }
 
     private boolean hasFireProtectionArmor(LivingEntity entity) {
-        for (EquipmentSlot slot : EquipmentSlotGroup.ARMOR) {
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (!slot.isArmor()) continue;
             ItemStack stack = entity.getItemBySlot(slot);
             if (stack.isEmpty()) continue;
 

@@ -13,14 +13,15 @@ import meteordevelopment.meteorclient.gui.renderer.operations.TextOperation;
 import meteordevelopment.meteorclient.gui.renderer.packer.GuiTexture;
 import meteordevelopment.meteorclient.gui.renderer.packer.TexturePacker;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
+import meteordevelopment.meteorclient.renderer.GL;
 import meteordevelopment.meteorclient.renderer.Renderer2D;
 import meteordevelopment.meteorclient.renderer.Texture;
 import meteordevelopment.meteorclient.utils.PostInit;
 import meteordevelopment.meteorclient.utils.misc.Pool;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.resources.Identifier;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 
@@ -60,9 +61,9 @@ public class GuiRenderer {
     public WWidget tooltipWidget;
     private double tooltipAnimProgress;
 
-    private GuiGraphicsExtractor graphics;
+    private GuiGraphics graphics;
 
-    public static GuiTexture addTexture(Identifier id) {
+    public static GuiTexture addTexture(ResourceLocation id) {
         return TEXTURE_PACKER.add(id);
     }
 
@@ -81,13 +82,13 @@ public class GuiRenderer {
         TEXTURE = TEXTURE_PACKER.pack();
     }
 
-    public void begin(GuiGraphicsExtractor graphics) {
+    // WidgetScreen renders under Utils.unscaledProjection(), so GuiGraphics is already in raw framebuffer
+    // pixels here - the same space widget coordinates use. Do not scale the pose by the gui scale.
+    public void begin(GuiGraphics graphics) {
         this.graphics = graphics;
-        this.graphics.nextStratum();
 
-        var matrices = graphics.pose();
-        matrices.pushMatrix();
-        matrices.scale(1.0f / mc.getWindow().getGuiScale());
+        GL.enableBlend();
+        GL.enableScissorTest();
 
         scissorStart(0, 0, getWindowWidth(), getWindowHeight());
     }
@@ -98,8 +99,7 @@ public class GuiRenderer {
         for (Runnable task : postTasks) task.run();
         postTasks.clear();
 
-        graphics.pose().popMatrix();
-        graphics.nextStratum();
+        GL.disableScissorTest();
     }
 
     public void beginRender() {
@@ -108,17 +108,11 @@ public class GuiRenderer {
     }
 
     public void endRender() {
-        endRender(null);
-    }
-
-    public void endRender(Scissor scissor) {
-        if (scissor != null) scissor.push();
-
         r.end();
         rTex.end();
 
         r.render();
-        rTex.render("u_Texture", TEXTURE.getTextureView(), TEXTURE.getSampler());
+        rTex.render(TEXTURE);
 
         // Normal text
         theme.textRenderer().begin(theme.scale(1));
@@ -135,8 +129,6 @@ public class GuiRenderer {
         theme.textRenderer().end();
 
         texts.clear();
-
-        if (scissor != null) scissor.pop();
     }
 
     public void scissorStart(double x, double y, double width, double height) {
@@ -149,11 +141,11 @@ public class GuiRenderer {
             if (y < parent.y) y = parent.y;
             else if (y + height > parent.y + parent.height) height -= (y + height) - (parent.y + parent.height);
 
-            endRender(parent);
+            parent.apply();
+            endRender();
         }
 
         scissorStack.push(scissorPool.get().set(x, y, width, height));
-        graphics.enableScissor((int) x, (int) y, (int) (x + width), (int) (y + height));
 
         beginRender();
     }
@@ -161,19 +153,16 @@ public class GuiRenderer {
     public void scissorEnd() {
         Scissor scissor = scissorStack.pop();
 
-        endRender(scissor);
-
-        scissor.push();
+        scissor.apply();
+        endRender();
         for (Runnable task : scissor.postTasks) task.run();
-        scissor.pop();
 
-        graphics.disableScissor();
         if (!scissorStack.isEmpty()) beginRender();
 
         scissorPool.free(scissor);
     }
 
-    public boolean renderTooltip(GuiGraphicsExtractor graphics, double mouseX, double mouseY, double delta) {
+    public boolean renderTooltip(GuiGraphics graphics, double mouseX, double mouseY, double delta) {
         tooltipAnimProgress += (tooltip != null ? 1 : -1) * delta * 14;
         tooltipAnimProgress = Mth.clamp(tooltipAnimProgress, 0, 1);
 
@@ -260,7 +249,7 @@ public class GuiRenderer {
             rTex.texQuad(x, y, width, height, rotation, 0, 0, 1, 1, WHITE);
             rTex.end();
 
-            rTex.render(texture.getTextureView(), texture.getSampler());
+            rTex.render(texture);
         });
     }
 
@@ -269,7 +258,7 @@ public class GuiRenderer {
     }
 
     public void item(ItemStack itemStack, int x, int y, float scale, boolean overlay) {
-        RenderUtils.drawItem(graphics, itemStack, x, y, scale, overlay, null, false);
+        RenderUtils.drawItem(graphics, itemStack, x, y, scale, overlay, null);
     }
 
     public void absolutePost(Runnable task) {

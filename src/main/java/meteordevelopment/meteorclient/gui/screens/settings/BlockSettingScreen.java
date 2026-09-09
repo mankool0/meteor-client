@@ -17,7 +17,7 @@ import meteordevelopment.meteorclient.utils.render.DisplayItemUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import org.apache.commons.lang3.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 public class BlockSettingScreen extends WindowScreen {
     private final BlockSetting setting;
@@ -55,7 +55,7 @@ public class BlockSettingScreen extends WindowScreen {
             if (skipValue(block)) continue;
 
             WItemWithLabel item = theme.itemWithLabel(DisplayItemUtils.toStack(block), Names.get(block));
-            if (!filterText.isEmpty() && !Strings.CI.contains(item.getLabelText(), filterText)) continue;
+            if (!filterText.isEmpty() && !StringUtils.containsIgnoreCase(item.getLabelText(), filterText)) continue;
             table.add(item);
 
             WButton select = table.add(theme.button("Select")).expandCellX().right().widget();

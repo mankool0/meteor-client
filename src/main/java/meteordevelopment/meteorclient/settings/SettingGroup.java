@@ -74,13 +74,13 @@ public class SettingGroup implements ISerializable<SettingGroup>, Iterable<Setti
 
     @Override
     public SettingGroup fromTag(CompoundTag tag) {
-        sectionExpanded = tag.getBooleanOr("sectionExpanded", false);
+        sectionExpanded = tag.getBoolean("sectionExpanded");
 
-        ListTag settingsTag = tag.getListOrEmpty("settings");
+        ListTag settingsTag = tag.getList("settings", Tag.TAG_COMPOUND);
         for (Tag t : settingsTag) {
             CompoundTag settingTag = (CompoundTag) t;
 
-            Setting<?> setting = get(settingTag.getStringOr("name", ""));
+            Setting<?> setting = get(settingTag.getString("name"));
             if (setting != null) setting.fromTag(settingTag);
         }
 

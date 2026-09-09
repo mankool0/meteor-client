@@ -25,7 +25,7 @@ public class WaypointCommand extends Command {
 
     @Override
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
-        builder.then(literal("list").executes(_ -> {
+        builder.then(literal("list").executes(unused1 -> {
             if (Waypoints.get().isEmpty()) error("No created waypoints.");
             else {
                 info(ChatFormatting.WHITE + "Created Waypoints:");

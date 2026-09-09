@@ -12,7 +12,7 @@ import meteordevelopment.meteorclient.systems.modules.player.NameProtect;
 import meteordevelopment.meteorclient.systems.proxies.Proxies;
 import meteordevelopment.meteorclient.systems.proxies.Proxy;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
@@ -56,7 +56,7 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
         super(title);
     }
 
-    @Inject(method = "repositionElements", at = @At("TAIL"))
+    @Inject(method = "init", at = @At("TAIL"))
     private void onInit(CallbackInfo ci) {
         textColor1 = Color.fromRGBA(255, 255, 255, 255);
         textColor2 = Color.fromRGBA(175, 175, 175, 255);
@@ -64,21 +64,18 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
         loggedInAs = "Logged in as ";
         loggedInAsLength = font.width(loggedInAs);
 
-        if (accounts == null) {
-            accounts = addRenderableWidget(
-                new Button.Builder(Component.literal("Accounts"), _ -> minecraft.setScreen(GuiThemes.get().accountsScreen()))
-                    .size(BUTTON_WIDTH, BUTTON_HEIGHT)
-                    .build()
-            );
-        }
+        // widgets are cleared on every (re)init, so the buttons must be recreated
+        accounts = addRenderableWidget(
+            new Button.Builder(Component.literal("Accounts"), unused1 -> minecraft.setScreen(GuiThemes.get().accountsScreen()))
+                .size(BUTTON_WIDTH, BUTTON_HEIGHT)
+                .build()
+        );
 
-        if (proxies == null) {
-            proxies = addRenderableWidget(
-                new Button.Builder(Component.literal("Proxies"), _ -> minecraft.setScreen(GuiThemes.get().proxiesScreen()))
-                    .size(BUTTON_WIDTH, BUTTON_HEIGHT)
-                    .build()
-            );
-        }
+        proxies = addRenderableWidget(
+            new Button.Builder(Component.literal("Proxies"), unused2 -> minecraft.setScreen(GuiThemes.get().proxiesScreen()))
+                .size(BUTTON_WIDTH, BUTTON_HEIGHT)
+                .build()
+        );
 
         Config config = Config.get();
         Config.ButtonPosition accountPos = config.accountButtonAnchor.get();
@@ -107,10 +104,8 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
         }
     }
 
-    @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float deltaTicks) {
-        super.extractRenderState(graphics, mouseX, mouseY, deltaTicks);
-
+    @Inject(method = "render", at = @At("TAIL"))
+    private void onRender(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks, CallbackInfo ci) {
         Config config = Config.get();
 
         if (!config.showAccountStatus.get() && !config.showProxiesStatus.get()) {
@@ -130,8 +125,8 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
 
         // Logged in as
         if (config.showAccountStatus.get()) {
-            graphics.text(mc.font, loggedInAs, x, y, textColor1);
-            graphics.text(mc.font, Modules.get().get(NameProtect.class).getName(minecraft.getUser().getName()), x + loggedInAsLength, y, textColor2);
+            graphics.drawString(mc.font, loggedInAs, x, y, textColor1);
+            graphics.drawString(mc.font, Modules.get().get(NameProtect.class).getName(minecraft.getUser().getName()), x + loggedInAsLength, y, textColor2);
 
             y += font.lineHeight + 2;
         }
@@ -146,8 +141,8 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
         String left = proxy != null ? "Using proxy " : "Not using a proxy";
         String right = proxy != null ? (proxy.name.get() != null && !proxy.name.get().isEmpty() ? "(" + proxy.name.get() + ") " : "") + proxy.address.get() + ":" + proxy.port.get() : null;
 
-        graphics.text(mc.font, left, x, y, textColor1);
+        graphics.drawString(mc.font, left, x, y, textColor1);
         if (right != null)
-            graphics.text(mc.font, right, x + font.width(left), y, textColor2);
+            graphics.drawString(mc.font, right, x + font.width(left), y, textColor2);
     }
 }

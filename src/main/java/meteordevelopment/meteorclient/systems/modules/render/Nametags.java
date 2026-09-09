@@ -40,7 +40,7 @@ import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.vehicle.minecart.MinecartTNT;
+import net.minecraft.world.entity.vehicle.MinecartTNT;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -333,7 +333,7 @@ public class Nametags extends Module {
 
         boolean freecamNotActive = !Modules.get().isActive(Freecam.class);
         boolean notThirdPerson = mc.options.getCameraType().isFirstPerson();
-        Vec3 cameraPos = mc.gameRenderer.getMainCamera().position();
+        Vec3 cameraPos = mc.gameRenderer.getMainCamera().getPosition();
 
         for (Entity entity : mc.level.entitiesForRendering()) {
             EntityType<?> type = entity.getType();
@@ -531,7 +531,7 @@ public class Nametags extends Module {
             for (int i = 0; i < 6; i++) {
                 ItemStack stack = getItem(player, i);
 
-                RenderUtils.drawItem(event.graphics, stack, (int) x, (int) y, 2, true, null, false);
+                RenderUtils.drawItem(event.graphics, stack, (int) x, (int) y, 2, true, null);
 
                 if (stack.isDamageableItem() && itemDurability.get() != Durability.None) {
                     text.begin(0.75, false, true);

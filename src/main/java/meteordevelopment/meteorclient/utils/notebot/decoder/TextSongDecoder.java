@@ -52,7 +52,7 @@ public class TextSongDecoder extends SongDecoder {
                 if (parts.length > 2) {
                     type = Integer.parseInt(parts[2]);
                 }
-            } catch (NumberFormatException _) {
+            } catch (NumberFormatException unused1) {
                 notebot.warning("Invalid character at line %d", lineNumber);
                 continue;
             }

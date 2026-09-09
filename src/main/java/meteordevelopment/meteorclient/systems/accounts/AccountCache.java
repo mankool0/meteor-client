@@ -64,8 +64,8 @@ public class AccountCache implements ISerializable<AccountCache> {
     public AccountCache fromTag(CompoundTag tag) {
         if (tag.getString("username").isEmpty() || tag.getString("uuid").isEmpty()) throw new NbtException();
 
-        username = tag.getString("username").get();
-        uuid = tag.getString("uuid").get();
+        username = tag.getString("username");
+        uuid = tag.getString("uuid");
         loadHead();
 
         return this;

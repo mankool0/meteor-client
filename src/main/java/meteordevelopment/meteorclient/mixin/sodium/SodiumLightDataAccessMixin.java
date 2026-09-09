@@ -9,8 +9,8 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.render.Fullbright;
 import meteordevelopment.meteorclient.systems.modules.render.Xray;
 import net.caffeinemc.mods.sodium.client.model.light.data.LightDataAccess;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Final;
@@ -29,8 +29,7 @@ public abstract class SodiumLightDataAccessMixin {
 
     @Shadow
     protected BlockAndTintGetter level;
-    @Shadow
-    @Final
+    @Shadow @Final
     private BlockPos.MutableBlockPos pos;
 
     @Unique
@@ -40,19 +39,19 @@ public abstract class SodiumLightDataAccessMixin {
     private Fullbright fb;
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void onInit(CallbackInfo ci) {
+    private void onInit(CallbackInfo info) {
         xray = Modules.get().get(Xray.class);
         fb = Modules.get().get(Fullbright.class);
     }
 
     @ModifyVariable(method = "compute", at = @At(value = "TAIL"), name = "bl")
-    private int compute_modifyBL(int bl) {
+    private int compute_modifyBL(int light) {
         if (xray.isActive()) {
             BlockState state = level.getBlockState(pos);
             if (!xray.isBlocked(state.getBlock(), pos)) return FULL_LIGHT;
         }
 
-        return bl;
+        return light;
     }
 
     // fullbright

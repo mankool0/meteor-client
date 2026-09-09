@@ -13,7 +13,7 @@ import meteordevelopment.meteorclient.gui.widgets.containers.WHorizontalList;
 import meteordevelopment.meteorclient.gui.widgets.containers.WTable;
 import meteordevelopment.meteorclient.utils.network.Http;
 import meteordevelopment.meteorclient.utils.network.MeteorExecutor;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 
 import java.net.http.HttpResponse;
 import java.time.format.DateTimeFormatter;

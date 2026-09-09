@@ -113,7 +113,7 @@ public class AutoArmor extends Module {
         for (ArmorPiece armorPiece : armorPieces) armorPiece.reset();
 
         // Loop through items in inventory
-        for (int i = 0; i < mc.player.getInventory().getNonEquipmentItems().size(); i++) {
+        for (int i = 0; i < mc.player.getInventory().items.size(); i++) {
             ItemStack itemStack = mc.player.getInventory().getItem(i);
             if (itemStack.isEmpty() || !isArmor(itemStack)) continue;
 
@@ -208,7 +208,7 @@ public class AutoArmor extends Module {
     }
 
     private void moveToEmpty(int armorSlotId) {
-        for (int i = 0; i < mc.player.getInventory().getNonEquipmentItems().size(); i++) {
+        for (int i = 0; i < mc.player.getInventory().items.size(); i++) {
             if (mc.player.getInventory().getItem(i).isEmpty()) {
                 InvUtils.move().fromArmor(armorSlotId).to(i);
 

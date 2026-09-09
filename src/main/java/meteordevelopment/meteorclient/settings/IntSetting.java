@@ -28,7 +28,7 @@ public class IntSetting extends Setting<Integer> {
     protected Integer parseImpl(String str) {
         try {
             return Integer.parseInt(str.trim());
-        } catch (NumberFormatException _) {
+        } catch (NumberFormatException unused1) {
             return null;
         }
     }
@@ -47,7 +47,7 @@ public class IntSetting extends Setting<Integer> {
 
     @Override
     public Integer load(CompoundTag tag) {
-        set(tag.getIntOr("value", 0));
+        set(tag.getInt("value"));
 
         return get();
     }

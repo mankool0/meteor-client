@@ -8,7 +8,7 @@ package meteordevelopment.meteorclient.mixin;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.misc.BetterBeacons;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.BeaconScreen;
@@ -59,8 +59,8 @@ public abstract class BeaconScreenMixin extends AbstractContainerScreen<BeaconMe
         ci.cancel();
     }
 
-    @Inject(method = "extractBackground", at = @At("TAIL"))
-    private void onExtractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
+    @Inject(method = "renderBg", at = @At("TAIL"))
+    private void onExtractBackground(GuiGraphics graphics, float partialTick, int mouseX, int mouseY, CallbackInfo ci) {
         if (!Modules.get().get(BetterBeacons.class).isActive()) return;
         //this will clear the background from useless pyramid graphics
         graphics.fill(leftPos + 10, topPos + 7, leftPos + 220, topPos + 98, 0xFF212121);

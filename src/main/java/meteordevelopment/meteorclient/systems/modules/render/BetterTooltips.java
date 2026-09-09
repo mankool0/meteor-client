@@ -26,11 +26,9 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
-import net.minecraft.client.input.InputWithModifiers;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -75,7 +73,7 @@ public class BetterTooltips extends Module {
         .name("display-when")
         .description("When to display previews.")
         .defaultValue(DisplayWhen.Keybind)
-        .onChanged(_ -> updateTooltips = true)
+        .onChanged(unused1 -> updateTooltips = true)
         .build()
     );
 
@@ -84,7 +82,7 @@ public class BetterTooltips extends Module {
         .description("The bind for keybind mode.")
         .defaultValue(Keybind.fromKey(GLFW_KEY_LEFT_ALT))
         .visible(() -> displayWhen.get() == DisplayWhen.Keybind)
-        .onChanged(_ -> updateTooltips = true)
+        .onChanged(unused2 -> updateTooltips = true)
         .build()
     );
 
@@ -117,7 +115,7 @@ public class BetterTooltips extends Module {
         .name("containers")
         .description("Shows a preview of a containers when hovering over it in an inventory.")
         .defaultValue(true)
-        .onChanged(_ -> updateTooltips = true)
+        .onChanged(unused3 -> updateTooltips = true)
         .build()
     );
 
@@ -132,7 +130,7 @@ public class BetterTooltips extends Module {
         .name("echests")
         .description("Shows a preview of your echest when hovering over it in an inventory.")
         .defaultValue(true)
-        .onChanged(_ -> updateTooltips = true)
+        .onChanged(unused4 -> updateTooltips = true)
         .build()
     );
 
@@ -140,7 +138,7 @@ public class BetterTooltips extends Module {
         .name("maps")
         .description("Shows a preview of a map when hovering over it in an inventory.")
         .defaultValue(true)
-        .onChanged(_ -> updateTooltips = true)
+        .onChanged(unused5 -> updateTooltips = true)
         .build()
     );
 
@@ -158,7 +156,7 @@ public class BetterTooltips extends Module {
         .name("books")
         .description("Shows contents of a book when hovering over it in an inventory.")
         .defaultValue(true)
-        .onChanged(_ -> updateTooltips = true)
+        .onChanged(unused6 -> updateTooltips = true)
         .build()
     );
 
@@ -166,7 +164,7 @@ public class BetterTooltips extends Module {
         .name("banners")
         .description("Shows banners' patterns when hovering over it in an inventory. Also works with shields.")
         .defaultValue(true)
-        .onChanged(_ -> updateTooltips = true)
+        .onChanged(unused7 -> updateTooltips = true)
         .build()
     );
 
@@ -174,7 +172,7 @@ public class BetterTooltips extends Module {
         .name("entities-in-buckets")
         .description("Shows entities in buckets when hovering over it in an inventory.")
         .defaultValue(true)
-        .onChanged(_ -> updateTooltips = true)
+        .onChanged(unused8 -> updateTooltips = true)
         .build()
     );
 
@@ -182,7 +180,7 @@ public class BetterTooltips extends Module {
         .name("bundles")
         .description("Shows a preview of bundle contents when hovering over it in an inventory.")
         .defaultValue(true)
-        .onChanged(_ -> updateTooltips = true)
+        .onChanged(unused9 -> updateTooltips = true)
         .build()
     );
 
@@ -190,7 +188,7 @@ public class BetterTooltips extends Module {
         .name("food-info")
         .description("Shows hunger and saturation values for food items.")
         .defaultValue(true)
-        .onChanged(_ -> updateTooltips = true)
+        .onChanged(unused10 -> updateTooltips = true)
         .build()
     );
 
@@ -200,7 +198,7 @@ public class BetterTooltips extends Module {
         .name("byte-size")
         .description("Displays an item's size in bytes in the tooltip.")
         .defaultValue(true)
-        .onChanged(_ -> updateTooltips = true)
+        .onChanged(unused11 -> updateTooltips = true)
         .build()
     );
 
@@ -216,7 +214,7 @@ public class BetterTooltips extends Module {
         .name("status-effects")
         .description("Adds list of status effects to tooltips of food items.")
         .defaultValue(true)
-        .onChanged(_ -> updateTooltips = true)
+        .onChanged(unused12 -> updateTooltips = true)
         .build()
     );
 
@@ -304,11 +302,11 @@ public class BetterTooltips extends Module {
                         ByteCountDataOutput.INSTANCE.reset();
 
                         event.appendEnd(Component.literal(count).withStyle(ChatFormatting.DARK_GRAY));
-                    } catch (Exception _) {
+                    } catch (Exception unused13) {
                         event.appendEnd(Component.literal("Error getting bytes.").withStyle(ChatFormatting.RED));
                     }
                 }
-                case DataResult.Error<Tag> _ ->
+                case DataResult.Error<Tag> unused14 ->
                     event.appendEnd(Component.literal("Error getting bytes.").withStyle(ChatFormatting.RED));
                 default -> throw new MatchException(null, null);
             }
@@ -352,8 +350,9 @@ public class BetterTooltips extends Module {
         // Banner preview
         else if (event.itemStack.getItem() instanceof BannerItem && previewBanners()) {
             event.tooltipData = new BannerTooltipComponent(event.itemStack);
-        } else if (event.itemStack.has(DataComponents.PROVIDES_BANNER_PATTERNS) && previewBanners()) {
-            event.tooltipData = createBannerFromBannerPatternItem(event.itemStack);
+        } else if (event.itemStack.getItem() instanceof BannerPatternItem bannerPatternItem && previewBanners()) {
+            // PORT(1.21.4): DataComponents.PROVIDES_BANNER_PATTERNS does not exist on 1.21.4 - use BannerPatternItem's pattern tag.
+            event.tooltipData = createBannerFromBannerPatternItem(bannerPatternItem);
         } else if (event.itemStack.getItem() == Items.SHIELD && previewBanners()) {
             if (!event.itemStack.getOrDefault(DataComponents.BANNER_PATTERNS, BannerPatternLayers.EMPTY).layers().isEmpty()) {
                 event.tooltipData = createBannerFromShield(event.itemStack);
@@ -371,7 +370,8 @@ public class BetterTooltips extends Module {
                     return;
                 }
 
-                entity.applyComponentsFromItemStack(event.itemStack);
+                // PORT(1.21.4): Entity.applyComponentsFromItemStack does not exist on 1.21.4 - apply the custom name manually.
+                if (event.itemStack.has(DataComponents.CUSTOM_NAME)) entity.setCustomName(event.itemStack.get(DataComponents.CUSTOM_NAME));
                 ((Bucketable) entity).loadFromBucketTag(nbtComponent.copyTag());
                 ((EntityAccessor) entity).meteor$setInWater(true);
                 event.tooltipData = new EntityTooltipComponent(entity);
@@ -385,8 +385,8 @@ public class BetterTooltips extends Module {
                 if (bundleContents != null && !bundleContents.isEmpty()) {
                     ItemStack[] bundleItems = new ItemStack[bundleContents.size()];
                     int index = 0;
-                    for (var template : bundleContents.items()) {
-                        bundleItems[index++] = template.create();
+                    for (ItemStack stack : bundleContents.items()) {
+                        bundleItems[index++] = stack;
                     }
                     event.tooltipData = new BundleTooltipComponent(bundleItems, bundleContents);
                 }
@@ -394,19 +394,15 @@ public class BetterTooltips extends Module {
         }
     }
 
-    public void applyCompactShulkerTooltip(List<Optional<ItemStackTemplate>> stacks, Consumer<Component> textConsumer) {
+    // PORT(1.21.4): ItemStackTemplate does not exist on 1.21.4 - ItemContainerContents stores plain ItemStacks.
+    public void applyCompactShulkerTooltip(List<ItemStack> stacks, Consumer<Component> textConsumer) {
         Object2IntMap<Item> counts = new Object2IntOpenHashMap<>();
 
-        for (var opt : stacks) {
-            if (opt.isEmpty()) continue;
+        for (ItemStack stack : stacks) {
+            if (stack.isEmpty()) continue;
 
-            var stackItem = opt.get().item().value();
-            var stackCount = opt.get().count();
-
-            if (stackCount == 0) continue;
-
-            int count = counts.getInt(stackItem);
-            counts.put(stackItem, count + stackCount);
+            int count = counts.getInt(stack.getItem());
+            counts.put(stack.getItem(), count + stack.getCount());
         }
 
         counts.keySet().stream().sorted(Comparator.comparingInt(value -> -counts.getInt(value))).limit(5).forEach(item -> {
@@ -430,7 +426,7 @@ public class BetterTooltips extends Module {
                 || (event.itemStack().getItem() instanceof MobBucketItem && entitiesInBuckets.get())
                 || (event.itemStack().getItem() instanceof BundleItem && bundles.get())
                 || (event.itemStack().getItem() instanceof BannerItem && banners.get())
-                || (event.itemStack().has(DataComponents.PROVIDES_BANNER_PATTERNS) && banners.get())
+                || (event.itemStack().getItem() instanceof BannerPatternItem && banners.get())
                 || (event.itemStack().getItem() == Items.SHIELD && banners.get())
         );
 
@@ -479,9 +475,9 @@ public class BetterTooltips extends Module {
         return 0;
     }
 
-    private BannerTooltipComponent createBannerFromBannerPatternItem(ItemStack item) {
-        HolderSet<BannerPattern> providedPatterns = item.get(DataComponents.PROVIDES_BANNER_PATTERNS);
-        if (providedPatterns == null || providedPatterns.size() == 0) {
+    private BannerTooltipComponent createBannerFromBannerPatternItem(BannerPatternItem item) {
+        HolderSet.Named<BannerPattern> providedPatterns = mc.player.registryAccess().lookupOrThrow(Registries.BANNER_PATTERN).getOrThrow(item.getBannerPattern());
+        if (providedPatterns.size() == 0) {
             return new BannerTooltipComponent(DyeColor.GRAY, BannerPatternLayers.EMPTY);
         }
 
@@ -499,12 +495,9 @@ public class BetterTooltips extends Module {
         return (isActive() && openContents.get()) && (!pauseInCreative.get() || !mc.player.hasInfiniteMaterials());
     }
 
-    public boolean shouldOpenContents(InputWithModifiers input) {
-        if (input instanceof MouseButtonEvent click)
-            return openContents() && openContentsKey.get().matches(click.buttonInfo());
-        if (input instanceof KeyEvent keyInput) return openContents() && openContentsKey.get().matches(keyInput);
-
-        return false;
+    // PORT(1.21.4): InputWithModifiers/KeyEvent/MouseButtonEvent do not exist on 1.21.4 - callers pass plain ints (isKey, value, modifiers).
+    public boolean shouldOpenContents(boolean isKey, int value, int modifiers) {
+        return openContents() && openContentsKey.get().matches(isKey, value, modifiers);
     }
 
     public boolean openContent(ItemStack itemStack) {

@@ -11,7 +11,7 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.utils.PreInit;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
 import java.io.IOException;
@@ -98,7 +98,7 @@ public class Capes {
         }
     }
 
-    public static Identifier get(Player player) {
+    public static ResourceLocation get(Player player) {
         String capeName = OWNERS.get(player.getUUID());
         if (capeName != null) {
             Cape cape = TEXTURES.get(capeName);
@@ -117,7 +117,7 @@ public class Capes {
         private static int COUNT = 0;
 
         private final String name;
-        private final Identifier identifier;
+        private final ResourceLocation identifier;
 
         private boolean downloaded;
         private boolean downloading;
@@ -131,7 +131,7 @@ public class Capes {
             this.name = name;
         }
 
-        public Identifier getIdentifier() {
+        public ResourceLocation getIdentifier() {
             return identifier;
         }
 
@@ -172,7 +172,7 @@ public class Capes {
         }
 
         public void register() {
-            mc.getTextureManager().register(identifier, new DynamicTexture(null, img));
+            mc.getTextureManager().register(identifier, new DynamicTexture(img));
             img = null;
 
             downloading = false;

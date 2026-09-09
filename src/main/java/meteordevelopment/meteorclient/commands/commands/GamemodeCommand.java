@@ -18,7 +18,7 @@ public class GamemodeCommand extends Command {
     @Override
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
         for (GameType gameMode : GameType.values()) {
-            builder.then(literal(gameMode.getName()).executes(_ -> {
+            builder.then(literal(gameMode.getName()).executes(unused1 -> {
                 mc.gameMode.setLocalMode(gameMode);
                 return SINGLE_SUCCESS;
             }));

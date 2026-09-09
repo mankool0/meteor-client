@@ -151,7 +151,7 @@ public class ProfilesTab extends Tab {
             if (nbt == null) return null;
 
             Profile p = new Profile();
-            Optional<String> parsedName = nbt.getString("name").filter(n -> !n.isEmpty());
+            Optional<String> parsedName = Optional.of(nbt.getString("name")).filter(n -> !n.isEmpty());
 
             if (parsedName.filter(p.name::set).isEmpty() && !p.name.set(FilenameUtils.removeExtension(profileFile.getName()))) {
                 throw new IllegalStateException("Imported profile does not have a valid name.");
@@ -167,8 +167,7 @@ public class ProfilesTab extends Tab {
             nbt.remove("name");
 
             boolean valid = false;
-            for (var entry : nbt.entrySet()) {
-                String filename = entry.getKey();
+            for (String filename : nbt.getAllKeys()) {
                 if (!filename.endsWith(".nbt")) continue;
                 if (filename.contains("/") || filename.contains("\\") || new File(filename).isAbsolute()) continue;
 
@@ -185,7 +184,7 @@ public class ProfilesTab extends Tab {
                 if (!f.toPath().startsWith(profileFolder.toPath())) continue;
 
                 valid = true;
-                NbtIo.writeUnnamedTagWithFallback(entry.getValue(), new DataOutputStream(new FileOutputStream(f)));
+                NbtIo.writeUnnamedTagWithFallback(nbt.get(filename), new DataOutputStream(new FileOutputStream(f)));
             }
 
             if (!valid) {

@@ -8,7 +8,6 @@ package meteordevelopment.meteorclient.mixin;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
-import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.authlib.GameProfile;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.entity.DropItemsEvent;
@@ -16,20 +15,14 @@ import meteordevelopment.meteorclient.events.entity.player.PlayerTickMovementEve
 import meteordevelopment.meteorclient.events.entity.player.SendMovementPacketsEvent;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.*;
-import meteordevelopment.meteorclient.systems.modules.player.LiquidInteract;
-import meteordevelopment.meteorclient.systems.modules.player.NoMiningTrace;
 import meteordevelopment.meteorclient.systems.modules.player.Portals;
-import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.PlayerRideableJumping;
 import net.minecraft.world.entity.player.Input;
-import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.HitResult;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -53,13 +46,13 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer {
             cir.setReturnValue(false);
     }
 
-    @ModifyExpressionValue(method = "handlePortalTransitionEffect", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", opcode = Opcodes.GETFIELD))
+    @ModifyExpressionValue(method = "handleConfusionTransitionEffect", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;screen:Lnet/minecraft/client/gui/screens/Screen;", opcode = Opcodes.GETFIELD))
     private Screen modifyPortalTransitionEffect(Screen original) {
         if (Modules.get().isActive(Portals.class)) return null;
         return original;
     }
 
-    @ModifyExpressionValue(method = "modifyInput", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
+    @ModifyExpressionValue(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/LocalPlayer;isUsingItem()Z"))
     private boolean redirectUsingItem(boolean isUsingItem) {
         if (Modules.get().get(NoSlow.class).items()) return false;
         return isUsingItem;
@@ -118,30 +111,11 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer {
         if (Modules.get().get(EntityControl.class).cancelJump()) cir.setReturnValue(null);
     }
 
-    @ModifyReturnValue(method = "pick", at = @At("RETURN"))
-    private static HitResult onUpdateTargetedEntity(HitResult original, @Local(name = "blockHitResult") HitResult blockHitResult) {
-        if (original instanceof EntityHitResult ehr) {
-            if (Modules.get().get(NoMiningTrace.class).canWork(ehr.getEntity()) && blockHitResult.getType() == HitResult.Type.BLOCK) {
-                return blockHitResult;
-            } else if (ehr.getEntity() instanceof FakePlayerEntity fakePlayer && fakePlayer.noHit) {
-                return blockHitResult;
-            }
-        }
-
-        return original;
-    }
-
-    @ModifyExpressionValue(method = "pick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;pick(DFZ)Lnet/minecraft/world/phys/HitResult;"))
-    private static HitResult modifyPick(HitResult original, @Local(argsOnly = true, name = "cameraEntity") Entity cameraEntity, @Local(argsOnly = true, name = "partialTicks") float partialTicks, @Local(name = "maxDistance") double maxDistance) {
-        if (!Modules.get().isActive(LiquidInteract.class)) return original;
-        if (original.getType() != HitResult.Type.MISS) return original;
-
-        return cameraEntity.pick(maxDistance, partialTicks, true);
-    }
+    // NOTE(1.21.4): the crosshair pick hooks (NoMiningTrace, LiquidInteract) moved to GameRendererMixin - on 1.21.4 the pick logic lives in GameRenderer, not LocalPlayer.
 
     // Sprint
 
-    @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;hasForwardImpulse()Z"))
+    @ModifyExpressionValue(method = "hasEnoughImpulseToStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/ClientInput;hasForwardImpulse()Z"))
     private boolean modifyIsWalking(boolean original) {
         if (!Modules.get().get(Sprint.class).rageSprint()) return original;
 
@@ -163,6 +137,14 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer {
         Sprint s = Modules.get().get(Sprint.class);
 
         return !s.rageSprint() || s.unsprintInWater() && isInWater();
+    }
+
+    // PORT(1.21.4): FoodData.hasEnoughFood() does not exist on 1.21.4 - the minimum-food check for sprinting
+    // lives inline in LocalPlayer.hasEnoughFoodToStartSprinting() instead.
+    @ModifyExpressionValue(method = "hasEnoughFoodToStartSprinting", at = @At(value = "CONSTANT", args = "floatValue=6.0f"))
+    private float onHunger(float constant) {
+        if (Modules.get().get(NoSlow.class).hunger()) return -1;
+        return constant;
     }
 
     // Rotations

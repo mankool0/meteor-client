@@ -5,6 +5,8 @@
 
 package meteordevelopment.meteorclient.mixin;
 
+import com.mojang.serialization.MapCodec;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectArrayMap;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.world.BlockActivateEvent;
 import net.minecraft.world.InteractionResult;
@@ -20,8 +22,8 @@ import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(BlockState.class)
 public abstract class BlockStateMixin extends BlockBehaviour.BlockStateBase {
-    protected BlockStateMixin(Block owner, Property<?>[] propertyKeys, Comparable<?>[] propertyValues) {
-        super(owner, propertyKeys, propertyValues);
+    protected BlockStateMixin(Block owner, Reference2ObjectArrayMap<Property<?>, Comparable<?>> propertyMap, MapCodec<BlockState> codec) {
+        super(owner, propertyMap, codec);
     }
 
     @Override

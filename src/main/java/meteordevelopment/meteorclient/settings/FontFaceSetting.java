@@ -28,7 +28,7 @@ public class FontFaceSetting extends Setting<FontFace> {
             if (family.getName().replace(" ", "").equals(split[0])) {
                 try {
                     return family.get(FontInfo.Type.valueOf(split[1]));
-                } catch (IllegalArgumentException _) {
+                } catch (IllegalArgumentException unused1) {
                     return null;
                 }
             }
@@ -63,12 +63,12 @@ public class FontFaceSetting extends Setting<FontFace> {
 
     @Override
     protected FontFace load(CompoundTag tag) {
-        String family = tag.getStringOr("family", "");
+        String family = tag.getString("family");
         FontInfo.Type type;
 
         try {
-            type = FontInfo.Type.valueOf(tag.getStringOr("type", ""));
-        } catch (IllegalArgumentException _) {
+            type = FontInfo.Type.valueOf(tag.getString("type"));
+        } catch (IllegalArgumentException unused2) {
             set(Fonts.DEFAULT_FONT);
             return get();
         }

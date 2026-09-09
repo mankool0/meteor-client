@@ -8,13 +8,11 @@ package meteordevelopment.meteorclient.gui.screens;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.render.BetterTooltips;
 import meteordevelopment.meteorclient.utils.Utils;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.BundleItem;
@@ -32,7 +30,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  * i couldn't figure out how to add proper outer borders for the GUI without adding custom textures.
  */
 public class ContainerInventoryScreen extends Screen {
-    private static final Identifier SLOT_TEXTURE = Identifier.withDefaultNamespace("container/slot");
+    private static final ResourceLocation SLOT_TEXTURE = ResourceLocation.withDefaultNamespace("container/slot");
     private static final int SLOT_SIZE = 18;
     private static final int SCREEN_WIDTH = 176;
 
@@ -52,8 +50,8 @@ public class ContainerInventoryScreen extends Screen {
         if (containerItem.getItem() instanceof BundleItem) {
             BundleContents bundleContents = containerItem.get(DataComponents.BUNDLE_CONTENTS);
             if (bundleContents != null) {
-                for (var template : bundleContents.items()) {
-                    containerItems.add(template.create());
+                for (ItemStack template : bundleContents.items()) {
+                    containerItems.add(template.copy());
                 }
             }
         } else {
@@ -73,8 +71,8 @@ public class ContainerInventoryScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+        super.render(graphics, mouseX, mouseY, delta);
 
         baseX = x + 8;
         baseY = y + 18;
@@ -84,7 +82,7 @@ public class ContainerInventoryScreen extends Screen {
         for (int row = 0; row < containerRows + 4; row++) {
             for (int col = 0; col < 9; col++) {
                 int slotY = row < containerRows ? baseY + row * SLOT_SIZE : playerY + (row - containerRows) * SLOT_SIZE;
-                graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_TEXTURE, baseX + col * SLOT_SIZE, slotY, SLOT_SIZE, SLOT_SIZE);
+                graphics.blitSprite(RenderType::guiTextured, SLOT_TEXTURE, baseX + col * SLOT_SIZE, slotY, SLOT_SIZE, SLOT_SIZE);
             }
         }
 
@@ -94,8 +92,8 @@ public class ContainerInventoryScreen extends Screen {
             if (!item.isEmpty()) {
                 int itemX = baseX + (i % 9) * SLOT_SIZE + 1;
                 int itemY = baseY + (i / 9) * SLOT_SIZE + 1;
-                graphics.item(item, itemX, itemY);
-                graphics.itemDecorations(font, item, itemX, itemY);
+                graphics.renderItem(item, itemX, itemY);
+                graphics.renderItemDecorations(font, item, itemX, itemY);
             }
         }
 
@@ -107,34 +105,34 @@ public class ContainerInventoryScreen extends Screen {
                 if (!item.isEmpty()) {
                     int itemX = baseX + col * SLOT_SIZE + 1;
                     int itemY = playerY + row * SLOT_SIZE + 1;
-                    graphics.item(item, itemX, itemY);
-                    graphics.itemDecorations(font, item, itemX, itemY);
+                    graphics.renderItem(item, itemX, itemY);
+                    graphics.renderItemDecorations(font, item, itemX, itemY);
                 }
             }
         }
 
         // drawing title headers
-        graphics.pose().pushMatrix();
-        graphics.pose().translate((float) x, (float) y);
+        graphics.pose().pushPose();
+        graphics.pose().translate(x, y, 0);
         if (font != null) {
-            graphics.text(font, title, 8, 6, -12566464, false);
-            graphics.text(font, playerInventory.getDisplayName(), 8, 18 + containerRows * SLOT_SIZE + 10, -12566464, false);
+            graphics.drawString(font, title, 8, 6, -12566464, false);
+            graphics.drawString(font, playerInventory.getDisplayName(), 8, 18 + containerRows * SLOT_SIZE + 10, -12566464, false);
         }
-        graphics.pose().popMatrix();
+        graphics.pose().popPose();
 
         // drawing the tooltip
         ItemStack item = getSelectedItem(mouseX, mouseY);
         if (!item.isEmpty()) {
-            graphics.setTooltipForNextFrame(font, getTooltipFromItem(mc, item), item.getTooltipImage(), mouseX, mouseY);
+            graphics.renderTooltip(font, getTooltipFromItem(mc, item), item.getTooltipImage(), mouseX, mouseY);
         }
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         BetterTooltips tooltips = Modules.get().get(BetterTooltips.class);
 
-        ItemStack stack = getSelectedItem((int) click.x(), (int) click.y());
-        if (tooltips.shouldOpenContents(click)) {
+        ItemStack stack = getSelectedItem((int) mouseX, (int) mouseY);
+        if (tooltips.shouldOpenContents(false, button, 0)) {
             return tooltips.openContent(stack);
         }
 
@@ -142,15 +140,18 @@ public class ContainerInventoryScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(KeyEvent input) {
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         BetterTooltips tooltips = Modules.get().get(BetterTooltips.class);
 
-        ItemStack stack = getSelectedItem((int) mc.mouseHandler.getScaledXPos(mc.getWindow()), (int) mc.mouseHandler.getScaledYPos(mc.getWindow()));
-        if (tooltips.shouldOpenContents(input)) {
+        int mouseX = (int) (mc.mouseHandler.xpos() * mc.getWindow().getGuiScaledWidth() / mc.getWindow().getScreenWidth());
+        int mouseY = (int) (mc.mouseHandler.ypos() * mc.getWindow().getGuiScaledHeight() / mc.getWindow().getScreenHeight());
+
+        ItemStack stack = getSelectedItem(mouseX, mouseY);
+        if (tooltips.shouldOpenContents(true, keyCode, modifiers)) {
             return tooltips.openContent(stack);
         }
 
-        if (input.key() == GLFW.GLFW_KEY_ESCAPE || mc.options.keyInventory.matches(input)) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE || mc.options.keyInventory.matches(keyCode, scanCode)) {
             onClose();
             return true;
         }

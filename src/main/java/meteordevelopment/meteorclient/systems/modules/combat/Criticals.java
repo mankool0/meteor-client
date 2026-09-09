@@ -15,8 +15,10 @@ import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.mixin.ServerboundInteractPacketAccessor;
+import meteordevelopment.meteorclient.systems.modules.movement.Sprint;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.protocol.game.ServerboundAttackPacket;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundSwingPacket;
 import net.minecraft.world.entity.Entity;
@@ -60,7 +62,7 @@ public class Criticals extends Module {
         .build()
     );
 
-    private ServerboundAttackPacket attackPacket;
+    private ServerboundInteractPacket attackPacket;
     private ServerboundSwingPacket swingPacket;
     private boolean sendPackets;
     private int sendTimer;
@@ -83,7 +85,9 @@ public class Criticals extends Module {
 
     @EventHandler
     private void onSendPacket(PacketEvent.Send event) {
-        if (event.packet instanceof ServerboundAttackPacket(int entityId)) {
+        // PORT(1.21.4): needs-mixin - ServerboundInteractPacketAccessor: @Mixin(ServerboundInteractPacket.class) interface with @Accessor("entityId") int getEntityId(); (mirror ref-1214 PlayerInteractEntityC2SPacketMixin).
+        if (event.packet instanceof ServerboundInteractPacket interactPacket && Sprint.isAttackPacket(interactPacket)) {
+            int entityId = ((ServerboundInteractPacketAccessor) interactPacket).getEntityId();
             if (mace.get() && mc.player.getMainHandItem().getItem() instanceof MaceItem) {
                 if (mc.player.isFallFlying()) return;
 
@@ -115,7 +119,7 @@ public class Criticals extends Module {
                     case Jump, MiniJump -> {
                         if (!sendPackets) {
                             sendPackets = true;
-                            attackPacket = (ServerboundAttackPacket) event.packet;
+                            attackPacket = interactPacket;
 
                             if (mode.get() == Mode.Jump) {
                                 mc.player.jumpFromGround();

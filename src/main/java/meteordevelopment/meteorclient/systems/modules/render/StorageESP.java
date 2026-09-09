@@ -281,7 +281,7 @@ public class StorageESP extends Module {
                 sideColor.a *= a;
 
                 if (tracers.get()) {
-                    event.renderer.line(RenderUtils.center.x, RenderUtils.center.y, RenderUtils.center.z, blockEntity.getBlockPos().getX() + 0.5, blockEntity.getBlockPos().getY() + 0.5, blockEntity.getBlockPos().getZ() + 0.5, lineColor);
+                    RenderUtils.drawTracer(event.renderer, blockEntity.getBlockPos().getX() + 0.5, blockEntity.getBlockPos().getY() + 0.5, blockEntity.getBlockPos().getZ() + 0.5, lineColor);
                 }
 
                 if (mode.get() == Mode.Box) {

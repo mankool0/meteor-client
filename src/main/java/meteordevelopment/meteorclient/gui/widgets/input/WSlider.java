@@ -6,7 +6,7 @@
 package meteordevelopment.meteorclient.gui.widgets.input;
 
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
-import net.minecraft.client.input.MouseButtonEvent;
+import meteordevelopment.meteorclient.gui.utils.MouseButtonEvent;
 import net.minecraft.util.Mth;
 
 public abstract class WSlider extends WWidget {

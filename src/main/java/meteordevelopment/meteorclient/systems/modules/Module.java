@@ -171,16 +171,16 @@ public abstract class Module implements ISerializable<Module>, Comparable<Module
     @Override
     public Module fromTag(CompoundTag tag) {
         // General
-        keybind.fromTag(tag.getCompoundOrEmpty("keybind"));
-        toggleOnBindRelease = tag.getBooleanOr("toggleOnKeyRelease", false);
-        chatFeedback = !tag.contains("chatFeedback") || tag.getBooleanOr("chatFeedback", false);
-        favorite = tag.getBooleanOr("favorite", false);
+        keybind.fromTag(tag.getCompound("keybind"));
+        toggleOnBindRelease = tag.getBoolean("toggleOnKeyRelease");
+        chatFeedback = !tag.contains("chatFeedback") || tag.getBoolean("chatFeedback");
+        favorite = tag.getBoolean("favorite");
 
         // Settings
         Tag settingsTag = tag.get("settings");
         if (settingsTag instanceof CompoundTag compoundTag) settings.fromTag(compoundTag);
 
-        boolean active = tag.getBooleanOr("active", false);
+        boolean active = tag.getBoolean("active");
         if (active != isActive()) toggle();
 
         return this;

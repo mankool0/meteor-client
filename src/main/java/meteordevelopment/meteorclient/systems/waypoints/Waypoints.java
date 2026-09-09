@@ -24,7 +24,7 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import org.apache.commons.lang3.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -70,8 +70,8 @@ public class Waypoints extends System<Waypoints> implements Iterable<Waypoint> {
         for (File file : files) {
             if (file.getName().endsWith(PNG)) {
                 try (FileInputStream inputStream = new FileInputStream(file)) {
-                    String name = Strings.CS.removeEnd(file.getName(), PNG);
-                    AbstractTexture texture = new DynamicTexture(() -> name, NativeImage.read(inputStream));
+                    String name = StringUtils.removeEnd(file.getName(), PNG);
+                    AbstractTexture texture = new DynamicTexture(NativeImage.read(inputStream));
                     icons.put(name, texture);
                 } catch (Exception e) {
                     MeteorClient.LOG.error("Failed to read a waypoint icon", e);
@@ -183,7 +183,7 @@ public class Waypoints extends System<Waypoints> implements Iterable<Waypoint> {
     public Waypoints fromTag(CompoundTag tag) {
         waypoints.clear();
 
-        for (Tag waypointTag : tag.getListOrEmpty("waypoints")) {
+        for (Tag waypointTag : tag.getList("waypoints", Tag.TAG_COMPOUND)) {
             waypoints.add(new Waypoint(waypointTag));
         }
 

@@ -45,7 +45,7 @@ public class Vector3dSetting extends Setting<Vector3d> {
         try {
             String[] strs = str.split(" ");
             return new Vector3d(Double.parseDouble(strs[0]), Double.parseDouble(strs[1]), Double.parseDouble(strs[2]));
-        } catch (IndexOutOfBoundsException | NumberFormatException _) {
+        } catch (IndexOutOfBoundsException | NumberFormatException unused1) {
             return null;
         }
     }
@@ -71,9 +71,9 @@ public class Vector3dSetting extends Setting<Vector3d> {
     protected Vector3d load(CompoundTag tag) {
         if (tag.getCompound("value").isEmpty()) return get();
 
-        CompoundTag valueTag = tag.getCompound("value").get();
+        CompoundTag valueTag = tag.getCompound("value");
 
-        set(valueTag.getDoubleOr("x", 0.0), valueTag.getDoubleOr("y", 0.0), valueTag.getDoubleOr("z", 0.0));
+        set(valueTag.getDouble("x"), valueTag.getDouble("y"), valueTag.getDouble("z"));
 
         return get();
     }

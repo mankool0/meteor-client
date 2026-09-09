@@ -3,10 +3,8 @@
 layout (location = 0) in vec4 pos;
 layout (location = 1) in vec4 color;
 
-layout (std140) uniform MeshData {
-    mat4 u_Proj;
-    mat4 u_ModelView;
-};
+uniform mat4 u_Proj;
+uniform mat4 u_ModelView;
 
 out vec4 v_Color;
 

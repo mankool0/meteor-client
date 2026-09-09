@@ -20,7 +20,8 @@ public abstract class ArmorStandRendererMixin {
     @Unique
     private static ESP esp;
 
-    @ModifyExpressionValue(method = "getRenderType(Lnet/minecraft/client/renderer/entity/state/ArmorStandRenderState;ZZZ)Lnet/minecraft/client/renderer/rendertype/RenderType;", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/entity/state/ArmorStandRenderState;isMarker:Z", opcode = Opcodes.GETFIELD))
+    // PORT(1.21.4): RenderType lives in net.minecraft.client.renderer, not the 26.x rendertype subpackage.
+    @ModifyExpressionValue(method = "getRenderType(Lnet/minecraft/client/renderer/entity/state/ArmorStandRenderState;ZZZ)Lnet/minecraft/client/renderer/RenderType;", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/entity/state/ArmorStandRenderState;isMarker:Z", opcode = Opcodes.GETFIELD))
     private boolean modifyMarkerValue(boolean original) {
         if (esp == null) esp = Modules.get().get(ESP.class);
 

@@ -8,7 +8,7 @@ package meteordevelopment.meteorclient.utils.render;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import meteordevelopment.meteorclient.renderer.MeshBuilder;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.RenderType;
 
 public class MeshBuilderVertexConsumerProvider implements IVertexConsumerProvider {
     private final MeshBuilderVertexConsumer vertexConsumer;
@@ -156,11 +156,6 @@ public class MeshBuilderVertexConsumerProvider implements IVertexConsumerProvide
         @Override
         public VertexConsumer setNormal(float x, float y, float z) {
             return null;
-        }
-
-        @Override
-        public VertexConsumer setLineWidth(float width) {
-            return this;
         }
 
         public void fixedColor(int red, int green, int blue, int alpha) {

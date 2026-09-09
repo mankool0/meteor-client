@@ -56,7 +56,7 @@ public class WDoubleEdit extends WHorizontalList {
                 default -> {
                     try {
                         value = Double.parseDouble(textBox.get());
-                    } catch (NumberFormatException _) {
+                    } catch (NumberFormatException unused1) {
                     }
                 }
             }
@@ -106,7 +106,7 @@ public class WDoubleEdit extends WHorizontalList {
         if (good && validate) {
             try {
                 Double.parseDouble(text + c);
-            } catch (NumberFormatException _) {
+            } catch (NumberFormatException unused2) {
                 good = false;
             }
         }

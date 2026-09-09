@@ -153,7 +153,7 @@ public class Proxies extends System<Proxies> implements Iterable<Proxy> {
                     executor.execute(() -> {
                         try {
                             check(toCheck, checked);
-                        } catch (InterruptedException _) {
+                        } catch (InterruptedException unused1) {
                         }
                     });
                 }
@@ -162,7 +162,7 @@ public class Proxies extends System<Proxies> implements Iterable<Proxy> {
                     executor.shutdown();
                     //noinspection ResultOfMethodCallIgnored
                     executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-                } catch (InterruptedException _) {
+                } catch (InterruptedException unused2) {
                 }
 
                 refreshing = false;
@@ -222,8 +222,8 @@ public class Proxies extends System<Proxies> implements Iterable<Proxy> {
 
     @Override
     public Proxies fromTag(CompoundTag tag) {
-        if (tag.contains("settings")) settings.fromTag(tag.getCompoundOrEmpty("settings"));
-        proxies = NbtUtils.listFromTag(tag.getListOrEmpty("proxies"), Proxy::new);
+        if (tag.contains("settings")) settings.fromTag(tag.getCompound("settings"));
+        proxies = NbtUtils.listFromTag(tag.getList("proxies", 10), Proxy::new);
 
         return this;
     }

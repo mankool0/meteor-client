@@ -80,7 +80,7 @@ public class BlockUtils {
 
     public static boolean place(BlockPos blockPos, FindItemResult findItemResult, boolean rotate, int rotationPriority, boolean swingHand, boolean checkEntities, boolean swapBack) {
         if (findItemResult.isOffhand()) {
-            return place(blockPos, InteractionHand.OFF_HAND, mc.player.getInventory().getSelectedSlot(), rotate, rotationPriority, swingHand, checkEntities, swapBack);
+            return place(blockPos, InteractionHand.OFF_HAND, mc.player.getInventory().selected, rotate, rotationPriority, swingHand, checkEntities, swapBack);
         } else if (findItemResult.isHotbar()) {
             return place(blockPos, InteractionHand.MAIN_HAND, findItemResult.slot(), rotate, rotationPriority, swingHand, checkEntities, swapBack);
         }
@@ -378,7 +378,7 @@ public class BlockUtils {
         float hardness = state.getDestroySpeed(null, null);
         if (hardness == -1) return 0;
         else {
-            return getDestroySpeed(slot, state) / hardness / (!state.requiresCorrectToolForDrops() || mc.player.getInventory().getNonEquipmentItems().get(slot).isCorrectToolForDrops(state) ? 30 : 100);
+            return getDestroySpeed(slot, state) / hardness / (!state.requiresCorrectToolForDrops() || mc.player.getInventory().items.get(slot).isCorrectToolForDrops(state) ? 30 : 100);
         }
     }
 
@@ -386,7 +386,7 @@ public class BlockUtils {
      * @see net.minecraft.world.entity.player.Player#getDestroySpeed(BlockState)
      */
     private static double getDestroySpeed(int slot, BlockState block) {
-        double speed = mc.player.getInventory().getNonEquipmentItems().get(slot).getDestroySpeed(block);
+        double speed = mc.player.getInventory().items.get(slot).getDestroySpeed(block);
 
         if (speed > 1) {
             ItemStack tool = mc.player.getInventory().getItem(slot);
@@ -400,8 +400,8 @@ public class BlockUtils {
             speed *= 1 + (MobEffectUtil.getDigSpeedAmplification(mc.player) + 1) * 0.2F;
         }
 
-        if (mc.player.hasEffect(MobEffects.MINING_FATIGUE)) {
-            float k = switch (mc.player.getEffect(MobEffects.MINING_FATIGUE).getAmplifier()) {
+        if (mc.player.hasEffect(MobEffects.DIG_SLOWDOWN)) {
+            float k = switch (mc.player.getEffect(MobEffects.DIG_SLOWDOWN).getAmplifier()) {
                 case 0 -> 0.3F;
                 case 1 -> 0.09F;
                 case 2 -> 0.0027F;

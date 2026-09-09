@@ -41,7 +41,7 @@ public class Quiver extends Module {
     private final Setting<List<MobEffect>> effects = sgGeneral.add(new StatusEffectListSetting.Builder()
         .name("effects")
         .description("Which effects to shoot you with.")
-        .defaultValue(MobEffects.STRENGTH.value())
+        .defaultValue(MobEffects.DAMAGE_BOOST.value())
         .build()
     );
 
@@ -124,14 +124,14 @@ public class Quiver extends Module {
 
         if (!bow.isMainHand()) {
             if (wasHotbar) InvUtils.swap(bow.slot(), true);
-            else InvUtils.move().from(mc.player.getInventory().getSelectedSlot()).to(prevSlot);
+            else InvUtils.move().from(mc.player.getInventory().selected).to(prevSlot);
         } else wasMainhand = true;
 
         arrowSlots.clear();
         List<MobEffect> usedEffects = new ArrayList<>();
 
         for (int i = mc.player.getInventory().getContainerSize(); i > 0; i--) {
-            if (i == mc.player.getInventory().getSelectedSlot()) continue;
+            if (i == mc.player.getInventory().selected) continue;
 
             ItemStack item = mc.player.getInventory().getItem(i);
 
@@ -156,7 +156,7 @@ public class Quiver extends Module {
     public void onDeactivate() {
         if (!wasMainhand) {
             if (wasHotbar) InvUtils.swapBack();
-            else InvUtils.move().from(mc.player.getInventory().getSelectedSlot()).to(prevSlot);
+            else InvUtils.move().from(mc.player.getInventory().selected).to(prevSlot);
         }
     }
 

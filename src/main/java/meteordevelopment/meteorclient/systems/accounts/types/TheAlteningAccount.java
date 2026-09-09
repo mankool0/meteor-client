@@ -23,7 +23,7 @@ import java.util.UUID;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class TheAlteningAccount extends Account<TheAlteningAccount> implements TokenAccount {
-    private static final Environment ENVIRONMENT = new Environment("http://sessionserver.thealtening.com", "http://authserver.thealtening.com", "https://api.mojang.com", "The Altening");
+    private static final Environment ENVIRONMENT = new Environment("http://sessionserver.thealtening.com", "http://authserver.thealtening.com", "The Altening");
     private static final YggdrasilAuthenticationService SERVICE = new YggdrasilAuthenticationService(mc.getProxy(), ENVIRONMENT);
     private String token;
     private String accessToken;
@@ -48,7 +48,7 @@ public class TheAlteningAccount extends Account<TheAlteningAccount> implements T
             cache.loadHead();
 
             return true;
-        } catch (Exception _) {
+        } catch (Exception unused1) {
             MeteorClient.LOG.error("Failed to fetch info for TheAltening account!");
             return false;
         }
@@ -57,12 +57,12 @@ public class TheAlteningAccount extends Account<TheAlteningAccount> implements T
     @Override
     public boolean login() {
         if (accessToken == null || cache.username.isEmpty() || cache.uuid.isEmpty()) return false;
-        applyLoginEnvironment(SERVICE);
+        applyLoginEnvironment(SERVICE, SERVICE.createMinecraftSessionService());
 
         try {
-            setSession(new User(cache.username, UndashedUuid.fromStringLenient(cache.uuid), accessToken, Optional.empty(), Optional.empty()));
+            setSession(new User(cache.username, UndashedUuid.fromStringLenient(cache.uuid), accessToken, Optional.empty(), Optional.empty(), User.Type.MOJANG));
             return true;
-        } catch (Exception _) {
+        } catch (Exception unused2) {
             MeteorClient.LOG.error("Failed to login with TheAltening.");
             return false;
         }
@@ -96,9 +96,9 @@ public class TheAlteningAccount extends Account<TheAlteningAccount> implements T
         if (tag.getString("name").isEmpty() || tag.getCompound("cache").isEmpty() || tag.getString("token").isEmpty())
             throw new NbtException();
 
-        name = tag.getString("name").get();
-        token = tag.getString("token").get();
-        cache.fromTag(tag.getCompound("cache").get());
+        name = tag.getString("name");
+        token = tag.getString("token");
+        cache.fromTag(tag.getCompound("cache"));
 
         return this;
     }

@@ -6,7 +6,7 @@
 package meteordevelopment.meteorclient.gui.widgets.pressable;
 
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
-import net.minecraft.client.input.MouseButtonEvent;
+import meteordevelopment.meteorclient.gui.utils.MouseButtonEvent;
 
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT;

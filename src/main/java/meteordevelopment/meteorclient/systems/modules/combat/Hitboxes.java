@@ -135,7 +135,7 @@ public class Hitboxes extends Module {
             if (shovel.get() && itemStack.is(ItemTags.SHOVELS)) return true;
             if (hoe.get() && itemStack.is(ItemTags.HOES)) return true;
             if (mace.get() && itemStack.getItem() instanceof MaceItem) return true;
-            if (spear.get() && itemStack.is(ItemTags.SPEARS)) return true;
+            // PORT(1.21.4): ItemTags.SPEARS does not exist on 1.21.4 - spear setting has no effect.
             if (trident.get() && itemStack.getItem() instanceof TridentItem) return true;
             return false;
         });

@@ -17,7 +17,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 
 public class Swarm extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -102,7 +102,7 @@ public class Swarm extends Module {
                 worker.disconnect();
                 worker = null;
             }
-        } catch (Exception _) {
+        } catch (Exception unused1) {
         }
     }
 

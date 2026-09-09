@@ -7,10 +7,9 @@ package meteordevelopment.meteorclient.mixin;
 
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.utils.player.TitleScreenCredits;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,15 +24,15 @@ public abstract class TitleScreenMixin extends Screen {
         super(title);
     }
 
-    @Inject(method = "extractRenderState", at = @At("TAIL"))
-    private void onExtractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a, CallbackInfo ci) {
+    @Inject(method = "render", at = @At("TAIL"))
+    private void onRender(GuiGraphics graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (Config.get().titleScreenCredits.get()) TitleScreenCredits.render(graphics);
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
-    private void onMouseClicked(MouseButtonEvent event, boolean doubleClick, CallbackInfoReturnable<Boolean> cir) {
-        if (Config.get().titleScreenCredits.get() && event.button() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
-            if (TitleScreenCredits.onClicked(event.x(), event.y())) cir.setReturnValue(true);
+    private void onMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+        if (Config.get().titleScreenCredits.get() && button == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            if (TitleScreenCredits.onClicked(mouseX, mouseY)) cir.setReturnValue(true);
         }
     }
 }

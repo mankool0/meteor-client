@@ -11,7 +11,7 @@ import meteordevelopment.meteorclient.utils.misc.IGetter;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
 import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -104,7 +104,7 @@ public abstract class Setting<T> implements IGetter<T>, ISerializable<T> {
 
     protected abstract boolean isValueValid(T value);
 
-    public Iterable<Identifier> getIdentifierSuggestions() {
+    public Iterable<ResourceLocation> getIdentifierSuggestions() {
         return null;
     }
 
@@ -156,9 +156,9 @@ public abstract class Setting<T> implements IGetter<T>, ISerializable<T> {
     public static <T> T parseId(Registry<T> registry, String name) {
         name = name.trim();
 
-        Identifier id;
-        if (name.contains(":")) id = Identifier.parse(name);
-        else id = Identifier.withDefaultNamespace(name);
+        ResourceLocation id;
+        if (name.contains(":")) id = ResourceLocation.parse(name);
+        else id = ResourceLocation.withDefaultNamespace(name);
         if (registry.containsKey(id)) return registry.getValue(id);
 
         return null;

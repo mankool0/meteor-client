@@ -815,7 +815,7 @@ public class CrystalAura extends Module {
         // Anti weakness
         if (antiWeakness.get()) {
             MobEffectInstance weakness = mc.player.getEffect(MobEffects.WEAKNESS);
-            MobEffectInstance strength = mc.player.getEffect(MobEffects.STRENGTH);
+            MobEffectInstance strength = mc.player.getEffect(MobEffects.DAMAGE_BOOST);
 
             // Check for strength
             if (weakness != null && (strength == null || strength.getAmplifier() <= weakness.getAmplifier())) {
@@ -869,7 +869,7 @@ public class CrystalAura extends Module {
 
     private void attackCrystal(Entity entity) {
         // Attack
-        mc.player.connection.send(new ServerboundAttackPacket(entity.getId()));
+        mc.player.connection.send(ServerboundInteractPacket.createAttackPacket(entity, mc.player.isShiftKeyDown()));
 
         InteractionHand hand = InvUtils.findInHotbar(Items.END_CRYSTAL).getHand();
         if (hand == null) hand = InteractionHand.MAIN_HAND;
@@ -1025,7 +1025,7 @@ public class CrystalAura extends Module {
         FindItemResult item = InvUtils.findInHotbar(targetItem);
         if (!item.found()) return;
 
-        int prevSlot = mc.player.getInventory().getSelectedSlot();
+        int prevSlot = mc.player.getInventory().selected;
 
         if (autoSwitch.get() != AutoSwitchMode.None && !item.isOffhand()) InvUtils.swap(item.slot(), false);
 
@@ -1120,7 +1120,8 @@ public class CrystalAura extends Module {
         for (LivingEntity target : targets) {
             if (EntityUtils.getTotalHealth(target) <= facePlaceHealth.get()) return true;
 
-            for (EquipmentSlot slot : EquipmentSlotGroup.ARMOR) {
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+                if (!slot.isArmor()) continue;
                 ItemStack itemStack = target.getItemBySlot(slot);
 
                 if (itemStack == null || itemStack.isEmpty()) {

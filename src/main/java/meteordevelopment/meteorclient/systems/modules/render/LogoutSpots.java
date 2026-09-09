@@ -153,7 +153,7 @@ public class LogoutSpots extends Module {
                     continue;
 
                 for (Player player : lastPlayers) {
-                    if (player.getUUID().equals(entry.getProfile().id())) {
+                    if (player.getUUID().equals(entry.getProfile().getId())) {
                         add(new Entry(player));
                     }
                 }

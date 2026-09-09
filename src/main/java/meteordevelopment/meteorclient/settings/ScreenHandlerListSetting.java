@@ -10,7 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.MenuType;
 
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ public class ScreenHandlerListSetting extends Setting<List<MenuType<?>>> {
                 MenuType<?> handler = parseId(BuiltInRegistries.MENU, value);
                 if (handler != null) handlers.add(handler);
             }
-        } catch (Exception _) {
+        } catch (Exception unused1) {
         }
 
         return handlers;
@@ -50,7 +50,7 @@ public class ScreenHandlerListSetting extends Setting<List<MenuType<?>>> {
     }
 
     @Override
-    public Iterable<Identifier> getIdentifierSuggestions() {
+    public Iterable<ResourceLocation> getIdentifierSuggestions() {
         return BuiltInRegistries.MENU.keySet();
     }
 
@@ -58,7 +58,7 @@ public class ScreenHandlerListSetting extends Setting<List<MenuType<?>>> {
     public CompoundTag save(CompoundTag tag) {
         ListTag valueTag = new ListTag();
         for (MenuType<?> type : get()) {
-            Identifier id = BuiltInRegistries.MENU.getKey(type);
+            ResourceLocation id = BuiltInRegistries.MENU.getKey(type);
             if (id != null) valueTag.add(StringTag.valueOf(id.toString()));
         }
         tag.put("value", valueTag);
@@ -70,9 +70,9 @@ public class ScreenHandlerListSetting extends Setting<List<MenuType<?>>> {
     public List<MenuType<?>> load(CompoundTag tag) {
         get().clear();
 
-        ListTag valueTag = tag.getListOrEmpty("value");
+        ListTag valueTag = tag.getList("value", Tag.TAG_STRING);
         for (Tag tagI : valueTag) {
-            MenuType<?> type = BuiltInRegistries.MENU.getValue(Identifier.parse(tagI.asString().orElse("")));
+            MenuType<?> type = BuiltInRegistries.MENU.getValue(ResourceLocation.parse(tagI.getAsString()));
             if (type != null) get().add(type);
         }
 

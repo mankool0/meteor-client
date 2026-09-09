@@ -17,7 +17,7 @@ import meteordevelopment.meteorclient.utils.render.DisplayItemUtils;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
-import org.apache.commons.lang3.Strings;
+import org.apache.commons.lang3.StringUtils;
 
 public class ItemSettingScreen extends WindowScreen {
     private final ItemSetting setting;
@@ -54,7 +54,7 @@ public class ItemSettingScreen extends WindowScreen {
             if (item == Items.AIR) continue;
 
             WItemWithLabel itemLabel = theme.itemWithLabel(DisplayItemUtils.toStack(item), Names.get(item));
-            if (!filterText.isEmpty() && !Strings.CI.contains(itemLabel.getLabelText(), filterText)) continue;
+            if (!filterText.isEmpty() && !StringUtils.containsIgnoreCase(itemLabel.getLabelText(), filterText)) continue;
             table.add(itemLabel);
 
             WButton select = table.add(theme.button("Select")).expandCellX().right().widget();

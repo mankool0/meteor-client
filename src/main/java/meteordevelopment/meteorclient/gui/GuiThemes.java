@@ -40,7 +40,7 @@ public class GuiThemes {
             try {
                 CompoundTag tag = NbtIo.read(FILE.toPath());
 
-                if (tag != null) select(tag.getStringOr("currentTheme", ""));
+                if (tag != null) select(tag.getString("currentTheme"));
             } catch (IOException e) {
                 e.printStackTrace();
             }

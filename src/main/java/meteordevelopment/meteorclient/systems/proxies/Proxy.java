@@ -121,9 +121,9 @@ public class Proxy implements ISerializable<Proxy> {
                 latency = Duration.between(before, Instant.now()).toMillis();
                 return 1;
             }
-        } catch (SocketTimeoutException _) {
+        } catch (SocketTimeoutException unused1) {
             timeout = true;
-        } catch (IOException _) {
+        } catch (IOException unused2) {
         }
 
         try {
@@ -133,9 +133,9 @@ public class Proxy implements ISerializable<Proxy> {
                 latency = Duration.between(before, Instant.now()).toMillis();
                 return 1;
             }
-        } catch (SocketTimeoutException _) {
+        } catch (SocketTimeoutException unused3) {
             timeout = true;
-        } catch (IOException _) {
+        } catch (IOException unused4) {
         }
 
         status = Status.DEAD;
@@ -272,7 +272,7 @@ public class Proxy implements ISerializable<Proxy> {
 
     @Override
     public Proxy fromTag(CompoundTag tag) {
-        tag.getCompound("settings").ifPresent(settings::fromTag);
+        if (tag.contains("settings")) settings.fromTag(tag.getCompound("settings"));
 
         return this;
     }

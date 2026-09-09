@@ -57,7 +57,7 @@ public abstract class BookViewScreenMixin extends Screen {
     @Inject(method = "init", at = @At("TAIL"))
     private void onInit(CallbackInfo ci) {
         addRenderableWidget(
-            new Button.Builder(Component.literal("Copy"), _ -> {
+            new Button.Builder(Component.literal("Copy"), unused1 -> {
                 ListTag listTag = new ListTag();
                 for (int i = 0; i < bookAccess.getPageCount(); i++)
                     listTag.add(StringTag.valueOf(bookAccess.getPage(i).getString()));
@@ -83,7 +83,7 @@ public abstract class BookViewScreenMixin extends Screen {
                 if (size > available) {
                     ChatUtils.error("Could not copy to clipboard: Out of memory.");
                 } else {
-                    GLFW.glfwSetClipboardString(mc.getWindow().handle(), encoded);
+                    GLFW.glfwSetClipboardString(mc.getWindow().getWindow(), encoded);
                 }
             })
                 .pos(4, 4)
@@ -105,7 +105,7 @@ public abstract class BookViewScreenMixin extends Screen {
         InteractionHand hand2 = hand; // Honestly
 
         addRenderableWidget(
-            new Button.Builder(Component.literal("Edit title & author"), _ -> {
+            new Button.Builder(Component.literal("Edit title & author"), unused2 -> {
                 mc.setScreen(new EditBookTitleAndAuthorScreen(GuiThemes.get(), book, hand2));
             })
                 .pos(4, 4 + 20 + 2)

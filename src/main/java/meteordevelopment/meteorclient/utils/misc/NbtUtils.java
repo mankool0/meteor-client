@@ -39,7 +39,7 @@ public class NbtUtils {
 
     public static <K, V> Map<K, V> mapFromTag(CompoundTag tag, ToKey<K> toKey, ToValue<V> toValue) {
         Map<K, V> map = HashMap.newHashMap(tag.size());
-        for (String key : tag.keySet()) map.put(toKey.toKey(key), toValue.toValue(tag.get(key)));
+        for (String key : tag.getAllKeys()) map.put(toKey.toKey(key), toValue.toValue(tag.get(key)));
         return map;
     }
 
@@ -66,7 +66,7 @@ public class NbtUtils {
         if (tag == null) return false;
 
         CompoundTag sourceTag = serializable.toTag();
-        for (String key : sourceTag.keySet()) {
+        for (String key : sourceTag.getAllKeys()) {
             if (!tag.contains(key)) return false;
         }
 

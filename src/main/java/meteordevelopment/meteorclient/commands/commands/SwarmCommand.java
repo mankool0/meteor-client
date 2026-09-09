@@ -48,7 +48,7 @@ public class SwarmCommand extends Command {
 
     @Override
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
-        builder.then(literal("disconnect").executes(_ -> {
+        builder.then(literal("disconnect").executes(unused1 -> {
             Swarm swarm = Modules.get().get(Swarm.class);
             if (swarm.isActive()) {
                 swarm.close();
@@ -78,7 +78,7 @@ public class SwarmCommand extends Command {
                     })
                 )
             )
-            .then(literal("confirm").executes(_ -> {
+            .then(literal("confirm").executes(unused2 -> {
                 if (pendingConnection == null) {
                     error("No pending swarm connections.");
                     return SINGLE_SUCCESS;
@@ -95,7 +95,7 @@ public class SwarmCommand extends Command {
 
                 try {
                     info("Connected to (highlight)%s.", swarm.worker.getConnection());
-                } catch (NullPointerException _) {
+                } catch (NullPointerException unused3) {
                     error("Error connecting to swarm host.");
                     swarm.close();
                     swarm.toggle();
@@ -105,7 +105,7 @@ public class SwarmCommand extends Command {
             }))
         );
 
-        builder.then(literal("connections").executes(_ -> {
+        builder.then(literal("connections").executes(unused4 -> {
             Swarm swarm = Modules.get().get(Swarm.class);
             if (swarm.isActive()) {
                 if (swarm.isHost()) {

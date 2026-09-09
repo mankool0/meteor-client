@@ -20,7 +20,7 @@ public class DisconnectCommand extends Command {
 
     @Override
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
-        builder.executes(_ -> {
+        builder.executes(unused1 -> {
             mc.player.connection.handleDisconnect(new ClientboundDisconnectPacket(Component.literal("%s[%sDisconnectCommand%s] Disconnected by user.".formatted(ChatFormatting.GRAY, ChatFormatting.BLUE, ChatFormatting.GRAY))));
             return SINGLE_SUCCESS;
         });

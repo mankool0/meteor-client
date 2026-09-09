@@ -23,4 +23,17 @@ public abstract class AbstractClientPlayerMixin {
     private void onGetPlayerListEntry(CallbackInfoReturnable<PlayerInfo> cir) {
         if (mc.getConnection() == null) cir.setReturnValue(FakeClientPlayer.getPlayerListEntry());
     }
+
+    // PORT(1.21.4): Player.isSpectator()/isCreative() are abstract on Player on 1.21.4 - the only concrete
+    // client-side implementation is on AbstractClientPlayer, so these hooks moved here from PlayerMixin.
+
+    @Inject(method = "isSpectator", at = @At("HEAD"), cancellable = true)
+    private void onIsSpectator(CallbackInfoReturnable<Boolean> cir) {
+        if (mc.getConnection() == null) cir.setReturnValue(false);
+    }
+
+    @Inject(method = "isCreative", at = @At("HEAD"), cancellable = true)
+    private void onIsCreative(CallbackInfoReturnable<Boolean> cir) {
+        if (mc.getConnection() == null) cir.setReturnValue(false);
+    }
 }

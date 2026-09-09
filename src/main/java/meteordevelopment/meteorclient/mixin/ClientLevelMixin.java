@@ -10,27 +10,77 @@ import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.entity.EntityRemovedEvent;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.render.NoRender;
+import meteordevelopment.meteorclient.systems.modules.world.Ambience;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.DimensionSpecialEffects;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(ClientLevel.class)
 public abstract class ClientLevelMixin {
+    @Unique
+    private final DimensionSpecialEffects endSky = new DimensionSpecialEffects.EndEffects();
+
+    @Unique
+    private final DimensionSpecialEffects customSky = new Ambience.Custom();
+
     @Shadow
     @Nullable
     public abstract Entity getEntity(int id);
+
+    // Ambience
+
+    /**
+     * @author Walaryne
+     */
+    @Inject(method = "effects", at = @At("HEAD"), cancellable = true)
+    private void onEffects(CallbackInfoReturnable<DimensionSpecialEffects> cir) {
+        Ambience ambience = Modules.get().get(Ambience.class);
+
+        if (ambience.isActive() && ambience.endSky.get()) {
+            cir.setReturnValue(ambience.customSkyColor.get() ? customSky : endSky);
+        }
+    }
+
+    /**
+     * @author Walaryne
+     */
+    @Inject(method = "getSkyColor", at = @At("HEAD"), cancellable = true)
+    private void onGetSkyColor(Vec3 cameraPos, float partialTick, CallbackInfoReturnable<Integer> cir) {
+        Ambience ambience = Modules.get().get(Ambience.class);
+
+        if (ambience.isActive() && ambience.customSkyColor.get()) {
+            SettingColor color = ambience.skyColor();
+            if (color != null) cir.setReturnValue(color.getPacked());
+        }
+    }
+
+    /**
+     * @author Walaryne
+     */
+    @Inject(method = "getCloudColor", at = @At("HEAD"), cancellable = true)
+    private void onGetCloudColor(float partialTick, CallbackInfoReturnable<Integer> cir) {
+        Ambience ambience = Modules.get().get(Ambience.class);
+
+        if (ambience.isActive() && ambience.customCloudColor.get()) {
+            cir.setReturnValue(ambience.cloudColor.get().getPacked());
+        }
+    }
 
     @Inject(method = "addEntity", at = @At("TAIL"))
     private void onAddEntity(Entity entity, CallbackInfo ci) {
@@ -45,11 +95,6 @@ public abstract class ClientLevelMixin {
 
     @Inject(method = "addDestroyBlockEffect", at = @At("HEAD"), cancellable = true)
     private void onAddDestroyBlockEffect(BlockPos pos, BlockState blockState, CallbackInfo ci) {
-        if (Modules.get().get(NoRender.class).noParticle(ParticleTypes.BLOCK)) ci.cancel();
-    }
-
-    @Inject(method = "addBreakingBlockEffect", at = @At("HEAD"), cancellable = true)
-    private void onAddBlockBreakingParticles(BlockPos pos, Direction direction, CallbackInfo ci) {
         if (Modules.get().get(NoRender.class).noParticle(ParticleTypes.BLOCK)) ci.cancel();
     }
 

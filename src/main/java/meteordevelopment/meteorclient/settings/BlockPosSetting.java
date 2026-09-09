@@ -24,7 +24,7 @@ public class BlockPosSetting extends Setting<BlockPos> {
         BlockPos bp = null;
         try {
             bp = new BlockPos(Integer.parseInt(values.get(0)), Integer.parseInt(values.get(1)), Integer.parseInt(values.get(2)));
-        } catch (NumberFormatException _) {
+        } catch (NumberFormatException unused1) {
         }
         return bp;
     }
@@ -43,8 +43,8 @@ public class BlockPosSetting extends Setting<BlockPos> {
 
     @Override
     protected BlockPos load(CompoundTag tag) {
-        if (tag.getIntArray("value").isPresent()) {
-            int[] value = tag.getIntArray("value").get();
+        int[] value = tag.getIntArray("value");
+        if (value.length == 3) {
             set(new BlockPos(value[0], value[1], value[2]));
         }
 

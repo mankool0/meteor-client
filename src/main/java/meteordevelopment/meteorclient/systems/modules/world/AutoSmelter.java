@@ -16,7 +16,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import net.minecraft.world.inventory.AbstractFurnaceMenu;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -161,15 +161,15 @@ public class AutoSmelter extends Module {
         if (amount <= 0 || mc.player == null || mc.gameMode == null) return;
         if (!mc.player.containerMenu.getCarried().isEmpty()) return;
 
-        mc.gameMode.handleContainerInput(c.containerId, fromId, 0, ContainerInput.PICKUP, mc.player);
+        mc.gameMode.handleInventoryMouseClick(c.containerId, fromId, 0, ClickType.PICKUP, mc.player);
 
         for (int i = 0; i < amount; i++) {
             if (mc.player.containerMenu.getCarried().isEmpty()) break;
-            mc.gameMode.handleContainerInput(c.containerId, 1, 1, ContainerInput.PICKUP, mc.player);
+            mc.gameMode.handleInventoryMouseClick(c.containerId, 1, 1, ClickType.PICKUP, mc.player);
         }
 
         if (!mc.player.containerMenu.getCarried().isEmpty()) {
-            mc.gameMode.handleContainerInput(c.containerId, fromId, 0, ContainerInput.PICKUP, mc.player);
+            mc.gameMode.handleInventoryMouseClick(c.containerId, fromId, 0, ClickType.PICKUP, mc.player);
         }
 
         c.slots.get(1).getItem().isEmpty();

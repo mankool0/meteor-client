@@ -31,12 +31,12 @@ public class ResetCommand extends Command {
                 module.info("Reset all settings.");
                 return SINGLE_SUCCESS;
             }))
-            .then(literal("all").executes(_ -> {
+            .then(literal("all").executes(unused1 -> {
                 Modules.get().getAll().forEach(module -> module.settings.forEach(group -> group.forEach(Setting::reset)));
                 ChatUtils.infoPrefix("Modules", "Reset all module settings");
                 return SINGLE_SUCCESS;
             }))
-        ).then(literal("gui").executes(_ -> {
+        ).then(literal("gui").executes(unused2 -> {
             GuiThemes.get().clearWindowConfigs();
             GuiThemes.get().settings.reset();
             ChatUtils.info("Reset all GUI settings.");
@@ -50,12 +50,12 @@ public class ResetCommand extends Command {
 
                 return SINGLE_SUCCESS;
             }))
-            .then(literal("all").executes(_ -> {
+            .then(literal("all").executes(unused3 -> {
                 Modules.get().getAll().forEach(module -> module.keybind.reset());
                 ChatUtils.infoPrefix("Modules", "Reset all binds.");
                 return SINGLE_SUCCESS;
             }))
-        ).then(literal("hud").executes(_ -> {
+        ).then(literal("hud").executes(unused4 -> {
             Hud.get().resetToDefaultElements();
             ChatUtils.infoPrefix("HUD", "Reset all elements.");
             return SINGLE_SUCCESS;

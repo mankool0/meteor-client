@@ -12,7 +12,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.Set;
 
@@ -172,7 +172,7 @@ public class Chams extends Module {
         .build()
     );
 
-    public static final Identifier BLANK = MeteorClient.identifier("textures/blank.png");
+    public static final ResourceLocation BLANK = MeteorClient.identifier("textures/blank.png");
 
     public Chams() {
         super(Categories.Render, "chams", "Tweaks rendering of entities.");

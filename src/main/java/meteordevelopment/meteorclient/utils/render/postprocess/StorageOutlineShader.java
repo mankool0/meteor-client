@@ -20,11 +20,10 @@ public class StorageOutlineShader extends PostProcessShader {
 
     @Override
     protected void setupPass(MeshRenderer renderer) {
-        renderer.uniform("OutlineData", OutlineUniforms.write(
-            storageESP.outlineWidth.get(),
-            storageESP.fillOpacity.get() / 255.0f,
-            storageESP.shapeMode.get().ordinal(),
-            storageESP.glowMultiplier.get().floatValue()
-        ));
+        renderer
+            .uniform("u_Width", storageESP.outlineWidth.get().intValue())
+            .uniform("u_FillOpacity", storageESP.fillOpacity.get() / 255.0)
+            .uniform("u_ShapeMode", storageESP.shapeMode.get().ordinal())
+            .uniform("u_GlowMultiplier", storageESP.glowMultiplier.get().doubleValue());
     }
 }

@@ -1,4 +1,4 @@
-classTweaker	v1	official
+classTweaker	v1	named
 
 # FileCacheAccessor, SkinManagerAccessor, Account#applyLoginEnvironment
 accessible   class   net/minecraft/client/resources/SkinManager$TextureCache
@@ -18,19 +18,8 @@ accessible   class   net/minecraft/client/gui/screens/inventory/BeaconScreen$Bea
 # ResourceLoadStateTrackerAccessor, ReloadStateAccessor, Utils#isLoading
 accessible   class   net/minecraft/client/ResourceLoadStateTracker$ReloadState
 
-# CapabilityTrackerMixin
-accessible   class   com/mojang/blaze3d/opengl/GlStateManager$BooleanState
-# ExtendedRenderPipelineBuilder
-accessible   method  com/mojang/blaze3d/pipeline/RenderPipeline$Builder <init> ()V
-accessible   method  com/mojang/blaze3d/pipeline/RenderPipeline$Builder withSnippet (Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;)V
-
-# OutlineRenderCommandQueue#order
-accessible   field   net/minecraft/client/renderer/SubmitNodeStorage submitsPerOrder Lit/unimi/dsi/fastutil/ints/Int2ObjectAVLTreeMap;
-
-# GlCommandEncoderMixin, GlDeviceMixin
-accessible   class   com/mojang/blaze3d/opengl/GlDevice
-# GlCommandEncoderMixin
-accessible   class   com/mojang/blaze3d/opengl/GlCommandEncoder
+# CapabilityTrackerMixin (1.21.4: GlStateManager lives in blaze3d.platform)
+accessible   class   com/mojang/blaze3d/platform/GlStateManager$BooleanState
 
 # AutoFish#tryCatch
 accessible   class   net/minecraft/world/entity/projectile/FishingHook$FishHookState
@@ -38,10 +27,21 @@ accessible   field   net/minecraft/world/entity/projectile/FishingHook currentSt
 
 accessible   method  net/minecraft/client/multiplayer/MultiPlayerGameMode startPrediction (Lnet/minecraft/client/multiplayer/ClientLevel;Lnet/minecraft/client/multiplayer/prediction/PredictiveAction;)V
 
-# GuiGraphicsExtractorAccessor
-accessible   class   net/minecraft/client/gui/GuiGraphicsExtractor$ScissorStack
-# WireframeEntityRenderer#getBuffer
-accessible   field   net/minecraft/client/renderer/rendertype/RenderSetup outputTarget Lnet/minecraft/client/renderer/rendertype/OutputTarget;
+# GuiGraphicsExtractorAccessor (1.21.4: scissor stack is an inner class of GuiGraphics)
+accessible   class   net/minecraft/client/gui/GuiGraphics$ScissorStack
 
-# ProjectileEntitySimulator#hitOrDeflect
-accessible   method   net/minecraft/world/entity/projectile/Projectile shouldBounceOnWorldBorder ()Z
+# WireframeEntityRenderer — filter out item-entity-target layers
+accessible   class   net/minecraft/client/renderer/RenderType$CompositeRenderType
+accessible   field   net/minecraft/client/renderer/RenderType$CompositeRenderType state Lnet/minecraft/client/renderer/RenderType$CompositeState;
+accessible   class   net/minecraft/client/renderer/RenderType$CompositeState
+accessible   field   net/minecraft/client/renderer/RenderType$CompositeState outputState Lnet/minecraft/client/renderer/RenderStateShard$OutputStateShard;
+accessible   class   net/minecraft/client/renderer/RenderStateShard$OutputStateShard
+accessible   field   net/minecraft/client/renderer/RenderStateShard ITEM_ENTITY_TARGET Lnet/minecraft/client/renderer/RenderStateShard$OutputStateShard;
+
+# PORT(1.21.4): dropped 26.1-only entries — revisit while porting the affected code:
+#   RenderPipeline$Builder <init>/withSnippet (ExtendedRenderPipelineBuilder — renderer rewritten for 1.21.4)
+#   SubmitNodeStorage submitsPerOrder (OutlineRenderCommandQueue — no submit-node renderer in 1.21.4)
+#   GlDevice / GlCommandEncoder (GlCommandEncoderMixin, GlDeviceMixin — no GPU device abstraction in 1.21.4)
+#   GuiGraphicsExtractor$ScissorStack (26.1 name; replaced by GuiGraphics$ScissorStack above)
+#   RenderSetup outputTarget (WireframeEntityRenderer — rework against 1.21.4 RenderType)
+#   Projectile shouldBounceOnWorldBorder (may not exist in 1.21.4 — ProjectileEntitySimulator port decides)

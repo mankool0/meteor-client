@@ -58,7 +58,7 @@ public abstract class System<T> implements ISerializable<T> {
 
             try {
                 Files.move(tempFile.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-            } catch (AtomicMoveNotSupportedException _) {
+            } catch (AtomicMoveNotSupportedException unused1) {
                 StreamUtils.copy(tempFile, file);
             }
 
@@ -88,7 +88,7 @@ public abstract class System<T> implements ISerializable<T> {
 
                     try {
                         Files.move(file.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-                    } catch (AtomicMoveNotSupportedException _) {
+                    } catch (AtomicMoveNotSupportedException unused2) {
                         StreamUtils.copy(file, backup);
                     }
 

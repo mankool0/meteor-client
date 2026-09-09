@@ -5,13 +5,12 @@
 
 package meteordevelopment.meteorclient.mixin;
 
-import net.minecraft.client.renderer.rendertype.RenderType;
-import net.minecraft.client.renderer.rendertype.RenderSetup;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
-@Mixin(RenderType.class)
-public interface RenderTypeAccessor {
-    @Accessor("state")
-    RenderSetup getState();
+@Mixin(ServerboundInteractPacket.class)
+public interface ServerboundInteractPacketAccessor {
+    @Accessor("entityId")
+    int getEntityId();
 }

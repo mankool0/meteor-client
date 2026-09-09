@@ -176,7 +176,7 @@ public abstract class EntityMixin {
             ci.cancel();
         } else if (Modules.get().isActive(HighwayBuilder.class)) {
             Camera camera = mc.gameRenderer.getMainCamera();
-            ((ICamera) camera).meteor$setRot(camera.yRot() + xo * 0.15, camera.xRot() + yo * 0.15);
+            ((ICamera) camera).meteor$setRot(camera.getYRot() + xo * 0.15, camera.getXRot() + yo * 0.15);
             ci.cancel();
         } else if (freeLook.cameraMode()) {
             freeLook.cameraYaw += (float) (xo / freeLook.sensitivity.get().floatValue());

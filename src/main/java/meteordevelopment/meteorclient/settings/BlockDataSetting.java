@@ -11,7 +11,7 @@ import meteordevelopment.meteorclient.utils.misc.IGetter;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 
 import java.util.HashMap;
@@ -57,9 +57,9 @@ public class BlockDataSetting<T extends ICopyable<T> & ISerializable<T> & IChang
     protected Map<Block, T> load(CompoundTag tag) {
         get().clear();
 
-        CompoundTag valueTag = tag.getCompoundOrEmpty("value");
-        for (String key : valueTag.keySet()) {
-            get().put(BuiltInRegistries.BLOCK.getValue(Identifier.parse(key)), defaultData.get().copy().fromTag(valueTag.getCompoundOrEmpty(key)));
+        CompoundTag valueTag = tag.getCompound("value");
+        for (String key : valueTag.getAllKeys()) {
+            get().put(BuiltInRegistries.BLOCK.getValue(ResourceLocation.parse(key)), defaultData.get().copy().fromTag(valueTag.getCompound(key)));
         }
 
         return get();

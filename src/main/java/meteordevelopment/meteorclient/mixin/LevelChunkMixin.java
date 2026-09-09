@@ -25,7 +25,7 @@ public abstract class LevelChunkMixin {
     private Level level;
 
     @Inject(method = "setBlockState", at = @At("TAIL"))
-    private void onSetBlockState(BlockPos pos, BlockState state, int flags, CallbackInfoReturnable<BlockState> cir) {
+    private void onSetBlockState(BlockPos pos, BlockState state, boolean isMoving, CallbackInfoReturnable<BlockState> cir) {
         if (level.isClientSide()) MeteorClient.EVENT_BUS.post(BlockUpdateEvent.get(pos, cir.getReturnValue(), state));
     }
 }

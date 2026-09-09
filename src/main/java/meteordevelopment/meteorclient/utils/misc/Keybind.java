@@ -5,10 +5,10 @@
 
 package meteordevelopment.meteorclient.utils.misc;
 
+import meteordevelopment.meteorclient.events.meteor.KeyInputEvent;
+import meteordevelopment.meteorclient.events.meteor.MouseClickEvent;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.input.Input;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.nbt.CompoundTag;
 
 import java.util.Objects;
@@ -89,11 +89,11 @@ public class Keybind implements ISerializable<Keybind>, ICopyable<Keybind> {
         return this.value == value && this.modifiers == modifiers;
     }
 
-    public boolean matches(KeyEvent input) {
+    public boolean matches(KeyInputEvent input) {
         return matches(true, input.key(), input.modifiers());
     }
 
-    public boolean matches(MouseButtonInfo input) {
+    public boolean matches(MouseClickEvent input) {
         return matches(false, input.button(), 0);
     }
 
@@ -177,9 +177,9 @@ public class Keybind implements ISerializable<Keybind>, ICopyable<Keybind> {
 
     @Override
     public Keybind fromTag(CompoundTag tag) {
-        isKey = tag.getBooleanOr("isKey", false);
-        value = tag.getIntOr("value", 0);
-        modifiers = tag.getIntOr("modifiers", 0);
+        isKey = tag.getBoolean("isKey");
+        value = tag.getInt("value");
+        modifiers = tag.getInt("modifiers");
 
         return this;
     }

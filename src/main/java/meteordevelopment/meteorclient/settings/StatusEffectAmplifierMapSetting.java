@@ -10,7 +10,7 @@ import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffect;
 
 import java.util.function.Consumer;
@@ -41,7 +41,7 @@ public class StatusEffectAmplifierMapSetting extends Setting<Reference2IntMap<Mo
 
                 effects.put(effect, level);
             }
-        } catch (Exception _) {
+        } catch (Exception unused1) {
         }
 
         return effects;
@@ -56,7 +56,7 @@ public class StatusEffectAmplifierMapSetting extends Setting<Reference2IntMap<Mo
     public CompoundTag save(CompoundTag tag) {
         CompoundTag valueTag = new CompoundTag();
         for (MobEffect statusEffect : get().keySet()) {
-            Identifier id = BuiltInRegistries.MOB_EFFECT.getKey(statusEffect);
+            ResourceLocation id = BuiltInRegistries.MOB_EFFECT.getKey(statusEffect);
             if (id != null) valueTag.putInt(id.toString(), get().getInt(statusEffect));
         }
         tag.put("value", valueTag);
@@ -76,10 +76,10 @@ public class StatusEffectAmplifierMapSetting extends Setting<Reference2IntMap<Mo
     public Reference2IntMap<MobEffect> load(CompoundTag tag) {
         get().clear();
 
-        CompoundTag valueTag = tag.getCompoundOrEmpty("value");
-        for (String key : valueTag.keySet()) {
-            MobEffect statusEffect = BuiltInRegistries.MOB_EFFECT.getValue(Identifier.parse(key));
-            if (statusEffect != null) get().put(statusEffect, valueTag.getIntOr(key, 0));
+        CompoundTag valueTag = tag.getCompound("value");
+        for (String key : valueTag.getAllKeys()) {
+            MobEffect statusEffect = BuiltInRegistries.MOB_EFFECT.getValue(ResourceLocation.parse(key));
+            if (statusEffect != null) get().put(statusEffect, valueTag.getInt(key));
         }
 
         return get();

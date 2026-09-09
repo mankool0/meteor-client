@@ -58,9 +58,9 @@ public class StringListSetting extends Setting<List<String>> {
     public List<String> load(CompoundTag tag) {
         get().clear();
 
-        ListTag valueTag = tag.getListOrEmpty("value");
+        ListTag valueTag = tag.getList("value", Tag.TAG_STRING);
         for (Tag tagI : valueTag) {
-            get().add(tagI.asString().orElse(""));
+            get().add(tagI.getAsString());
         }
 
         return get();
@@ -75,7 +75,7 @@ public class StringListSetting extends Setting<List<String>> {
         table.clear();
 
         ArrayList<String> strings = new ArrayList<>(setting.get());
-        CharFilter filter = setting.filter == null ? (_, _) -> true : setting.filter;
+        CharFilter filter = setting.filter == null ? (unused1, unused2) -> true : setting.filter;
 
         for (int i = 0; i < setting.get().size(); i++) {
             int msgI = i;

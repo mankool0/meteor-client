@@ -192,8 +192,8 @@ public class StashFinder extends Module {
     @EventHandler
     private void onChunkData(ChunkDataEvent event) {
         // Check the distance.
-        double chunkXAbs = Math.abs(event.chunk().getPos().x() * 16);
-        double chunkZAbs = Math.abs(event.chunk().getPos().z() * 16);
+        double chunkXAbs = Math.abs(event.chunk().getPos().x * 16);
+        double chunkZAbs = Math.abs(event.chunk().getPos().z * 16);
         if (Math.sqrt(chunkXAbs * chunkXAbs + chunkZAbs * chunkZAbs) < minimumDistance.get()) return;
 
         Chunk chunk = new Chunk(event.chunk().getPos());
@@ -209,13 +209,13 @@ public class StashFinder extends Module {
             }
 
             switch (blockEntity) {
-                case ChestBlockEntity _ -> chunk.chests++;
-                case BarrelBlockEntity _ -> chunk.barrels++;
-                case ShulkerBoxBlockEntity _ -> chunk.shulkers++;
-                case EnderChestBlockEntity _ -> chunk.enderChests++;
-                case AbstractFurnaceBlockEntity _ -> chunk.furnaces++;
-                case DispenserBlockEntity _ -> chunk.dispensersDroppers++;
-                case HopperBlockEntity _ -> chunk.hoppers++;
+                case ChestBlockEntity unused1 -> chunk.chests++;
+                case BarrelBlockEntity unused2 -> chunk.barrels++;
+                case ShulkerBoxBlockEntity unused3 -> chunk.shulkers++;
+                case EnderChestBlockEntity unused4 -> chunk.enderChests++;
+                case AbstractFurnaceBlockEntity unused5 -> chunk.furnaces++;
+                case DispenserBlockEntity unused6 -> chunk.dispensersDroppers++;
+                case HopperBlockEntity unused7 -> chunk.hoppers++;
                 default -> {
                 }
             }
@@ -338,7 +338,7 @@ public class StashFinder extends Module {
                 for (Chunk chunk : chunks) chunk.calculatePos();
 
                 loaded = true;
-            } catch (Exception _) {
+            } catch (Exception unused8) {
                 if (chunks == null) chunks = new ArrayList<>();
             }
         }
@@ -366,7 +366,7 @@ public class StashFinder extends Module {
                 }
 
                 reader.close();
-            } catch (Exception _) {
+            } catch (Exception unused9) {
                 if (chunks == null) chunks = new ArrayList<>();
             }
         }
@@ -417,7 +417,7 @@ public class StashFinder extends Module {
             .setStyle(Style.EMPTY
                 .withColor(ChatFormatting.WHITE)
                 .applyFormat(ChatFormatting.UNDERLINE)
-                .withHoverEvent(new HoverEvent.ShowText(Component.literal("Path to stash")))
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Path to stash")))
                 .withClickEvent(new RunnableClickEvent(() -> PathManagers.get().moveTo(new BlockPos(chunk.x, 0, chunk.z), true))));
 
         MutableComponent message = Component.literal("Found stash at ")
@@ -450,9 +450,7 @@ public class StashFinder extends Module {
             if (horizontalDist > traceMaxDistance.get()) continue;
 
             if (renderTracer.get()) {
-                event.renderer.line(
-                    RenderUtils.center.x, RenderUtils.center.y, RenderUtils.center.z, pos.x, mc.player.getEyeY(), pos.z, traceColor.get()
-                );
+                RenderUtils.drawTracer(event.renderer, pos.x, mc.player.getEyeY(), pos.z, traceColor.get());
             }
 
             if (renderChunkColumn.get()) {
@@ -492,8 +490,8 @@ public class StashFinder extends Module {
         }
 
         public void calculatePos() {
-            x = chunkPos.x() * 16 + 8;
-            z = chunkPos.z() * 16 + 8;
+            x = chunkPos.x * 16 + 8;
+            z = chunkPos.z * 16 + 8;
         }
 
         public int getTotal() {

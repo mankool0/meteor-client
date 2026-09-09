@@ -7,7 +7,6 @@ package meteordevelopment.meteorclient.utils;
 
 import com.mojang.blaze3d.ProjectionType;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.serialization.DataResult;
 import it.unimi.dsi.fastutil.objects.*;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -31,22 +30,19 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
-import net.minecraft.client.renderer.Projection;
-import net.minecraft.client.renderer.ProjectionMatrixBuffer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
-import net.minecraft.world.ItemStackWithSlot;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.component.TypedEntityData;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
@@ -54,7 +50,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.phys.Vec3;
 import org.apache.commons.io.IOUtils;
@@ -83,8 +78,6 @@ public class Utils {
     public static boolean rendering3D = true;
     public static double frameTime;
     public static Screen screenToOpen;
-
-    private static final ProjectionMatrixBuffer matrixBuffer = new ProjectionMatrixBuffer("meteor-projection-matrix");
 
     private Utils() {
     }
@@ -224,11 +217,9 @@ public class Utils {
         float width = mc.getWindow().getWidth();
         float height = mc.getWindow().getHeight();
 
-        var proj = new Projection();
-        proj.setupOrtho(-10, 100, width, height, true);
-        var matrix = proj.getMatrix(new Matrix4f());
+        Matrix4f matrix = new Matrix4f().setOrtho(0, width, height, 0, 1000, 21000);
 
-        RenderSystem.setProjectionMatrix(matrixBuffer.getBuffer(matrix), ProjectionType.ORTHOGRAPHIC);
+        RenderSystem.setProjectionMatrix(matrix, ProjectionType.ORTHOGRAPHIC);
         RenderUtils.projection.set(matrix);
 
         rendering3D = false;
@@ -238,11 +229,9 @@ public class Utils {
         float width = (float) (mc.getWindow().getWidth() / mc.getWindow().getGuiScale());
         float height = (float) (mc.getWindow().getHeight() / mc.getWindow().getGuiScale());
 
-        var proj = new Projection();
-        proj.setupOrtho(-10, 100, width, height, true);
-        var matrix = proj.getMatrix(new Matrix4f());
+        Matrix4f matrix = new Matrix4f().setOrtho(0, width, height, 0, 1000, 21000);
 
-        RenderSystem.setProjectionMatrix(matrixBuffer.getBuffer(matrix), ProjectionType.PERSPECTIVE);
+        RenderSystem.setProjectionMatrix(matrix, ProjectionType.PERSPECTIVE);
         RenderUtils.projection.set(matrix);
 
         rendering3D = true;
@@ -276,31 +265,24 @@ public class Utils {
         DataComponentMap components = itemStack.getComponents();
 
         if (components.has(DataComponents.CONTAINER)) {
-            var stacks = components.get(DataComponents.CONTAINER).allItemsCopyStream().toList();
+            var stacks = components.get(DataComponents.CONTAINER).stream().toList();
 
             for (int i = 0; i < stacks.size(); i++) {
                 if (i >= 0 && i < items.length) items[i] = stacks.get(i);
             }
         } else if (components.has(DataComponents.BLOCK_ENTITY_DATA)) {
-            TypedEntityData<BlockEntityType<?>> blockEntityData = components.get(DataComponents.BLOCK_ENTITY_DATA);
+            CustomData blockEntityData = components.get(DataComponents.BLOCK_ENTITY_DATA);
             if (blockEntityData == null) return;
-            ListTag nbt3 = blockEntityData.copyTagWithoutId().getListOrEmpty("Items");
+            ListTag nbt3 = blockEntityData.copyTag().getList("Items", Tag.TAG_COMPOUND);
 
             for (int i = 0; i < nbt3.size(); i++) {
-                Optional<CompoundTag> compound = nbt3.getCompound(i);
-                if (compound.isEmpty()) continue;
+                CompoundTag compound = nbt3.getCompound(i);
 
-                Optional<Byte> slot = compound.get().getByte("Slot"); // Apparently shulker boxes can store more than 27 items, good job Mojang
-                if (slot.isEmpty()) continue;
+                int slot = compound.getByte("Slot"); // Apparently shulker boxes can store more than 27 items, good job Mojang
 
                 // now NPEs when mc.world == null
-                if (slot.get() >= 0 && slot.get() < items.length) {
-                    switch (ItemStackWithSlot.CODEC.parse(mc.player.registryAccess().createSerializationContext(NbtOps.INSTANCE), compound.get())) {
-                        case DataResult.Success<ItemStackWithSlot> success ->
-                            items[slot.get()] = success.value().stack();
-                        case DataResult.Error<ItemStackWithSlot> _ -> items[slot.get()] = ItemStack.EMPTY;
-                        default -> throw new MatchException(null, null);
-                    }
+                if (slot >= 0 && slot < items.length) {
+                    items[slot] = ItemStack.parseOptional(mc.player.registryAccess(), compound);
                 }
             }
         }
@@ -331,7 +313,7 @@ public class Utils {
             if (items.hasNext()) return true;
         }
 
-        TypedEntityData<BlockEntityType<?>> blockEntityData = itemStack.get(DataComponents.BLOCK_ENTITY_DATA);
+        CustomData blockEntityData = itemStack.get(DataComponents.BLOCK_ENTITY_DATA);
         return blockEntityData != null && blockEntityData.contains("Items");
     }
 
@@ -622,7 +604,7 @@ public class Utils {
 
         try {
             port = Integer.parseInt(full.substring(full.lastIndexOf(':') + 1, full.length() - 1));
-        } catch (NumberFormatException _) {
+        } catch (NumberFormatException unused2) {
             port = -1;
         }
 

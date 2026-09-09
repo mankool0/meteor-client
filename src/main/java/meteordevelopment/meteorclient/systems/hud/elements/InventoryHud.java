@@ -15,7 +15,7 @@ import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.render.DisplayItemUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -24,8 +24,8 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class InventoryHud extends HudElement {
     public static final HudElementInfo<InventoryHud> INFO = new HudElementInfo<>(Hud.GROUP, "inventory", "Displays your inventory.", InventoryHud::new);
 
-    private static final Identifier TEXTURE = MeteorClient.identifier("textures/container.png");
-    private static final Identifier TEXTURE_TRANSPARENT = MeteorClient.identifier("textures/container-transparent.png");
+    private static final ResourceLocation TEXTURE = MeteorClient.identifier("textures/container.png");
+    private static final ResourceLocation TEXTURE_TRANSPARENT = MeteorClient.identifier("textures/container-transparent.png");
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgScale = settings.createGroup("Scale");
@@ -44,7 +44,7 @@ public class InventoryHud extends HudElement {
         .name("custom-scale")
         .description("Applies a custom scale to this hud element.")
         .defaultValue(false)
-        .onChanged(_ -> calculateSize())
+        .onChanged(unused1 -> calculateSize())
         .build()
     );
 
@@ -53,7 +53,7 @@ public class InventoryHud extends HudElement {
         .description("Custom scale.")
         .visible(customScale::get)
         .defaultValue(2)
-        .onChanged(_ -> calculateSize())
+        .onChanged(unused2 -> calculateSize())
         .min(0.5)
         .sliderRange(0.5, 3)
         .build()
@@ -65,7 +65,7 @@ public class InventoryHud extends HudElement {
         .name("background")
         .description("Background of inventory viewer.")
         .defaultValue(Background.Texture)
-        .onChanged(_ -> calculateSize())
+        .onChanged(unused3 -> calculateSize())
         .build()
     );
 

@@ -19,7 +19,7 @@ public class Version {
         for (int i = 0; i < 3; i++) {
             try {
                 numbers[i] = Integer.parseInt(split[i]);
-            } catch (NumberFormatException _) {
+            } catch (NumberFormatException unused1) {
                 throw new IllegalArgumentException("Failed to parse version string.");
             }
         }

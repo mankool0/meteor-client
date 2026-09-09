@@ -72,7 +72,7 @@ public class Blink extends Module {
         if (!Utils.canUpdate()) return;
 
         if (renderOriginal.get()) {
-            model = new FakePlayerEntity(mc.player, mc.player.getGameProfile().name(), 20, true);
+            model = new FakePlayerEntity(mc.player, mc.player.getGameProfile().getName(), 20, true);
             model.doNotPush = true;
             model.hideWhenInsideCamera = true;
             model.noHit = true;

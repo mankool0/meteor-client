@@ -45,14 +45,14 @@ public class KeybindSetting extends Setting<Keybind> {
 
     @EventHandler(priority = EventPriority.HIGH)
     private void onKey(KeyInputEvent event) {
-        if (event.action == KeyAction.Release && get().matches(event.input) && (module == null || module.isActive()) && action != null) {
+        if (event.action == KeyAction.Release && get().matches(event) && (module == null || module.isActive()) && action != null) {
             action.run();
         }
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     private void onMouseClick(MouseClickEvent event) {
-        if (event.action == KeyAction.Release && get().matches(event.input) && (module == null || module.isActive()) && action != null) {
+        if (event.action == KeyAction.Release && get().matches(event) && (module == null || module.isActive()) && action != null) {
             action.run();
         }
     }
@@ -69,7 +69,7 @@ public class KeybindSetting extends Setting<Keybind> {
     protected Keybind parseImpl(String str) {
         try {
             return Keybind.fromKey(Integer.parseInt(str.trim()));
-        } catch (NumberFormatException _) {
+        } catch (NumberFormatException unused1) {
             return null;
         }
     }
@@ -88,7 +88,7 @@ public class KeybindSetting extends Setting<Keybind> {
 
     @Override
     public Keybind load(CompoundTag tag) {
-        get().fromTag(tag.getCompoundOrEmpty("value"));
+        get().fromTag(tag.getCompound("value"));
 
         return get();
     }

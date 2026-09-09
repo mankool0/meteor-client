@@ -9,9 +9,9 @@ import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
 import meteordevelopment.meteorclient.gui.utils.BaseWidget;
 import meteordevelopment.meteorclient.gui.widgets.containers.WView;
-import net.minecraft.client.input.CharacterEvent;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
+import meteordevelopment.meteorclient.gui.utils.CharacterEvent;
+import meteordevelopment.meteorclient.gui.utils.KeyEvent;
+import meteordevelopment.meteorclient.gui.utils.MouseButtonEvent;
 
 public abstract class WWidget implements BaseWidget {
     public boolean visible = true;

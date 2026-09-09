@@ -11,7 +11,7 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.render.BetterTab;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.PlayerTabOverlay;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
@@ -43,15 +43,20 @@ public abstract class PlayerTabOverlayMixin {
         if (betterTab.isActive()) cir.setReturnValue(betterTab.getPlayerName(info));
     }
 
-    @ModifyArg(method = "extractRenderState", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I"), index = 0)
+    // PORT(1.21.4): extractRenderState/extractPingIcon do not exist on 1.21.4 - PlayerTabOverlay
+    // still does row/col layout and ping-icon drawing inline in render()/renderPingIcon(). The single
+    // Math.min(II)I call and the isLocalServer() call (right after the vanilla row/col balancing loop,
+    // which stores into locals p (rows) and q (cols), the 6th/7th int locals in scope there) are used
+    // as stable anchors, mirroring the pre-refactor (Yarn 1.21.4) BetterTab mixin.
+    @ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I"), index = 0)
     private int modifyWidth(int width) {
         BetterTab module = Modules.get().get(BetterTab.class);
 
         return module.isActive() && module.accurateLatency.get() ? width + 30 : width;
     }
 
-    @Inject(method = "extractRenderState", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I", shift = At.Shift.BEFORE))
-    private void modifyHeight(CallbackInfo ci, @Local(name = "rows") LocalIntRef rows, @Local(name = "cols") LocalIntRef cols) {
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;isLocalServer()Z"))
+    private void modifyHeight(CallbackInfo ci, @Local(ordinal = 5) LocalIntRef rows, @Local(ordinal = 6) LocalIntRef cols) {
         BetterTab module = Modules.get().get(BetterTab.class);
         if (!module.isActive()) return;
 
@@ -66,8 +71,8 @@ public abstract class PlayerTabOverlayMixin {
         cols.set(newCols);
     }
 
-    @Inject(method = "extractPingIcon", at = @At("HEAD"), cancellable = true)
-    private void onExtractPingIcon(GuiGraphicsExtractor graphics, int slotWidth, int xo, int yo, PlayerInfo info, CallbackInfo ci) {
+    @Inject(method = "renderPingIcon", at = @At("HEAD"), cancellable = true)
+    private void onExtractPingIcon(GuiGraphics graphics, int slotWidth, int xo, int yo, PlayerInfo info, CallbackInfo ci) {
         BetterTab betterTab = Modules.get().get(BetterTab.class);
 
         if (betterTab.isActive() && betterTab.accurateLatency.get()) {
@@ -78,7 +83,7 @@ public abstract class PlayerTabOverlayMixin {
             int color = latency < 150 ? 0xFF00E970 :
                 latency < 300 ? 0xFFE7D020 : 0xFFD74238;
             String text = latency + "ms";
-            graphics.text(font, text, xo + slotWidth - font.width(text), yo, color);
+            graphics.drawString(font, text, xo + slotWidth - font.width(text), yo, color);
             ci.cancel();
         }
     }

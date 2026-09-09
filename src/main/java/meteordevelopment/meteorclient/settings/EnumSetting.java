@@ -53,7 +53,7 @@ public class EnumSetting<T extends Enum<?>> extends Setting<T> {
 
     @Override
     public T load(CompoundTag tag) {
-        parse(tag.getStringOr("value", ""));
+        parse(tag.getString("value"));
 
         return get();
     }

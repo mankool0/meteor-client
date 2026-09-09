@@ -171,7 +171,7 @@ public class BookBot extends Module {
 
         // Move the book into hand
         if (!InvUtils.testInMainHand(bookPredicate)) {
-            InvUtils.move().from(writableBook.slot()).toHotbar(mc.player.getInventory().getSelectedSlot());
+            InvUtils.move().from(writableBook.slot()).toHotbar(mc.player.getInventory().selected);
             return;
         }
 
@@ -209,7 +209,7 @@ public class BookBot extends Module {
                 message.append(Component.literal("Click here to edit it.")
                     .setStyle(Style.EMPTY
                         .applyFormats(ChatFormatting.UNDERLINE, ChatFormatting.RED)
-                        .withClickEvent(new ClickEvent.OpenFile(file.get().getAbsolutePath()))
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, file.get().getAbsolutePath()))
                     )
                 );
                 info(message);
@@ -230,7 +230,7 @@ public class BookBot extends Module {
 
                 // Write the file string to a book
                 writeBook(file.toString().chars().iterator());
-            } catch (IOException _) {
+            } catch (IOException unused1) {
                 error("Failed to read the file.");
             }
         }
@@ -248,7 +248,7 @@ public class BookBot extends Module {
             }
 
             // Use mc's own word wrapping logic
-            List<FormattedText> wrappedLines = mc.font.splitIgnoringLanguage(Component.literal(text.toString()), 114);
+            List<FormattedText> wrappedLines = mc.font.getSplitter().splitLines(Component.literal(text.toString()), 114, Style.EMPTY);
             processLinesToPages(wrappedLines, pages, filteredPages, maxPages);
         } else {
             int pageIndex = 0;
@@ -351,10 +351,10 @@ public class BookBot extends Module {
         if (count.get() && bookCount != 0) title += " #" + bookCount;
 
         // Write data to book
-        mc.player.getMainHandItem().set(DataComponents.WRITTEN_BOOK_CONTENT, new WrittenBookContent(Filterable.passThrough(title), mc.player.getGameProfile().name(), 0, filteredPages, true));
+        mc.player.getMainHandItem().set(DataComponents.WRITTEN_BOOK_CONTENT, new WrittenBookContent(Filterable.passThrough(title), mc.player.getGameProfile().getName(), 0, filteredPages, true));
 
         // Send book update to server
-        mc.player.connection.send(new ServerboundEditBookPacket(mc.player.getInventory().getSelectedSlot(), pages, sign.get() ? Optional.of(title) : Optional.empty()));
+        mc.player.connection.send(new ServerboundEditBookPacket(mc.player.getInventory().selected, pages, sign.get() ? Optional.of(title) : Optional.empty()));
 
         bookCount++;
     }

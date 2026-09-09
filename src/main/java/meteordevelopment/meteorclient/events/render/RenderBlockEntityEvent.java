@@ -6,16 +6,16 @@
 package meteordevelopment.meteorclient.events.render;
 
 import meteordevelopment.meteorclient.events.Cancellable;
-import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
 public class RenderBlockEntityEvent extends Cancellable {
     private static final RenderBlockEntityEvent INSTANCE = new RenderBlockEntityEvent();
 
-    public BlockEntityRenderState blockEntityState;
+    public BlockEntity blockEntity;
 
-    public static RenderBlockEntityEvent get(BlockEntityRenderState blockEntityState) {
+    public static RenderBlockEntityEvent get(BlockEntity blockEntity) {
         INSTANCE.setCancelled(false);
-        INSTANCE.blockEntityState = blockEntityState;
+        INSTANCE.blockEntity = blockEntity;
         return INSTANCE;
     }
 }

@@ -16,8 +16,10 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.network.protocol.game.ServerboundAttackPacket;
+import net.minecraft.network.protocol.game.ServerboundInteractPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.Vec3;
 
 public class Sprint extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -78,7 +80,7 @@ public class Sprint extends Module {
     @EventHandler(priority = EventPriority.HIGH)
     private void onPacketSend(PacketEvent.Send event) {
         if (!unsprintOnHit.get()) return;
-        if (!(event.packet instanceof ServerboundAttackPacket)) return;
+        if (!(event.packet instanceof ServerboundInteractPacket packet) || !isAttackPacket(packet)) return;
 
         mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.STOP_SPRINTING));
         mc.player.setSprinting(false);
@@ -87,11 +89,32 @@ public class Sprint extends Module {
     @EventHandler
     private void onPacketSent(PacketEvent.Sent event) {
         if (!unsprintOnHit.get() || !keepSprint.get()) return;
-        if (!(event.packet instanceof ServerboundAttackPacket)) return;
+        if (!(event.packet instanceof ServerboundInteractPacket packet) || !isAttackPacket(packet)) return;
         if (!shouldSprint() || mc.player.isSprinting()) return;
 
         mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_SPRINTING));
         mc.player.setSprinting(true);
+    }
+
+    // PORT(1.21.4): ServerboundInteractPacket's action/ActionType members are package-private on 1.21.4,
+    // so attack packets are detected through the public dispatch(Handler) API instead of an accessor.
+    public static boolean isAttackPacket(ServerboundInteractPacket packet) {
+        boolean[] attack = new boolean[1];
+
+        packet.dispatch(new ServerboundInteractPacket.Handler() {
+            @Override
+            public void onInteraction(InteractionHand hand) {}
+
+            @Override
+            public void onInteraction(InteractionHand hand, Vec3 pos) {}
+
+            @Override
+            public void onAttack() {
+                attack[0] = true;
+            }
+        });
+
+        return attack[0];
     }
 
     public boolean shouldSprint() {
@@ -105,10 +128,10 @@ public class Sprint extends Module {
             if (mode.get() == Mode.Strict || !permaSprint.get()) return false;
         }
 
-        boolean strictSprint = !(mc.player.isInShallowWater())
-            && !mc.player.isMobilityRestricted()
-            && mc.player.isPassenger() ? (mc.player.getVehicle().canSprint() && mc.player.getVehicle().isLocalInstanceAuthoritative()) : mc.player.getFoodData().hasEnoughFood()
-                                                                                                                                         && (!mc.player.horizontalCollision || mc.player.minorHorizontalCollision);
+        boolean strictSprint = !(mc.player.isInWater() && !mc.player.isUnderWater())
+            && !mc.player.isMovingSlowly()
+            && mc.player.isPassenger() ? (mc.player.getVehicle().canSprint() && mc.player.getVehicle().isControlledByLocalInstance()) : mc.player.getFoodData().getFoodLevel() > 6.0F
+                                                                                                                                        && (!mc.player.horizontalCollision || mc.player.minorHorizontalCollision);
 
         return isActive() && (mode.get() == Mode.Rage || strictSprint);
     }

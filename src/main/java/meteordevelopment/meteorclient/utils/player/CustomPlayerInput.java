@@ -14,7 +14,9 @@ public class CustomPlayerInput extends ClientInput {
     public void tick() {
         float f = this.keyPresses.forward() == this.keyPresses.backward() ? 0.0F : (this.keyPresses.forward() ? 1.0F : -1.0F);
         float g = this.keyPresses.left() == this.keyPresses.right() ? 0.0F : (this.keyPresses.left() ? 1.0F : -1.0F);
-        this.moveVector = new Vec2(g, f).normalized();
+        Vec2 moveVector = new Vec2(g, f).normalized();
+        this.leftImpulse = moveVector.x;
+        this.forwardImpulse = moveVector.y;
     }
 
     public void stop() {

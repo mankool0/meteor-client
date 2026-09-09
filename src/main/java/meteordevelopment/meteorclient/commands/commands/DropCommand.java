@@ -17,7 +17,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -32,27 +31,27 @@ public class DropCommand extends Command {
     @Override
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
         // Main Hand
-        builder.then(literal("hand").executes(_ -> drop(player -> player.drop(true))));
+        builder.then(literal("hand").executes(unused1 -> drop(player -> player.drop(true))));
 
         // Offhand
-        builder.then(literal("offhand").executes(_ -> drop(_ -> InvUtils.drop().slotOffhand())));
+        builder.then(literal("offhand").executes(unused2 -> drop(unused3 -> InvUtils.drop().slotOffhand())));
 
         // Hotbar
-        builder.then(literal("hotbar").executes(_ -> drop(_ -> {
+        builder.then(literal("hotbar").executes(unused4 -> drop(unused5 -> {
             for (int i = 0; i < 9; i++) {
                 InvUtils.drop().slotHotbar(i);
             }
         })));
 
         // Main Inv
-        builder.then(literal("inventory").executes(_ -> drop(_ -> {
+        builder.then(literal("inventory").executes(unused6 -> drop(unused7 -> {
             for (int i = 0; i < 27; i++) {
                 InvUtils.drop().slotMain(i);
             }
         })));
 
         // Hotbar and main inv
-        builder.then(literal("all").executes(_ -> drop(player -> {
+        builder.then(literal("all").executes(unused8 -> drop(player -> {
             for (int i = 0; i < player.getInventory().getContainerSize(); i++) {
                 InvUtils.drop().slot(i);
             }
@@ -60,8 +59,8 @@ public class DropCommand extends Command {
         })));
 
         // Armor
-        builder.then(literal("armor").executes(_ -> drop(_ -> {
-            for (EquipmentSlot equipmentSlot : EquipmentSlotGroup.ARMOR) {
+        builder.then(literal("armor").executes(unused9 -> drop(unused10 -> {
+            for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
                 if (equipmentSlot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR) {
                     InvUtils.drop().slotArmor(equipmentSlot.getIndex());
                 }
@@ -82,7 +81,7 @@ public class DropCommand extends Command {
     }
 
     private void dropItem(LocalPlayer player, CommandContext<ClientSuggestionProvider> context, int amount) throws CommandSyntaxException {
-        ItemStack stack = ItemArgument.getItem(context, "item").createItemStack(1);
+        ItemStack stack = ItemArgument.getItem(context, "item").createItemStack(1, false);
         if (stack == null || stack.getItem() == Items.AIR) throw NO_SUCH_ITEM.create();
 
         for (int i = 0; i < player.getInventory().getContainerSize() && amount > 0; i++) {

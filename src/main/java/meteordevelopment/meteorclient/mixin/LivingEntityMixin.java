@@ -57,7 +57,7 @@ public abstract class LivingEntityMixin extends Entity {
         if (noRender.noEatParticles() && itemStack.getComponents().has(DataComponents.FOOD)) ci.cancel();
     }
 
-    @ModifyVariable(method = "swing(Lnet/minecraft/world/InteractionHand;)V", at = @At("HEAD"), argsOnly = true, name = "hand")
+    @ModifyVariable(method = "swing(Lnet/minecraft/world/InteractionHand;)V", at = @At("HEAD"), argsOnly = true, ordinal = 0)
     private InteractionHand setHand(InteractionHand hand) {
         if ((Object) this != mc.player) return hand;
 
@@ -70,7 +70,7 @@ public abstract class LivingEntityMixin extends Entity {
         return hand;
     }
 
-    @ModifyExpressionValue(method = "getCurrentSwingDuration", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/SwingAnimation;duration()I"))
+    @ModifyReturnValue(method = "getCurrentSwingDuration", at = @At("RETURN"))
     private int getHandSwingDuration(int original) {
         if ((Object) this != mc.player) return original;
 

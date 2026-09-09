@@ -6,7 +6,7 @@
 package meteordevelopment.meteorclient.gui.widgets.pressable;
 
 import meteordevelopment.meteorclient.gui.renderer.packer.GuiTexture;
-import net.minecraft.client.input.MouseButtonEvent;
+import meteordevelopment.meteorclient.gui.utils.MouseButtonEvent;
 
 public abstract class WConfirmedButton extends WButton {
 

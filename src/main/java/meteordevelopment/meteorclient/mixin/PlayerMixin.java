@@ -60,16 +60,6 @@ public abstract class PlayerMixin extends LivingEntity {
         }
     }
 
-    @Inject(method = "isSpectator", at = @At("HEAD"), cancellable = true)
-    private void onIsSpectator(CallbackInfoReturnable<Boolean> cir) {
-        if (mc.getConnection() == null) cir.setReturnValue(false);
-    }
-
-    @Inject(method = "isCreative", at = @At("HEAD"), cancellable = true)
-    private void onIsCreative(CallbackInfoReturnable<Boolean> cir) {
-        if (mc.getConnection() == null) cir.setReturnValue(false);
-    }
-
     @ModifyReturnValue(method = "getDestroySpeed", at = @At(value = "RETURN"))
     public float onGetBlockBreakingSpeed(float breakSpeed, BlockState state) {
         if (!level().isClientSide()) return breakSpeed;
@@ -115,12 +105,12 @@ public abstract class PlayerMixin extends LivingEntity {
         if (speed != -1) cir.setReturnValue(speed);
     }
 
-    @WrapWithCondition(method = "causeExtraKnockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setDeltaMovement(Lnet/minecraft/world/phys/Vec3;)V"))
+    @WrapWithCondition(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setDeltaMovement(Lnet/minecraft/world/phys/Vec3;)V"))
     private boolean keepSprint$setDeltaMovement(Player instance, Vec3 vec3d) {
         return Modules.get().get(Sprint.class).stopSprinting();
     }
 
-    @WrapWithCondition(method = "causeExtraKnockback", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setSprinting(Z)V"))
+    @WrapWithCondition(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setSprinting(Z)V"))
     private boolean keepSprint$setSprinting(Player instance, boolean b) {
         return Modules.get().get(Sprint.class).stopSprinting();
     }

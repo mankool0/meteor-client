@@ -38,7 +38,7 @@ public class ModuleListSetting extends Setting<List<Module>> {
                 Module module = Modules.get().get(value.trim());
                 if (module != null) modules.add(module);
             }
-        } catch (Exception _) {
+        } catch (Exception unused1) {
         }
 
         return modules;
@@ -72,9 +72,9 @@ public class ModuleListSetting extends Setting<List<Module>> {
     public List<Module> load(CompoundTag tag) {
         get().clear();
 
-        ListTag valueTag = tag.getListOrEmpty("modules");
+        ListTag valueTag = tag.getList("modules", Tag.TAG_STRING);
         for (Tag tagI : valueTag) {
-            Module module = Modules.get().get(tagI.asString().orElse(""));
+            Module module = Modules.get().get(tagI.getAsString());
             if (module != null) get().add(module);
         }
 

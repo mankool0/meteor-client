@@ -168,7 +168,7 @@ public class DamageUtils {
 
     public static float getAttackDamage(LivingEntity attacker, Entity target, ItemStack weapon) {
         AttributeInstance original = attacker.getAttribute(Attributes.ATTACK_DAMAGE);
-        AttributeInstance copy = new AttributeInstance(Attributes.ATTACK_DAMAGE, _ -> {
+        AttributeInstance copy = new AttributeInstance(Attributes.ATTACK_DAMAGE, unused1 -> {
         });
 
         copy.setBaseValue(original.getBaseValue());
@@ -203,17 +203,17 @@ public class DamageUtils {
         }
 
         int baneOfArthropods = Utils.getEnchantmentLevel(enchantments, Enchantments.BANE_OF_ARTHROPODS);
-        if (baneOfArthropods > 0 && target.typeHolder().is(EntityTypeTags.SENSITIVE_TO_BANE_OF_ARTHROPODS)) {
+        if (baneOfArthropods > 0 && target.getType().is(EntityTypeTags.SENSITIVE_TO_BANE_OF_ARTHROPODS)) {
             enchantDamage += 2.5f * baneOfArthropods;
         }
 
         int impaling = Utils.getEnchantmentLevel(enchantments, Enchantments.IMPALING);
-        if (impaling > 0 && target.typeHolder().is(EntityTypeTags.SENSITIVE_TO_IMPALING)) {
+        if (impaling > 0 && target.getType().is(EntityTypeTags.SENSITIVE_TO_IMPALING)) {
             enchantDamage += 2.5f * impaling;
         }
 
         int smite = Utils.getEnchantmentLevel(enchantments, Enchantments.SMITE);
-        if (smite > 0 && target.typeHolder().is(EntityTypeTags.SENSITIVE_TO_SMITE)) {
+        if (smite > 0 && target.getType().is(EntityTypeTags.SENSITIVE_TO_SMITE)) {
             enchantDamage += 2.5f * smite;
         }
 
@@ -263,7 +263,7 @@ public class DamageUtils {
 
     private static float fallDamageReductions(LivingEntity entity, int surface) {
         int fallHeight = (int) (entity.getY() - surface + entity.fallDistance - 3d);
-        @Nullable MobEffectInstance jumpBoostInstance = entity.getEffect(MobEffects.JUMP_BOOST);
+        @Nullable MobEffectInstance jumpBoostInstance = entity.getEffect(MobEffects.JUMP);
         if (jumpBoostInstance != null) fallHeight -= jumpBoostInstance.getAmplifier() + 1;
 
         return calculateReductions(fallHeight, entity, mc.level.damageSources().fall());
@@ -307,7 +307,8 @@ public class DamageUtils {
 
         int damageProtection = 0;
 
-        for (EquipmentSlot slot : EquipmentSlotGroup.ARMOR) {
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (!EquipmentSlotGroup.ARMOR.test(slot)) continue;
             ItemStack stack = player.getItemBySlot(slot);
 
             Object2IntMap<Holder<Enchantment>> enchantments = new Object2IntOpenHashMap<>();
@@ -346,7 +347,7 @@ public class DamageUtils {
      * @see LivingEntity#getDamageAfterMagicAbsorb(DamageSource, float)
      */
     private static float resistanceReduction(LivingEntity player, float damage) {
-        MobEffectInstance resistance = player.getEffect(MobEffects.RESISTANCE);
+        MobEffectInstance resistance = player.getEffect(MobEffects.DAMAGE_RESISTANCE);
         if (resistance != null) {
             int lvl = resistance.getAmplifier() + 1;
             damage *= (1 - (lvl * 0.2f));
@@ -406,7 +407,7 @@ public class DamageUtils {
     /* Raycasts */
 
     private static BlockHitResult raycast(ExposureRaycastContext context, RaycastFactory raycastFactory) {
-        return BlockGetter.traverseBlocks(context.start, context.end, context, raycastFactory, _ -> null);
+        return BlockGetter.traverseBlocks(context.start, context.end, context, raycastFactory, unused2 -> null);
     }
 
     public record ExposureRaycastContext(Vec3 start, Vec3 end) {

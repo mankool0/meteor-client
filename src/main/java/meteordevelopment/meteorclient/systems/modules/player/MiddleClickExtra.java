@@ -134,7 +134,7 @@ public class MiddleClickExtra extends Module {
             return;
         }
 
-        selectedSlot = mc.player.getInventory().getSelectedSlot();
+        selectedSlot = mc.player.getInventory().selected;
         itemSlot = result.slot();
         wasHeld = result.isMainHand();
 
@@ -203,7 +203,7 @@ public class MiddleClickExtra extends Module {
     private boolean disabledByCreative() {
         if (mc.player == null) return false;
 
-        return disableInCreative.get() && mc.player.gameMode() == GameType.CREATIVE;
+        return disableInCreative.get() && mc.player.isCreative();
     }
 
     public enum Mode {

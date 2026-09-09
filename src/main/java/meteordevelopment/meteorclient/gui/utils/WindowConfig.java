@@ -28,9 +28,9 @@ public class WindowConfig implements ISerializable<WindowConfig> {
 
     @Override
     public WindowConfig fromTag(CompoundTag tag) {
-        tag.getBoolean("expanded").ifPresent(bool -> expanded = bool);
-        tag.getDouble("x").ifPresent(x1 -> x = x1);
-        tag.getDouble("y").ifPresent(y1 -> y = y1);
+        if (tag.contains("expanded")) expanded = tag.getBoolean("expanded");
+        if (tag.contains("x")) x = tag.getDouble("x");
+        if (tag.contains("y")) y = tag.getDouble("y");
 
         return this;
     }

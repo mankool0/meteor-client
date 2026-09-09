@@ -4,13 +4,10 @@ in vec2 v_TexCoord;
 in vec2 v_OneTexel;
 
 uniform sampler2D u_Texture;
-
-layout (std140) uniform OutlineData {
-    int width;
-    float fillOpacity;
-    int shapeMode;
-    float glowMultiplier;
-} u_Outline;
+uniform int u_Width;
+uniform float u_FillOpacity;
+uniform int u_ShapeMode;
+uniform float u_GlowMultiplier;
 
 out vec4 color;
 
@@ -18,16 +15,16 @@ void main() {
     vec4 center = texture(u_Texture, v_TexCoord);
 
     if (center.a != 0.0) {
-        if (u_Outline.shapeMode == 0) discard;
-        center = vec4(center.rgb, center.a * u_Outline.fillOpacity);
+        if (u_ShapeMode == 0) discard;
+        center = vec4(center.rgb, center.a * u_FillOpacity);
     }
     else {
-        if (u_Outline.shapeMode == 1) discard;
+        if (u_ShapeMode == 1) discard;
 
-        float dist = u_Outline.width * u_Outline.width * 4.0;
+        float dist = u_Width * u_Width * 4.0;
 
-        for (int x = -u_Outline.width; x <= u_Outline.width; x++) {
-            for (int y = -u_Outline.width; y <= u_Outline.width; y++) {
+        for (int x = -u_Width; x <= u_Width; x++) {
+            for (int y = -u_Width; y <= u_Width; y++) {
                 vec4 offset = texture(u_Texture, v_TexCoord + v_OneTexel * vec2(x, y));
 
                 if (offset.a != 0) {
@@ -38,10 +35,10 @@ void main() {
             }
         }
 
-        float minDist = u_Outline.width * u_Outline.width;
+        float minDist = u_Width * u_Width;
 
         if (dist > minDist) center.a = 0.0;
-        else center.a = min((1.0 - (dist / minDist)) * u_Outline.glowMultiplier, 1.0);
+        else center.a = min((1.0 - (dist / minDist)) * u_GlowMultiplier, 1.0);
     }
 
     color = center;

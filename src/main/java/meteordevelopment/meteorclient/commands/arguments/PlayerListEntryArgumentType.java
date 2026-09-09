@@ -45,7 +45,7 @@ public class PlayerListEntryArgumentType implements ArgumentType<PlayerInfo> {
         PlayerInfo playerListEntry = null;
 
         for (PlayerInfo p : mc.getConnection().getOnlinePlayers()) {
-            if (p.getProfile().name().equalsIgnoreCase(argument)) {
+            if (p.getProfile().getName().equalsIgnoreCase(argument)) {
                 playerListEntry = p;
                 break;
             }
@@ -57,7 +57,7 @@ public class PlayerListEntryArgumentType implements ArgumentType<PlayerInfo> {
 
     @Override
     public <S> CompletableFuture<Suggestions> listSuggestions(CommandContext<S> context, SuggestionsBuilder builder) {
-        return SharedSuggestionProvider.suggest(mc.getConnection().getOnlinePlayers().stream().map(playerListEntry -> playerListEntry.getProfile().name()), builder);
+        return SharedSuggestionProvider.suggest(mc.getConnection().getOnlinePlayers().stream().map(playerListEntry -> playerListEntry.getProfile().getName()), builder);
     }
 
     @Override

@@ -38,7 +38,7 @@ public class TextUtils {
      */
     public static MutableComponent parseOrderedText(FormattedCharSequence orderedText) {
         MutableComponent parsedText = Component.empty();
-        orderedText.accept((_, style, codePoint) -> {
+        orderedText.accept((unused1, style, codePoint) -> {
             parsedText.append(Component.literal(new String(Character.toChars(codePoint))).setStyle(style));
             return true;
         });

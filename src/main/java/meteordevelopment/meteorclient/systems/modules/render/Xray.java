@@ -11,7 +11,6 @@ import meteordevelopment.meteorclient.events.world.AmbientOcclusionEvent;
 import meteordevelopment.meteorclient.events.world.ChunkOcclusionEvent;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
-import meteordevelopment.meteorclient.mixin.BlockEntityRenderStateAccessor;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -40,7 +39,7 @@ public class Xray extends Module {
         .name("whitelist")
         .description("Which blocks to show x-rayed.")
         .defaultValue(ORES)
-        .onChanged(_ -> {
+        .onChanged(unused1 -> {
             if (isActive()) mc.levelRenderer.allChanged();
         })
         .build()
@@ -52,7 +51,7 @@ public class Xray extends Module {
         .defaultValue(25)
         .range(0, 255)
         .sliderMax(255)
-        .onChanged(_ -> {
+        .onChanged(unused2 -> {
             if (isActive()) mc.levelRenderer.allChanged();
         })
         .build()
@@ -62,7 +61,7 @@ public class Xray extends Module {
         .name("fluid-opacity")
         .description("Which fluids should use xray opacity.")
         .defaultValue(FluidOpacity.Both)
-        .onChanged(_ -> {
+        .onChanged(unused3 -> {
             if (isActive()) mc.levelRenderer.allChanged();
         })
         .build()
@@ -72,7 +71,7 @@ public class Xray extends Module {
         .name("exposed-only")
         .description("Show only exposed ores.")
         .defaultValue(false)
-        .onChanged(_ -> {
+        .onChanged(unused4 -> {
             if (isActive()) mc.levelRenderer.allChanged();
         })
         .build());
@@ -101,8 +100,8 @@ public class Xray extends Module {
 
     @EventHandler
     private void onRenderBlockEntity(RenderBlockEntityEvent event) {
-        BlockState state = ((BlockEntityRenderStateAccessor) event.blockEntityState).meteor$getBlockState();
-        if (getAlpha(state, event.blockEntityState.blockPos) == 0) event.cancel();
+        BlockState state = event.blockEntity.getBlockState();
+        if (getAlpha(state, event.blockEntity.getBlockPos()) == 0) event.cancel();
     }
 
     @EventHandler

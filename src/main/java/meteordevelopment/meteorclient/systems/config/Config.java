@@ -75,8 +75,8 @@ public class Config extends System<Config> {
         .name("custom-window-title")
         .description("Show custom text in the window title.")
         .defaultValue(false)
-        .onModuleActivated(_ -> mc.updateTitle())
-        .onChanged(_ -> mc.updateTitle())
+        .onModuleActivated(unused1 -> mc.updateTitle())
+        .onChanged(unused2 -> mc.updateTitle())
         .build()
     );
 
@@ -85,7 +85,7 @@ public class Config extends System<Config> {
         .description("The text it displays in the window title.")
         .visible(customWindowTitle::get)
         .defaultValue("Minecraft {mc_version} - {meteor.name} {meteor.version}")
-        .onChanged(_ -> mc.updateTitle())
+        .onChanged(unused3 -> mc.updateTitle())
         .build()
     );
 
@@ -217,7 +217,7 @@ public class Config extends System<Config> {
 
     @Override
     public Config fromTag(CompoundTag tag) {
-        if (tag.contains("settings")) settings.fromTag(tag.getCompoundOrEmpty("settings"));
+        if (tag.contains("settings")) settings.fromTag(tag.getCompound("settings"));
         if (tag.contains("dontShowAgainPrompts")) dontShowAgainPrompts = listFromTag(tag, "dontShowAgainPrompts");
 
         return this;
@@ -231,7 +231,7 @@ public class Config extends System<Config> {
 
     private List<String> listFromTag(CompoundTag tag, String key) {
         List<String> list = new ArrayList<>();
-        for (Tag item : tag.getListOrEmpty(key)) list.add(item.asString().orElse(""));
+        for (Tag item : tag.getList(key, Tag.TAG_STRING)) list.add(item.getAsString());
         return list;
     }
 

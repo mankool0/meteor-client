@@ -5,23 +5,25 @@
 
 package meteordevelopment.meteorclient.utils.render;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.renderer.Renderer3D;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.utils.PostInit;
 import meteordevelopment.meteorclient.utils.misc.Pool;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.orbit.EventHandler;
 import net.irisshaders.iris.api.v0.IrisApi;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Matrix3x2fStack;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import java.util.List;
@@ -48,27 +50,24 @@ public class RenderUtils {
     }
 
     // Items
-    public static void drawItem(GuiGraphicsExtractor graphics, ItemStack itemStack, int x, int y, float scale, boolean overlay, String countOverride, boolean disableGuiScale) {
-        Matrix3x2fStack matrices = graphics.pose();
-        matrices.pushMatrix();
+    public static void drawItem(GuiGraphics graphics, ItemStack itemStack, int x, int y, float scale, boolean overlay, String countOverride) {
+        PoseStack matrices = graphics.pose();
+        matrices.pushPose();
 
-        if (disableGuiScale) {
-            matrices.scale(1.0f / mc.getWindow().getGuiScale());
-        }
-
-        matrices.scale(scale, scale);
+        matrices.scale(scale, scale, 1);
+        matrices.translate(0, 0, 401); // Thanks Mojang
 
         int scaledX = (int) (x / scale);
         int scaledY = (int) (y / scale);
 
-        graphics.item(itemStack, scaledX, scaledY);
-        if (overlay) graphics.itemDecorations(mc.font, itemStack, scaledX, scaledY, countOverride);
+        graphics.renderItem(itemStack, scaledX, scaledY);
+        if (overlay) graphics.renderItemDecorations(mc.font, itemStack, scaledX, scaledY, countOverride);
 
-        matrices.popMatrix();
+        matrices.popPose();
     }
 
-    public static void drawItem(GuiGraphicsExtractor graphics, ItemStack itemStack, int x, int y, float scale, boolean overlay) {
-        drawItem(graphics, itemStack, x, y, scale, overlay, null, true);
+    public static void drawItem(GuiGraphics graphics, ItemStack itemStack, int x, int y, float scale, boolean overlay) {
+        drawItem(graphics, itemStack, x, y, scale, overlay, null);
     }
 
     public static void updateScreenCenter(Matrix4fc projection, Matrix4fc view) {
@@ -80,8 +79,72 @@ public class RenderUtils {
         Vector4f center4 = new Vector4f(0, 0, 0, 1).mul(invProjection).mul(invView);
         center4.div(center4.w);
 
-        Vec3 camera = mc.gameRenderer.getMainCamera().position();
+        Vec3 camera = mc.gameRenderer.getMainCamera().getPosition();
         center = new Vec3(camera.x + center4.x, camera.y + center4.y, camera.z + center4.z);
+    }
+
+    /**
+     * How far off the view axis a clamped tracer endpoint is placed, as a multiple of the tracer origin's
+     * distance from the camera. Anything above roughly {@code aspect * tan(fov / 2)} lands off screen; this
+     * leaves a wide margin for ultrawide monitors and high fov values.
+     */
+    private static final double TRACER_CLAMP_SPREAD = 50;
+
+    /**
+     * Draws a tracer from the screen centre to the given position.
+     *
+     * <p>Drawing a plain line to a target behind the camera does not work: the near plane cuts it off a
+     * fraction of a block from {@link #center}, so all that survives is a short stub at the crosshair,
+     * which reads as if the target were in front of you. When the target is behind the tracer origin this
+     * replaces the endpoint with a point on the origin's depth plane, offset along the same direction you
+     * would have to turn to face the target and far enough out to leave the screen. The tracer then runs
+     * from the crosshair off the correct screen edge instead of collapsing into the middle.
+     */
+    public static void drawTracer(Renderer3D renderer, double x, double y, double z, Color color) {
+        Vec3 origin = center;
+        Vec3 camera = mc.gameRenderer.getMainCamera().getPosition();
+
+        // Read the view axis off the camera rotation rather than deriving it from origin - camera.
+        // Vanilla multiplies view bob into the projection matrix, so #center is displaced by up to a
+        // tenth of a block while sitting only that far in front of the camera; a direction taken from
+        // the two would swing by tens of degrees on every step.
+        Vector3f look = mc.gameRenderer.getMainCamera().getLookVector();
+        double fx = look.x(), fy = look.y(), fz = look.z();
+
+        double depth = (origin.x - camera.x) * fx + (origin.y - camera.y) * fy + (origin.z - camera.z) * fz;
+
+        if (depth > 0) {
+            double vx = x - camera.x, vy = y - camera.y, vz = z - camera.z;
+            double forwardDist = vx * fx + vy * fy + vz * fz;
+
+            if (forwardDist < depth) {
+                // Component of the target direction perpendicular to the view axis - the way you'd turn.
+                double lx = vx - fx * forwardDist, ly = vy - fy * forwardDist, lz = vz - fz * forwardDist;
+                double lLen = Math.sqrt(lx * lx + ly * ly + lz * lz);
+
+                if (lLen < 1e-6) {
+                    // Target is directly behind the camera, so any perpendicular will do.
+                    lx = -fz;
+                    ly = 0;
+                    lz = fx;
+                    lLen = Math.sqrt(lx * lx + lz * lz);
+
+                    if (lLen < 1e-6) {
+                        lx = 1;
+                        lz = 0;
+                        lLen = 1;
+                    }
+                }
+
+                double scale = depth * TRACER_CLAMP_SPREAD / lLen;
+
+                x = origin.x + lx * scale;
+                y = origin.y + ly * scale;
+                z = origin.z + lz * scale;
+            }
+        }
+
+        renderer.line(origin.x, origin.y, origin.z, x, y, z, color);
     }
 
     public static void renderTickingBlock(BlockPos blockPos, Color sideColor, Color lineColor, ShapeMode shapeMode, int excludeDir, int duration, boolean fade, boolean shrink) {

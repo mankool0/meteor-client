@@ -261,7 +261,7 @@ public class Tracers extends Module {
             if (target.get() == Target.Head) y += height;
             else if (target.get() == Target.Body) y += height / 2;
 
-            event.renderer.line(RenderUtils.center.x, RenderUtils.center.y, RenderUtils.center.z, x, y, z, color);
+            RenderUtils.drawTracer(event.renderer, x, y, z, color);
             if (stem.get()) event.renderer.line(x, entity.getY(), z, x, entity.getY() + height, z, color);
 
             count++;

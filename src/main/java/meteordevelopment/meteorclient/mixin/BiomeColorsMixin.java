@@ -8,7 +8,7 @@ package meteordevelopment.meteorclient.mixin;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Ambience;
 import net.minecraft.client.renderer.BiomeColors;
-import net.minecraft.client.renderer.block.BlockAndTintGetter;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

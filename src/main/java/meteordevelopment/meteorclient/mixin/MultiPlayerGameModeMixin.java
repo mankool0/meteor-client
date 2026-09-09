@@ -25,11 +25,10 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.EntityHitResult;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -55,9 +54,9 @@ public abstract class MultiPlayerGameModeMixin implements IMultiPlayerGameMode {
     @Shadow
     public abstract void startPrediction(ClientLevel level, PredictiveAction predictiveAction);
 
-    @Inject(method = "handleContainerInput", at = @At("HEAD"), cancellable = true)
-    private void onHandleInventoryMouseClick(int containerId, int slotNum, int buttonNum, ContainerInput containerInput, Player player, CallbackInfo ci) {
-        if (containerInput == ContainerInput.THROW && slotNum >= 0 && slotNum < player.containerMenu.slots.size()) {
+    @Inject(method = "handleInventoryMouseClick", at = @At("HEAD"), cancellable = true)
+    private void onHandleInventoryMouseClick(int containerId, int slotNum, int buttonNum, ClickType containerInput, Player player, CallbackInfo ci) {
+        if (containerInput == ClickType.THROW && slotNum >= 0 && slotNum < player.containerMenu.slots.size()) {
             if (MeteorClient.EVENT_BUS.post(DropItemsEvent.get(player.containerMenu.slots.get(slotNum).getItem())).isCancelled())
                 ci.cancel();
         } else if (slotNum == -999) {
@@ -97,7 +96,7 @@ public abstract class MultiPlayerGameModeMixin implements IMultiPlayerGameMode {
     }
 
     @Inject(method = "interact", at = @At("HEAD"), cancellable = true)
-    private void onInteract(Player player, Entity entity, EntityHitResult hitResult, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
+    private void onInteract(Player player, Entity entity, InteractionHand hand, CallbackInfoReturnable<InteractionResult> cir) {
         if (MeteorClient.EVENT_BUS.post(InteractEntityEvent.get(entity, hand)).isCancelled())
             cir.setReturnValue(InteractionResult.FAIL);
     }

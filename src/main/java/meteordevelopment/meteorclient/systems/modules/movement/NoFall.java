@@ -29,7 +29,6 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -163,7 +162,8 @@ public class NoFall extends Module {
 
         // Bucket mode
         else if (mode.get() == Mode.Place) {
-            PlacedItem placedItem1 = mc.level.environmentAttributes().getDimensionValue(EnvironmentAttributes.WATER_EVAPORATES) && placedItem.get() == PlacedItem.Bucket ? PlacedItem.PowderSnow : placedItem.get();
+            // PORT(1.21.4): EnvironmentAttributes does not exist on 1.21.4 - use DimensionType.ultraWarm() for "water evaporates".
+            PlacedItem placedItem1 = mc.level.dimensionType().ultraWarm() && placedItem.get() == PlacedItem.Bucket ? PlacedItem.PowderSnow : placedItem.get();
             if (mc.player.fallDistance > 3 && !EntityUtils.isAboveWater(mc.player)) {
                 Item item = placedItem1.item;
 

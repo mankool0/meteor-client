@@ -17,7 +17,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -69,7 +69,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
                 BlockEntityType<?> block = parseId(BuiltInRegistries.BLOCK_ENTITY_TYPE, value);
                 if (block != null) blocks.add(block);
             }
-        } catch (Exception _) {
+        } catch (Exception unused1) {
         }
 
         return blocks;
@@ -81,7 +81,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
     }
 
     @Override
-    public Iterable<Identifier> getIdentifierSuggestions() {
+    public Iterable<ResourceLocation> getIdentifierSuggestions() {
         return BuiltInRegistries.BLOCK_ENTITY_TYPE.keySet();
     }
 
@@ -89,7 +89,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
     public CompoundTag save(CompoundTag tag) {
         ListTag valueTag = new ListTag();
         for (BlockEntityType<?> type : get()) {
-            Identifier id = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(type);
+            ResourceLocation id = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(type);
             if (id != null) valueTag.add(StringTag.valueOf(id.toString()));
         }
         tag.put("value", valueTag);
@@ -101,9 +101,9 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
     public List<BlockEntityType<?>> load(CompoundTag tag) {
         get().clear();
 
-        ListTag valueTag = tag.getListOrEmpty("value");
+        ListTag valueTag = tag.getList("value", Tag.TAG_STRING);
         for (Tag tagI : valueTag) {
-            BlockEntityType<?> type = BuiltInRegistries.BLOCK_ENTITY_TYPE.getValue(Identifier.parse(tagI.asString().orElse("")));
+            BlockEntityType<?> type = BuiltInRegistries.BLOCK_ENTITY_TYPE.getValue(ResourceLocation.parse(tagI.getAsString()));
             if (type != null) get().add(type);
         }
 
@@ -137,7 +137,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
 
         @Nullable
         @Override
-        public Identifier getKey(BlockEntityType<?> entry) {
+        public ResourceLocation getKey(BlockEntityType<?> entry) {
             return null;
         }
 
@@ -159,7 +159,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
 
         @Nullable
         @Override
-        public BlockEntityType<?> getValue(@Nullable Identifier id) {
+        public BlockEntityType<?> getValue(@Nullable ResourceLocation id) {
             return null;
         }
 
@@ -169,7 +169,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
         }
 
         @Override
-        public Set<Identifier> keySet() {
+        public Set<ResourceLocation> keySet() {
             return null;
         }
 
@@ -179,7 +179,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
         }
 
         @Override
-        public boolean containsKey(Identifier id) {
+        public boolean containsKey(ResourceLocation id) {
             return false;
         }
 
@@ -226,7 +226,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
         }
 
         @Override
-        public Optional<Holder.Reference<BlockEntityType<?>>> get(Identifier id) {
+        public Optional<Holder.Reference<BlockEntityType<?>>> get(ResourceLocation id) {
             return Optional.empty();
         }
 

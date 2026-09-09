@@ -13,6 +13,8 @@ import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import net.minecraft.client.renderer.DimensionSpecialEffects;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * @author Walaryne
@@ -96,7 +98,7 @@ public class Ambience extends Module {
         .name("custom-grass-color")
         .description("Whether the grass color should be changed.")
         .defaultValue(false)
-        .onChanged(_ -> reload())
+        .onChanged(unused1 -> reload())
         .build()
     );
 
@@ -105,7 +107,7 @@ public class Ambience extends Module {
         .description("The color of the grass.")
         .defaultValue(new SettingColor(102, 0, 0))
         .visible(customGrassColor::get)
-        .onChanged(_ -> reload())
+        .onChanged(unused2 -> reload())
         .build()
     );
 
@@ -113,7 +115,7 @@ public class Ambience extends Module {
         .name("custom-foliage-color")
         .description("Whether the foliage color should be changed.")
         .defaultValue(false)
-        .onChanged(_ -> reload())
+        .onChanged(unused3 -> reload())
         .build()
     );
 
@@ -122,7 +124,7 @@ public class Ambience extends Module {
         .description("The color of the foliage.")
         .defaultValue(new SettingColor(102, 0, 0))
         .visible(customFoliageColor::get)
-        .onChanged(_ -> reload())
+        .onChanged(unused4 -> reload())
         .build()
     );
 
@@ -130,7 +132,7 @@ public class Ambience extends Module {
         .name("custom-water-color")
         .description("Whether the water color should be changed.")
         .defaultValue(false)
-        .onChanged(_ -> reload())
+        .onChanged(unused5 -> reload())
         .build()
     );
 
@@ -139,7 +141,7 @@ public class Ambience extends Module {
         .description("The color of the water.")
         .defaultValue(new SettingColor(102, 0, 0))
         .visible(customWaterColor::get)
-        .onChanged(_ -> reload())
+        .onChanged(unused6 -> reload())
         .build()
     );
 
@@ -147,7 +149,7 @@ public class Ambience extends Module {
         .name("custom-lava-color")
         .description("Whether the lava color should be changed.")
         .defaultValue(false)
-        .onChanged(_ -> reload())
+        .onChanged(unused7 -> reload())
         .build()
     );
 
@@ -156,7 +158,7 @@ public class Ambience extends Module {
         .description("The color of the lava.")
         .defaultValue(new SettingColor(102, 0, 0))
         .visible(customLavaColor::get)
-        .onChanged(_ -> reload())
+        .onChanged(unused8 -> reload())
         .build()
     );
 
@@ -191,6 +193,22 @@ public class Ambience extends Module {
 
     private void reload() {
         if (mc.levelRenderer != null && isActive()) mc.levelRenderer.allChanged();
+    }
+
+    public static class Custom extends DimensionSpecialEffects {
+        public Custom() {
+            super(Float.NaN, true, DimensionSpecialEffects.SkyType.END, true, false);
+        }
+
+        @Override
+        public Vec3 getBrightnessDependentFogColor(Vec3 color, float sunHeight) {
+            return color.scale(0.15000000596046448D);
+        }
+
+        @Override
+        public boolean isFoggyAt(int camX, int camY) {
+            return false;
+        }
     }
 
     public SettingColor skyColor() {

@@ -13,7 +13,7 @@ import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.camel.Camel;
-import net.minecraft.world.entity.animal.equine.*;
+import net.minecraft.world.entity.animal.horse.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.*;
 
@@ -22,7 +22,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class SlotUtils {
     /**
      * These constants refer to the slot index of relevant player slots. They are used when dealing directly with the
-     * player inventory - e.g. {@code mc.player.getInventory().getSelectedSlot()} returns the slot index of your
+     * player inventory - e.g. {@code mc.player.getInventory().selected} returns the slot index of your
      * selected slot (i.e. main hand).
      *
      * @see net.minecraft.world.entity.player.Inventory
@@ -45,8 +45,8 @@ public class SlotUtils {
      * to translate slot indices to the ids for each handled screen.
      *
      * @see <a href="https://minecraft.wiki/w/Java_Edition_protocol/Inventory">the minecraft.wiki page</a> for every slot id
-     * @see MultiPlayerGameMode#handleContainerInput(int, int, int, ContainerInput, Player)
-     * @see AbstractContainerMenu#doClick(int, int, ContainerInput, Player)
+     * @see MultiPlayerGameMode#handleInventoryMouseClick(int, int, int, ClickType, Player)
+     * @see AbstractContainerMenu#doClick(int, int, ClickType, Player)
      * @see Slot#index
      */
     public static int indexToId(int i) {
@@ -54,27 +54,27 @@ public class SlotUtils {
         AbstractContainerMenu handler = mc.player.containerMenu;
 
         return switch (handler) {
-            case InventoryMenu _ -> survivalInventory(i);
-            case CreativeModeInventoryScreen.ItemPickerMenu _ -> creativeInventory(i);
+            case InventoryMenu unused1 -> survivalInventory(i);
+            case CreativeModeInventoryScreen.ItemPickerMenu unused2 -> creativeInventory(i);
             case ChestMenu chestMenu -> genericContainer(i, chestMenu.getRowCount());
-            case CraftingMenu _ -> craftingTable(i);
-            case FurnaceMenu _, BlastFurnaceMenu _, SmokerMenu _ -> furnace(i);
-            case DispenserMenu _ -> generic3x3(i);
-            case EnchantmentMenu _ -> enchantmentTable(i);
-            case BrewingStandMenu _ -> brewingStand(i);
-            case MerchantMenu _ -> villager(i);
-            case BeaconMenu _ -> beacon(i);
-            case AnvilMenu _ -> anvil(i);
-            case HopperMenu _ -> hopper(i);
-            case ShulkerBoxMenu _ -> genericContainer(i, 3);
-            case HorseInventoryMenu _ -> horse(handler, i);
-            case CartographyTableMenu _ -> cartographyTable(i);
-            case GrindstoneMenu _ -> grindstone(i);
-            case LecternMenu _ -> lectern();
-            case LoomMenu _ -> loom(i);
-            case StonecutterMenu _ -> stonecutter(i);
-            case CrafterMenu _ -> crafter(i);
-            case SmithingMenu _ -> smithingTable(i);
+            case CraftingMenu unused3 -> craftingTable(i);
+            case AbstractFurnaceMenu unused4 -> furnace(i); // FurnaceMenu, BlastFurnaceMenu, SmokerMenu
+            case DispenserMenu unused7 -> generic3x3(i);
+            case EnchantmentMenu unused8 -> enchantmentTable(i);
+            case BrewingStandMenu unused9 -> brewingStand(i);
+            case MerchantMenu unused10 -> villager(i);
+            case BeaconMenu unused11 -> beacon(i);
+            case AnvilMenu unused12 -> anvil(i);
+            case HopperMenu unused13 -> hopper(i);
+            case ShulkerBoxMenu unused14 -> genericContainer(i, 3);
+            case HorseInventoryMenu unused15 -> horse(handler, i);
+            case CartographyTableMenu unused16 -> cartographyTable(i);
+            case GrindstoneMenu unused17 -> grindstone(i);
+            case LecternMenu unused18 -> lectern();
+            case LoomMenu unused19 -> loom(i);
+            case StonecutterMenu unused20 -> stonecutter(i);
+            case CrafterMenu unused21 -> crafter(i);
+            case SmithingMenu unused22 -> smithingTable(i);
             default -> -1;
         };
 

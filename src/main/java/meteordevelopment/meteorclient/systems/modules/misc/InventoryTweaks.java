@@ -232,7 +232,7 @@ public class InventoryTweaks extends Module {
         .name("auto-steal")
         .description("Automatically removes all possible items when you open a container.")
         .defaultValue(false)
-        .onChanged(_ -> checkAutoStealSettings())
+        .onChanged(unused1 -> checkAutoStealSettings())
         .build()
     );
 
@@ -240,7 +240,7 @@ public class InventoryTweaks extends Module {
         .name("auto-dump")
         .description("Automatically dumps all possible items when you open a container.")
         .defaultValue(false)
-        .onChanged(_ -> checkAutoStealSettings())
+        .onChanged(unused2 -> checkAutoStealSettings())
         .build()
     );
 
@@ -296,7 +296,7 @@ public class InventoryTweaks extends Module {
     private void onKey(KeyInputEvent event) {
         if (event.action != KeyAction.Press) return;
 
-        if (sortingKey.get().matches(event.input)) {
+        if (sortingKey.get().matches(event)) {
             if (sort()) event.cancel();
         }
     }
@@ -305,7 +305,7 @@ public class InventoryTweaks extends Module {
     private void onMouseClick(MouseClickEvent event) {
         if (event.action != KeyAction.Press) return;
 
-        if (sortingKey.get().matches(event.input)) {
+        if (sortingKey.get().matches(event)) {
             if (sort()) event.cancel();
         }
     }
@@ -482,7 +482,7 @@ public class InventoryTweaks extends Module {
     public boolean canSteal(AbstractContainerMenu handler) {
         try {
             return (stealScreens.get().contains(handler.getType()));
-        } catch (UnsupportedOperationException _) {
+        } catch (UnsupportedOperationException unused3) {
             return false;
         }
     }
@@ -490,7 +490,7 @@ public class InventoryTweaks extends Module {
     @EventHandler
     private void onInventory(InventoryEvent event) {
         AbstractContainerMenu handler = mc.player.containerMenu;
-        if (canSteal(handler) && event.packet.containerId() == handler.containerId) {
+        if (canSteal(handler) && event.packet.getContainerId() == handler.containerId) {
             if (autoSteal.get()) {
                 steal(handler);
             } else if (autoDump.get()) {

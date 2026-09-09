@@ -11,12 +11,12 @@ import meteordevelopment.meteorclient.gui.widgets.containers.WHorizontalList;
 import meteordevelopment.meteorclient.gui.widgets.containers.WTable;
 import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
 import meteordevelopment.meteorclient.settings.Setting;
-import net.minecraft.IdentifierException;
+import net.minecraft.ResourceLocationException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
 import net.minecraft.data.registries.VanillaRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.resources.ResourceKey;
 
 import java.util.Collection;
@@ -56,9 +56,9 @@ public abstract class DynamicRegistryListSettingScreen<T> extends CollectionList
         manualEntry.add(theme.plus()).expandCellX().right().widget().action = () -> {
             String entry = textBox.get().trim();
             try {
-                Identifier id = entry.contains(":") ? Identifier.parse(entry) : Identifier.withDefaultNamespace(entry);
+                ResourceLocation id = entry.contains(":") ? ResourceLocation.parse(entry) : ResourceLocation.withDefaultNamespace(entry);
                 addValue(ResourceKey.create(registryKey, id));
-            } catch (IdentifierException _) {
+            } catch (ResourceLocationException unused1) {
             }
         };
     }

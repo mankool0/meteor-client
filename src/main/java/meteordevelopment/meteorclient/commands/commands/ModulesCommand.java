@@ -23,7 +23,7 @@ public class ModulesCommand extends Command {
 
     @Override
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
-        builder.executes(_ -> {
+        builder.executes(unused1 -> {
             ChatUtils.info("--- Modules ((highlight)%d(default)) ---", Modules.get().getCount());
 
             Modules.loopCategories().forEach(category -> {
@@ -48,7 +48,7 @@ public class ModulesCommand extends Command {
         if (!module.isActive()) finalModule.withStyle(ChatFormatting.GRAY);
         if (!module.equals(Modules.get().getGroup(module.category).getLast()))
             finalModule.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
-        finalModule.setStyle(finalModule.getStyle().withHoverEvent(new HoverEvent.ShowText(tooltip)));
+        finalModule.setStyle(finalModule.getStyle().withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltip)));
 
         return finalModule;
     }

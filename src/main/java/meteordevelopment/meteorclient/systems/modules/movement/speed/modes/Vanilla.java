@@ -26,8 +26,8 @@ public class Vanilla extends SpeedMode {
         double velX = vel.x();
         double velZ = vel.z();
 
-        if (mc.player.hasEffect(MobEffects.SPEED)) {
-            double value = (mc.player.getEffect(MobEffects.SPEED).getAmplifier() + 1) * 0.205;
+        if (mc.player.hasEffect(MobEffects.MOVEMENT_SPEED)) {
+            double value = (mc.player.getEffect(MobEffects.MOVEMENT_SPEED).getAmplifier() + 1) * 0.205;
             velX += velX * value;
             velZ += velZ * value;
         }

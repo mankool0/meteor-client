@@ -33,7 +33,7 @@ public class MacroCommand extends Command {
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
         builder
             .then(literal("clear")
-                .executes(_ -> {
+                .executes(unused1 -> {
                     if (scheduleQueue.isEmpty() && scheduledMacros.isEmpty()) {
                         error("No macros are currently scheduled.");
                         return SINGLE_SUCCESS;

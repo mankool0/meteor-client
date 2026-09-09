@@ -45,13 +45,13 @@ public abstract class CommandSuggestionsMixin {
     private @Nullable CompletableFuture<Suggestions> pendingSuggestions;
 
     @Shadow
-    protected abstract void updateUsageInfo(ParseResults<ClientSuggestionProvider> currentParse, Suggestions suggestions);
+    protected abstract void updateUsageInfo();
 
     @Inject(method = "updateCommandInfo",
         at = @At(value = "INVOKE", target = "Lcom/mojang/brigadier/StringReader;canRead()Z", remap = false),
         cancellable = true
     )
-    public void onRefresh(CallbackInfo ci, @Local(name = "reader") StringReader reader) {
+    public void onRefresh(CallbackInfo ci, @Local(index = 2) StringReader reader) {
         String prefix = Config.get().prefix.get();
         int length = prefix.length();
 
@@ -67,7 +67,7 @@ public abstract class CommandSuggestionsMixin {
                 this.pendingSuggestions = Commands.DISPATCHER.getCompletionSuggestions(this.currentParse, cursor);
                 this.pendingSuggestions.thenAccept(suggestionResult -> {
                     if (this.pendingSuggestions.isDone()) {
-                        this.updateUsageInfo(this.currentParse, suggestionResult);
+                        this.updateUsageInfo();
                     }
                 });
             }

@@ -1,6 +1,6 @@
 package meteordevelopment.meteorclient.utils.render.postprocess;
 
-import com.mojang.blaze3d.pipeline.RenderPipeline;
+import meteordevelopment.meteorclient.renderer.MeteorRenderPipeline;
 import meteordevelopment.meteorclient.mixininterface.ILevelRenderer;
 import meteordevelopment.meteorclient.utils.render.CustomOutlineVertexConsumerProvider;
 import net.minecraft.world.entity.Entity;
@@ -10,7 +10,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public abstract class EntityShader extends PostProcessShader {
     public final CustomOutlineVertexConsumerProvider vertexConsumerProvider;
 
-    protected EntityShader(RenderPipeline pipeline) {
+    protected EntityShader(MeteorRenderPipeline pipeline) {
         super(pipeline);
         this.vertexConsumerProvider = new CustomOutlineVertexConsumerProvider();
     }

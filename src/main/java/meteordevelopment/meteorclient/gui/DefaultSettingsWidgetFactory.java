@@ -27,7 +27,7 @@ import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.render.DisplayItemUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.client.resources.language.I18n;
-import org.apache.commons.lang3.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
 import java.io.File;
@@ -116,7 +116,7 @@ public class DefaultSettingsWidgetFactory extends SettingsWidgetFactory {
         RemoveInfo removeInfo = null;
 
         for (Setting<?> setting : group) {
-            if (!Strings.CI.contains(setting.title, filter)) continue;
+            if (!StringUtils.containsIgnoreCase(setting.title, filter)) continue;
 
             boolean visible = setting.isVisible();
             setting.lastWasVisible = visible;
@@ -193,7 +193,7 @@ public class DefaultSettingsWidgetFactory extends SettingsWidgetFactory {
     }
 
     private void stringW(WTable table, StringSetting setting) {
-        CharFilter filter = setting.filter == null ? (_, _) -> true : setting.filter;
+        CharFilter filter = setting.filter == null ? (unused1, unused2) -> true : setting.filter;
         Cell<WTextBox> cell = table.add(theme.textBox(setting.get(), setting.placeholder, filter, setting.renderer));
         if (setting.wide) cell.minWidth(Utils.getWindowWidth() - Utils.getWindowWidth() / 4.0);
 

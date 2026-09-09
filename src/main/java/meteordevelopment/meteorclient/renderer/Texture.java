@@ -5,67 +5,107 @@
 
 package meteordevelopment.meteorclient.renderer;
 
-import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.AddressMode;
-import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.TextureFormat;
-import net.minecraft.client.renderer.texture.AbstractTexture;
-import org.jetbrains.annotations.NotNull;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
-public class Texture extends AbstractTexture {
-    public Texture(int width, int height, TextureFormat format, FilterMode min, FilterMode mag) {
-        texture = RenderSystem.getDevice().createTexture("", 15, format, width, height, 1, 1);
-        sampler = RenderSystem.getSamplerCache().getSampler(AddressMode.REPEAT, AddressMode.REPEAT, min, mag, false);
+import static org.lwjgl.opengl.GL32C.*;
 
-        textureView = RenderSystem.getDevice().createTextureView(texture);
+public class Texture {
+    private final Format format;
+    private final Filter filterMin, filterMag;
+    private final boolean wrapClamp;
+
+    private int id;
+    private int width, height;
+    private boolean valid;
+
+    public Texture(int width, int height, Format format, Filter filterMin, Filter filterMag) {
+        this(width, height, format, filterMin, filterMag, false);
+    }
+
+    public Texture(int width, int height, Format format, Filter filterMin, Filter filterMag, boolean wrapClamp) {
+        this.width = width;
+        this.height = height;
+        this.format = format;
+        this.filterMin = filterMin;
+        this.filterMag = filterMag;
+        this.wrapClamp = wrapClamp;
+
+        if (RenderSystem.isOnRenderThread()) allocate(null);
+        else RenderSystem.recordRenderCall(() -> allocate(null));
     }
 
     public int getWidth() {
-        return getTexture().getWidth(0);
+        return width;
     }
 
     public int getHeight() {
-        return getTexture().getHeight(0);
+        return height;
+    }
+
+    public boolean isValid() {
+        return valid;
+    }
+
+    public int getGlId() {
+        return id;
     }
 
     public void upload(byte[] bytes) {
-        upload(BufferUtils.createByteBuffer(bytes.length).put(bytes));
+        upload((ByteBuffer) BufferUtils.createByteBuffer(bytes.length).put(bytes).rewind());
     }
 
     public void upload(ByteBuffer buffer) {
-        var image = getImage();
-
-        buffer.rewind();
-        MemoryUtil.memCopy(MemoryUtil.memAddress(buffer), image.getPointer(), buffer.remaining());
-
-        RenderSystem.getDevice().createCommandEncoder().writeToTexture(texture, image);
-
-        image.close();
+        if (RenderSystem.isOnRenderThread()) allocate(buffer);
+        else RenderSystem.recordRenderCall(() -> allocate(buffer));
     }
 
-    private @NotNull NativeImage getImage() {
-        NativeImage.Format imageFormat = switch (texture.getFormat()) {
-            case RGBA8 -> NativeImage.Format.RGBA;
-            case RED8 -> NativeImage.Format.LUMINANCE;
-            default -> throw new IllegalArgumentException();
-        };
+    private void allocate(ByteBuffer buffer) {
+        if (!valid) {
+            id = GL.genTexture();
+            valid = true;
+        }
 
-        // Workaround for writeToTexture(IntBuffer) overload comparing width * height to the size of the int buffer.
-        // And since we are working with pixels which are only one byte in size, the sizes don't match
-        return new NativeImage(imageFormat, getWidth(), getHeight(), false);
+        bind();
+        GL.defaultPixelStore();
+        if (format == Format.RED8) GL.pixelStore(GL_UNPACK_ALIGNMENT, 1);
+
+        GL.textureParam(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapClamp ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+        GL.textureParam(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapClamp ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+        GL.textureParam(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterMin.toOpenGL());
+        GL.textureParam(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterMag.toOpenGL());
+
+        if (buffer != null) buffer.rewind();
+        GL.textureImage2D(GL_TEXTURE_2D, 0, format.toOpenGL(), width, height, 0, format.toOpenGL(), GL_UNSIGNED_BYTE, buffer);
+
+        if (filterMin == Filter.LINEAR_MIPMAP_LINEAR || filterMag == Filter.LINEAR_MIPMAP_LINEAR) {
+            GL.generateMipmap(GL_TEXTURE_2D);
+        }
     }
 
-    public static Texture readResource(String path, boolean flipY, FilterMode filter) {
+    public void bind(int slot) {
+        GL.bindTexture(id, slot);
+    }
+
+    public void bind() {
+        bind(0);
+    }
+
+    public void close() {
+        if (!valid) return;
+
+        GL.deleteTexture(id);
+        valid = false;
+    }
+
+    public static Texture readResource(String path, boolean flipY, Filter filter) {
         try (var in = Texture.class.getResourceAsStream(path)) {
             if (in == null) return null;
 
@@ -79,7 +119,7 @@ public class Texture extends AbstractTexture {
                 STBImage.stbi_set_flip_vertically_on_load(flipY);
                 ByteBuffer image = STBImage.stbi_load_from_memory(data, width, height, comp, 4);
 
-                var texture = new Texture(width.get(0), height.get(0), TextureFormat.RGBA8, filter, filter);
+                var texture = new Texture(width.get(0), height.get(0), Format.RGBA8, filter, filter);
                 texture.upload(image);
 
                 STBImage.stbi_image_free(image);
@@ -87,8 +127,34 @@ public class Texture extends AbstractTexture {
 
                 return texture;
             }
-        } catch (IOException _) {
+        } catch (IOException unused1) {
             return null;
+        }
+    }
+
+    public enum Format {
+        RGBA8,
+        RED8;
+
+        public int toOpenGL() {
+            return switch (this) {
+                case RGBA8 -> GL_RGBA;
+                case RED8 -> GL_RED;
+            };
+        }
+    }
+
+    public enum Filter {
+        NEAREST,
+        LINEAR,
+        LINEAR_MIPMAP_LINEAR;
+
+        public int toOpenGL() {
+            return switch (this) {
+                case NEAREST -> GL_NEAREST;
+                case LINEAR -> GL_LINEAR;
+                case LINEAR_MIPMAP_LINEAR -> GL_LINEAR_MIPMAP_LINEAR;
+            };
         }
     }
 }

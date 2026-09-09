@@ -70,12 +70,12 @@ public class Marker extends Module {
         super.fromTag(tag);
 
         markers.clear();
-        ListTag list = tag.getListOrEmpty("markers");
+        ListTag list = tag.getList("markers", Tag.TAG_COMPOUND);
 
         for (Tag tagII : list) {
             CompoundTag tagI = (CompoundTag) tagII;
 
-            String type = tagI.getStringOr("type", "");
+            String type = tagI.getString("type");
             BaseMarker marker = factory.createMarker(type);
 
             if (marker != null) {

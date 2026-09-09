@@ -22,7 +22,7 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.world.Dimension;
 import meteordevelopment.meteorclient.utils.world.TickRate;
-import net.minecraft.IdentifierException;
+import net.minecraft.ResourceLocationException;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.core.BlockPos;
@@ -30,7 +30,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.protocol.game.ServerboundClientCommandPacket;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.stats.Stat;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.effect.MobEffect;
@@ -78,7 +78,7 @@ public class MeteorStarscript {
         StandardLib.init(ss);
 
         // General
-        ss.set("mc_version", SharedConstants.getCurrentVersion().name());
+        ss.set("mc_version", SharedConstants.getCurrentVersion().getName());
         ss.set("fps", () -> Value.number(MinecraftAccessor.meteor$getFps()));
         ss.set("ping", MeteorStarscript::ping);
         ss.set("time", () -> Value.string(LocalTime.now().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT))));
@@ -111,14 +111,14 @@ public class MeteorStarscript {
         ss.set("camera", new ValueMap()
             .set("pos", new ValueMap()
                 .set("_toString", () -> posString(false, true))
-                .set("x", () -> Value.number(mc.gameRenderer.getMainCamera().position().x))
-                .set("y", () -> Value.number(mc.gameRenderer.getMainCamera().position().y))
-                .set("z", () -> Value.number(mc.gameRenderer.getMainCamera().position().z))
+                .set("x", () -> Value.number(mc.gameRenderer.getMainCamera().getPosition().x))
+                .set("y", () -> Value.number(mc.gameRenderer.getMainCamera().getPosition().y))
+                .set("z", () -> Value.number(mc.gameRenderer.getMainCamera().getPosition().z))
             )
             .set("opposite_dim_pos", new ValueMap()
                 .set("_toString", () -> posString(true, true))
                 .set("x", () -> oppositeX(true))
-                .set("y", () -> Value.number(mc.gameRenderer.getMainCamera().position().y))
+                .set("y", () -> Value.number(mc.gameRenderer.getMainCamera().getPosition().y))
                 .set("z", () -> oppositeZ(true))
             )
 
@@ -290,7 +290,7 @@ public class MeteorStarscript {
         if (argCount < 1) ss.error("player.has_potion_effect() requires 1 argument, got %d.", argCount);
         if (mc.player == null) return Value.bool(false);
 
-        Identifier name = popIdentifier(ss, "First argument to player.has_potion_effect() needs to a string.");
+        ResourceLocation name = popIdentifier(ss, "First argument to player.has_potion_effect() needs to a string.");
 
         Optional<Holder.Reference<MobEffect>> effect = BuiltInRegistries.MOB_EFFECT.get(name);
         if (effect.isEmpty()) return Value.bool(false);
@@ -303,7 +303,7 @@ public class MeteorStarscript {
         if (argCount < 1) ss.error("player.get_potion_effect() requires 1 argument, got %d.", argCount);
         if (mc.player == null) return Value.null_();
 
-        Identifier name = popIdentifier(ss, "First argument to player.get_potion_effect() needs to a string.");
+        ResourceLocation name = popIdentifier(ss, "First argument to player.get_potion_effect() needs to a string.");
 
         Optional<Holder.Reference<MobEffect>> effect = BuiltInRegistries.MOB_EFFECT.get(name);
         if (effect.isEmpty()) return Value.null_();
@@ -325,7 +325,7 @@ public class MeteorStarscript {
         }
 
         String type = argCount > 1 ? ss.popString("First argument to player.get_stat() needs to be a string.") : "custom";
-        Identifier name = popIdentifier(ss, (argCount > 1 ? "Second" : "First") + " argument to player.get_stat() needs to be a string.");
+        ResourceLocation name = popIdentifier(ss, (argCount > 1 ? "Second" : "First") + " argument to player.get_stat() needs to be a string.");
 
         Stat<?> stat = switch (type) {
             case "mined" -> Stats.BLOCK_MINED.get(BuiltInRegistries.BLOCK.getValue(name));
@@ -400,7 +400,7 @@ public class MeteorStarscript {
         if (argCount != 1) ss.error("player.count_items() requires 1 argument, got %d.", argCount);
 
         String idRaw = ss.popString("First argument to player.count_items() needs to be a string.");
-        Identifier id = Identifier.tryParse(idRaw);
+        ResourceLocation id = ResourceLocation.tryParse(idRaw);
         if (id == null) return Value.number(0);
 
         Item item = BuiltInRegistries.ITEM.getValue(id);
@@ -458,7 +458,7 @@ public class MeteorStarscript {
     }
 
     private static Value oppositeX(boolean camera) {
-        double x = camera ? mc.gameRenderer.getMainCamera().position().x : (mc.player != null ? mc.player.getX() : 0);
+        double x = camera ? mc.gameRenderer.getMainCamera().getPosition().x : (mc.player != null ? mc.player.getX() : 0);
         Dimension dimension = PlayerUtils.getDimension();
 
         if (dimension == Dimension.Overworld) x /= 8;
@@ -468,7 +468,7 @@ public class MeteorStarscript {
     }
 
     private static Value oppositeZ(boolean camera) {
-        double z = camera ? mc.gameRenderer.getMainCamera().position().z : (mc.player != null ? mc.player.getZ() : 0);
+        double z = camera ? mc.gameRenderer.getMainCamera().getPosition().z : (mc.player != null ? mc.player.getZ() : 0);
         Dimension dimension = PlayerUtils.getDimension();
 
         if (dimension == Dimension.Overworld) z /= 8;
@@ -479,7 +479,7 @@ public class MeteorStarscript {
 
     private static Value yaw(boolean camera) {
         float yaw;
-        if (camera) yaw = mc.gameRenderer.getMainCamera().yRot();
+        if (camera) yaw = mc.gameRenderer.getMainCamera().getYRot();
         else yaw = mc.player != null ? mc.player.getYRot() : 0;
         yaw %= 360;
 
@@ -491,7 +491,7 @@ public class MeteorStarscript {
 
     private static Value pitch(boolean camera) {
         float pitch;
-        if (camera) pitch = mc.gameRenderer.getMainCamera().xRot();
+        if (camera) pitch = mc.gameRenderer.getMainCamera().getXRot();
         else pitch = mc.player != null ? mc.player.getXRot() : 0;
         pitch %= 360;
 
@@ -503,7 +503,7 @@ public class MeteorStarscript {
 
     private static Value direction(boolean camera) {
         float yaw;
-        if (camera) yaw = mc.gameRenderer.getMainCamera().yRot();
+        if (camera) yaw = mc.gameRenderer.getMainCamera().getYRot();
         else yaw = mc.player != null ? mc.player.getYRot() : 0;
 
         return wrap(HorizontalDirection.get(yaw));
@@ -515,7 +515,7 @@ public class MeteorStarscript {
         BP.set(mc.player.getX(), mc.player.getY(), mc.player.getZ());
         return mc.level.registryAccess().lookup(Registries.BIOME)
             .map(biomeRegistry -> {
-                Identifier id = biomeRegistry.getKey(mc.level.getBiome(BP).value());
+                ResourceLocation id = biomeRegistry.getKey(mc.level.getBiome(BP).value());
                 if (id == null) return Value.string("Unknown");
                 return Value.string(Arrays.stream(id.getPath().split("_")).map(StringUtils::capitalize).collect(Collectors.joining(" ")));
             })
@@ -550,7 +550,7 @@ public class MeteorStarscript {
 
     private static Value posString(boolean opposite, boolean camera) {
         Vec3 pos;
-        if (camera) pos = mc.gameRenderer.getMainCamera().position();
+        if (camera) pos = mc.gameRenderer.getMainCamera().getPosition();
         else pos = mc.player != null ? mc.player.position() : Vec3.ZERO;
 
         double x = pos.x;
@@ -596,10 +596,10 @@ public class MeteorStarscript {
 
     // Utility
 
-    public static Identifier popIdentifier(Starscript ss, String errorMessage) {
+    public static ResourceLocation popIdentifier(Starscript ss, String errorMessage) {
         try {
-            return Identifier.parse(ss.popString(errorMessage));
-        } catch (IdentifierException e) {
+            return ResourceLocation.parse(ss.popString(errorMessage));
+        } catch (ResourceLocationException e) {
             ss.error(e.getMessage());
             return null;
         }

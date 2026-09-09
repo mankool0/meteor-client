@@ -22,7 +22,7 @@ public class AntiVoid extends Module {
         .name("mode")
         .description("The method to prevent you from falling into the void.")
         .defaultValue(Mode.Jump)
-        .onChanged(_ -> onActivate())
+        .onChanged(unused1 -> onActivate())
         .build()
     );
 

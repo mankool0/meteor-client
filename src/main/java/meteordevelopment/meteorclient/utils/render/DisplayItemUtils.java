@@ -5,10 +5,6 @@
 
 package meteordevelopment.meteorclient.utils.render;
 
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponentMap;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -21,9 +17,11 @@ import net.minecraft.world.level.block.Block;
 public class DisplayItemUtils {
     private DisplayItemUtils() {}
 
+    // PORT(1.21.4): item components are bound at registration time on 1.21.4, so plain
+    // ItemStacks are safe to create before joining a world - no direct holder needed.
     public static ItemStack toStack(Item item) {
         if (item == Items.AIR) return ItemStack.EMPTY;
-        return new ItemStack(directHolder(item));
+        return new ItemStack(item);
     }
 
     public static ItemStack toStack(Block block) {
@@ -32,16 +30,6 @@ public class DisplayItemUtils {
 
     public static ItemStack toStack(Item item, int count) {
         if (item == Items.AIR) return ItemStack.EMPTY;
-        return new ItemStack(directHolder(item), count);
-    }
-
-    @SuppressWarnings("deprecation")
-    private static Holder<Item> directHolder(Item item) {
-        DataComponentMap components = DataComponentMap.builder()
-            .addAll(DataComponents.COMMON_ITEM_COMPONENTS)
-            .set(DataComponents.ITEM_MODEL, item.builtInRegistryHolder().key().identifier())
-            .set(DataComponents.ITEM_NAME, Component.translatable(item.getDescriptionId()))
-            .build();
-        return Holder.direct(item, components);
+        return new ItemStack(item, count);
     }
 }

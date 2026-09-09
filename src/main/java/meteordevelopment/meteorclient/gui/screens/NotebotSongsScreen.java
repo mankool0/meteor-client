@@ -68,7 +68,7 @@ public class NotebotSongsScreen extends WindowScreen {
                     }
                 }
             });
-        } catch (IOException _) {
+        } catch (IOException unused1) {
             table.add(theme.label("Missing meteor-client/notebot folder.")).expandCellX();
             table.row();
         }

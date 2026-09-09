@@ -23,8 +23,6 @@ import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.input.KeyAction;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.input.MouseButtonEvent;
 
 public class AutoWalk extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -51,7 +49,7 @@ public class AutoWalk extends Module {
         .name("simple-direction")
         .description("The direction to walk in simple mode.")
         .defaultValue(Direction.Forwards)
-        .onChanged(_ -> {
+        .onChanged(unused1 -> {
             if (isActive()) unpress();
         })
         .visible(() -> mode.get() == Mode.Simple)
@@ -130,12 +128,12 @@ public class AutoWalk extends Module {
 
     @EventHandler
     private void onKey(KeyInputEvent event) {
-        if (isMovementKey(event.input) && event.action == KeyAction.Press) onMovement();
+        if (isMovementKey(event.key, event.scancode) && event.action == KeyAction.Press) onMovement();
     }
 
     @EventHandler
     private void onMouseClick(MouseClickEvent event) {
-        if (isMovementButton(event.click) && event.action == KeyAction.Press) onMovement();
+        if (isMovementButton(event.button) && event.action == KeyAction.Press) onMovement();
     }
 
     @EventHandler
@@ -156,22 +154,22 @@ public class AutoWalk extends Module {
         mc.options.keyRight.setDown(false);
     }
 
-    private boolean isMovementKey(KeyEvent input) {
-        return mc.options.keyUp.matches(input)
-            || mc.options.keyDown.matches(input)
-            || mc.options.keyLeft.matches(input)
-            || mc.options.keyRight.matches(input)
-            || mc.options.keyShift.matches(input)
-            || mc.options.keyJump.matches(input);
+    private boolean isMovementKey(int key, int scancode) {
+        return mc.options.keyUp.matches(key, scancode)
+            || mc.options.keyDown.matches(key, scancode)
+            || mc.options.keyLeft.matches(key, scancode)
+            || mc.options.keyRight.matches(key, scancode)
+            || mc.options.keyShift.matches(key, scancode)
+            || mc.options.keyJump.matches(key, scancode);
     }
 
-    private boolean isMovementButton(MouseButtonEvent click) {
-        return mc.options.keyUp.matchesMouse(click)
-            || mc.options.keyDown.matchesMouse(click)
-            || mc.options.keyLeft.matchesMouse(click)
-            || mc.options.keyRight.matchesMouse(click)
-            || mc.options.keyShift.matchesMouse(click)
-            || mc.options.keyJump.matchesMouse(click);
+    private boolean isMovementButton(int button) {
+        return mc.options.keyUp.matchesMouse(button)
+            || mc.options.keyDown.matchesMouse(button)
+            || mc.options.keyLeft.matchesMouse(button)
+            || mc.options.keyRight.matchesMouse(button)
+            || mc.options.keyShift.matchesMouse(button)
+            || mc.options.keyJump.matchesMouse(button);
     }
 
     private void createGoal() {

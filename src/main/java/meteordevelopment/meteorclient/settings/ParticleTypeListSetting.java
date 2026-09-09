@@ -12,7 +12,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,7 +39,7 @@ public class ParticleTypeListSetting extends Setting<List<ParticleType<?>>> {
                 ParticleType<?> particleType = parseId(BuiltInRegistries.PARTICLE_TYPE, value);
                 if (particleType != null) particleTypes.add(particleType);
             }
-        } catch (Exception _) {
+        } catch (Exception unused1) {
         }
 
         return particleTypes;
@@ -51,7 +51,7 @@ public class ParticleTypeListSetting extends Setting<List<ParticleType<?>>> {
     }
 
     @Override
-    public Iterable<Identifier> getIdentifierSuggestions() {
+    public Iterable<ResourceLocation> getIdentifierSuggestions() {
         return BuiltInRegistries.PARTICLE_TYPE.keySet();
     }
 
@@ -59,7 +59,7 @@ public class ParticleTypeListSetting extends Setting<List<ParticleType<?>>> {
     public CompoundTag save(CompoundTag tag) {
         ListTag valueTag = new ListTag();
         for (ParticleType<?> particleType : get()) {
-            Identifier id = BuiltInRegistries.PARTICLE_TYPE.getKey(particleType);
+            ResourceLocation id = BuiltInRegistries.PARTICLE_TYPE.getKey(particleType);
             if (id != null) valueTag.add(StringTag.valueOf(id.toString()));
         }
         tag.put("value", valueTag);
@@ -71,9 +71,9 @@ public class ParticleTypeListSetting extends Setting<List<ParticleType<?>>> {
     public List<ParticleType<?>> load(CompoundTag tag) {
         get().clear();
 
-        ListTag valueTag = tag.getListOrEmpty("value");
+        ListTag valueTag = tag.getList("value", Tag.TAG_STRING);
         for (Tag tagI : valueTag) {
-            ParticleType<?> particleType = BuiltInRegistries.PARTICLE_TYPE.getValue(Identifier.parse(tagI.asString().orElse("")));
+            ParticleType<?> particleType = BuiltInRegistries.PARTICLE_TYPE.getValue(ResourceLocation.parse(tagI.getAsString()));
             if (particleType != null) get().add(particleType);
         }
 

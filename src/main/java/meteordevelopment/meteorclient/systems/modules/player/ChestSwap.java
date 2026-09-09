@@ -75,8 +75,8 @@ public class ChestSwap extends Module {
         int bestSlot = -1;
         boolean breakLoop = false;
 
-        for (int i = 0; i < mc.player.getInventory().getNonEquipmentItems().size(); i++) {
-            Item item = mc.player.getInventory().getNonEquipmentItems().get(i).getItem();
+        for (int i = 0; i < mc.player.getInventory().items.size(); i++) {
+            Item item = mc.player.getInventory().items.get(i).getItem();
 
             switch (chestplate.get()) {
                 case Diamond:
@@ -117,8 +117,8 @@ public class ChestSwap extends Module {
     }
 
     private void equipElytra() {
-        for (int i = 0; i < mc.player.getInventory().getNonEquipmentItems().size(); i++) {
-            ItemStack item = mc.player.getInventory().getNonEquipmentItems().get(i);
+        for (int i = 0; i < mc.player.getInventory().items.size(); i++) {
+            ItemStack item = mc.player.getInventory().items.get(i);
 
             if (item.has(DataComponents.GLIDER)) {
                 equip(i);

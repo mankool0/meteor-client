@@ -51,7 +51,7 @@ public class WIntEdit extends WHorizontalList {
             else {
                 try {
                     value = Integer.parseInt(textBox.get());
-                } catch (NumberFormatException _) {}
+                } catch (NumberFormatException unused1) {}
             }
 
             if (slider != null) slider.set(value);
@@ -91,7 +91,7 @@ public class WIntEdit extends WHorizontalList {
         if (good && validate) {
             try {
                 Integer.parseInt(text + c);
-            } catch (NumberFormatException _) {
+            } catch (NumberFormatException unused2) {
                 good = false;
             }
         }

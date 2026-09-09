@@ -22,7 +22,7 @@ public class AddCrackedAccountScreen extends AddAccountScreen {
 
         // Name
         t.add(theme.label("Name: "));
-        WTextBox name = t.add(theme.textBox("", "seasnail8169", (_, c) ->
+        WTextBox name = t.add(theme.textBox("", "seasnail8169", (unused1, c) ->
             /// @see net.minecraft.util.StringUtil#isValidPlayerName
             c > 32 && c < 127
         )).minWidth(400).expandX().widget();

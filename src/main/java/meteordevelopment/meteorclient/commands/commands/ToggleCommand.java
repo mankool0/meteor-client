@@ -25,14 +25,14 @@ public class ToggleCommand extends Command {
         builder
             .then(literal("all")
                 .then(literal("on")
-                    .executes(_ -> {
+                    .executes(unused1 -> {
                         new ArrayList<>(Modules.get().getAll()).forEach(Module::enable);
                         Hud.get().active = true;
                         return SINGLE_SUCCESS;
                     })
                 )
                 .then(literal("off")
-                    .executes(_ -> {
+                    .executes(unused2 -> {
                         new ArrayList<>(Modules.get().getActive()).forEach(Module::toggle);
                         Hud.get().active = false;
                         return SINGLE_SUCCESS;
@@ -61,17 +61,17 @@ public class ToggleCommand extends Command {
                 )
             )
             .then(literal("hud")
-                .executes(_ -> {
+                .executes(unused3 -> {
                     Hud.get().active = !(Hud.get().active);
                     return SINGLE_SUCCESS;
                 })
                 .then(literal("on")
-                    .executes(_ -> {
+                    .executes(unused4 -> {
                         Hud.get().active = true;
                         return SINGLE_SUCCESS;
                     })
                 ).then(literal("off")
-                    .executes(_ -> {
+                    .executes(unused5 -> {
                         Hud.get().active = false;
                         return SINGLE_SUCCESS;
                     })

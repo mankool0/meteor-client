@@ -6,7 +6,6 @@
 package meteordevelopment.meteorclient.mixin;
 
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.proxy.Socks4ProxyHandler;
@@ -23,14 +22,14 @@ import meteordevelopment.meteorclient.systems.proxies.Proxy;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.BandwidthDebugMonitor;
 import net.minecraft.network.Connection;
-import net.minecraft.network.SkipPacketEncoderException;
+import net.minecraft.network.PacketSendListener;
+import net.minecraft.network.SkipPacketException;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBundlePacket;
-import net.minecraft.server.network.EventLoopGroupHolder;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -65,27 +64,27 @@ public abstract class ConnectionMixin {
         }
     }
 
-    @Inject(method = "connect(Ljava/net/InetSocketAddress;Lnet/minecraft/server/network/EventLoopGroupHolder;Lnet/minecraft/network/Connection;)Lio/netty/channel/ChannelFuture;", at = @At("HEAD"))
-    private static void onConnect(InetSocketAddress address, EventLoopGroupHolder eventLoopGroupHolder, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
+    @Inject(method = "connect(Ljava/net/InetSocketAddress;ZLnet/minecraft/network/Connection;)Lio/netty/channel/ChannelFuture;", at = @At("HEAD"))
+    private static void onConnect(InetSocketAddress address, boolean useEpoll, Connection connection, CallbackInfoReturnable<ChannelFuture> cir) {
         MeteorClient.EVENT_BUS.post(ServerConnectEndEvent.get(address));
     }
 
-    @Inject(at = @At("HEAD"), method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;)V", cancellable = true)
-    private void onSendPacketHead(Packet<?> packet, @Nullable ChannelFutureListener listener, CallbackInfo ci) {
+    @Inject(at = @At("HEAD"), method = "send(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;)V", cancellable = true)
+    private void onSendPacketHead(Packet<?> packet, @Nullable PacketSendListener listener, CallbackInfo ci) {
         if (MeteorClient.EVENT_BUS.post(new PacketEvent.Send(packet, (Connection) (Object) this)).isCancelled()) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lio/netty/channel/ChannelFutureListener;)V", at = @At("TAIL"))
-    private void onSendPacketTail(Packet<?> packet, @Nullable ChannelFutureListener listener, CallbackInfo ci) {
+    @Inject(method = "send(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketSendListener;)V", at = @At("TAIL"))
+    private void onSendPacketTail(Packet<?> packet, @Nullable PacketSendListener listener, CallbackInfo ci) {
         MeteorClient.EVENT_BUS.post(new PacketEvent.Sent(packet, (Connection) (Object) this));
     }
 
     @Inject(method = "exceptionCaught", at = @At("HEAD"), cancellable = true)
     private void exceptionCaught(ChannelHandlerContext ctx, Throwable cause, CallbackInfo ci) {
         AntiPacketKick apk = Modules.get().get(AntiPacketKick.class);
-        if (!(cause instanceof TimeoutException) && !(cause instanceof SkipPacketEncoderException) && apk.catchExceptions()) {
+        if (!(cause instanceof TimeoutException) && !(cause instanceof SkipPacketException) && apk.catchExceptions()) {
             if (apk.logExceptions.get()) apk.warning("Caught exception: %s", cause);
             ci.cancel();
         }

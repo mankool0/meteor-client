@@ -30,14 +30,14 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.animal.frog.Frog;
-import net.minecraft.world.entity.animal.parrot.Parrot;
-import net.minecraft.world.entity.animal.wolf.Wolf;
+import net.minecraft.world.entity.animal.Parrot;
+import net.minecraft.world.entity.animal.Wolf;
 import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.entity.monster.Zoglin;
 import net.minecraft.world.entity.monster.hoglin.Hoglin;
 import net.minecraft.world.entity.monster.piglin.Piglin;
-import net.minecraft.world.entity.monster.zombie.Zombie;
-import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.ZombifiedPiglin;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.GameType;
@@ -261,7 +261,8 @@ public class KillAura extends Module {
         .build()
     );
 
-    private final static ArrayList<Item> FILTER = new ArrayList<>(List.of(Items.DIAMOND_SWORD, Items.DIAMOND_AXE, Items.DIAMOND_PICKAXE, Items.DIAMOND_SHOVEL, Items.DIAMOND_HOE, Items.MACE, Items.DIAMOND_SPEAR, Items.TRIDENT));
+    // PORT(1.21.4): Items.DIAMOND_SPEAR does not exist on 1.21.4 - removed from weapon filter.
+    private final static ArrayList<Item> FILTER = new ArrayList<>(List.of(Items.DIAMOND_SWORD, Items.DIAMOND_AXE, Items.DIAMOND_PICKAXE, Items.DIAMOND_SHOVEL, Items.DIAMOND_HOE, Items.MACE, Items.TRIDENT));
     private final List<Entity> targets = new ArrayList<>();
     private int switchTimer, hitTimer;
     private boolean wasPathing = false;
@@ -329,7 +330,7 @@ public class KillAura extends Module {
         Entity primary = targets.getFirst();
 
         if (autoSwitch.get()) {
-            FindItemResult weaponResult = new FindItemResult(mc.player.getInventory().getSelectedSlot(), -1);
+            FindItemResult weaponResult = new FindItemResult(mc.player.getInventory().selected, -1);
             if (attackWhenHolding.get() == AttackItems.Weapons)
                 weaponResult = InvUtils.find(this::acceptableWeapon, 0, 8);
 
@@ -339,7 +340,7 @@ public class KillAura extends Module {
             }
 
             if (!swapped) {
-                previousSlot = mc.player.getInventory().getSelectedSlot();
+                previousSlot = mc.player.getInventory().selected;
                 swapped = true;
             }
 
@@ -487,7 +488,7 @@ public class KillAura extends Module {
         if (weapons.get().contains(Items.DIAMOND_SHOVEL) && stack.is(ItemTags.SHOVELS)) return true;
         if (weapons.get().contains(Items.DIAMOND_HOE) && stack.is(ItemTags.HOES)) return true;
         if (weapons.get().contains(Items.MACE) && stack.getItem() instanceof MaceItem) return true;
-        if (weapons.get().contains(Items.DIAMOND_SPEAR) && stack.is(ItemTags.SPEARS)) return true;
+        // PORT(1.21.4): spears do not exist on 1.21.4.
         return weapons.get().contains(Items.TRIDENT) && stack.getItem() instanceof TridentItem;
     }
 
