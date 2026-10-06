@@ -24,7 +24,7 @@ import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.TagParser;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.Locale;
 import java.util.Set;
@@ -42,6 +42,7 @@ public class ComponentMapReader {
     private static final Dynamic2CommandExceptionType MALFORMED_COMPONENT_EXCEPTION = new Dynamic2CommandExceptionType(
         (type, error) -> Component.translatableEscape("arguments.item.component.malformed", type, error)
     );
+    private static final TagParser<Tag> SNBT_READER = TagParser.create(NbtOps.INSTANCE);
     private final DynamicOps<Tag> nbtOps;
 
     public ComponentMapReader(CommandBuildContext commandRegistryAccess) {
@@ -128,7 +129,7 @@ public class ComponentMapReader {
                 throw COMPONENT_EXPECTED_EXCEPTION.createWithContext(reader);
             } else {
                 int i = reader.getCursor();
-                ResourceLocation identifier = ResourceLocation.read(reader);
+                Identifier identifier = Identifier.read(reader);
                 DataComponentType<?> dataComponentType = BuiltInRegistries.DATA_COMPONENT_TYPE.getValue(identifier);
                 if (dataComponentType != null && !dataComponentType.isTransient()) {
                     return dataComponentType;
@@ -141,10 +142,10 @@ public class ComponentMapReader {
 
         private CompletableFuture<Suggestions> suggestComponentType(SuggestionsBuilder builder) {
             String string = builder.getRemaining().toLowerCase(Locale.ROOT);
-            SharedSuggestionProvider.filterResources(BuiltInRegistries.DATA_COMPONENT_TYPE.entrySet(), string, entry -> entry.getKey().location(), entry -> {
+            SharedSuggestionProvider.filterResources(BuiltInRegistries.DATA_COMPONENT_TYPE.entrySet(), string, entry -> entry.getKey().identifier(), entry -> {
                 DataComponentType<?> dataComponentType = entry.getValue();
                 if (dataComponentType.codec() != null) {
-                    ResourceLocation identifier = entry.getKey().location();
+                    Identifier identifier = entry.getKey().identifier();
                     builder.suggest(identifier + "=");
                 }
             });
@@ -153,7 +154,7 @@ public class ComponentMapReader {
 
         private <T> void readComponentValue(StringReader reader, DataComponentMap.Builder builder, DataComponentType<T> type) throws CommandSyntaxException {
             int i = reader.getCursor();
-            Tag nbtElement = new TagParser(reader).readValue();
+            Tag nbtElement = SNBT_READER.parseAsArgument(reader);
             DataResult<T> dataResult = type.codecOrThrow().parse(this.nbtOps, nbtElement);
             builder.set(type, dataResult.getOrThrow(error -> {
                 reader.setCursor(i);

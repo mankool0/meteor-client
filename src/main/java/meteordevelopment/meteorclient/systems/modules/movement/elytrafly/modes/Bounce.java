@@ -106,8 +106,7 @@ public class Bounce extends ElytraFlightMode {
 
     public static boolean checkConditions(LocalPlayer player) {
         BlockState blockState = player.getInBlockState();
-        // PORT(1.21.4): BlockTags.CAN_GLIDE_THROUGH does not exist on 1.21.4 - climbable check only.
-        boolean isClimbing = blockState.is(BlockTags.CLIMBABLE);
+        boolean isClimbing = (blockState.is(BlockTags.CLIMBABLE) && !blockState.is(BlockTags.CAN_GLIDE_THROUGH));
         return (!player.getAbilities().flying && !player.isPassenger() && !isClimbing && !player.isInWater() && !player.hasEffect(MobEffects.LEVITATION));
     }
 

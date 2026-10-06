@@ -43,8 +43,8 @@ public class BlockPosSetting extends Setting<BlockPos> {
 
     @Override
     protected BlockPos load(CompoundTag tag) {
-        int[] value = tag.getIntArray("value");
-        if (value.length == 3) {
+        if (tag.getIntArray("value").isPresent()) {
+            int[] value = tag.getIntArray("value").get();
             set(new BlockPos(value[0], value[1], value[2]));
         }
 

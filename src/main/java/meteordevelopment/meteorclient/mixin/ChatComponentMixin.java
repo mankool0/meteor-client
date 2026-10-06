@@ -7,6 +7,7 @@ package meteordevelopment.meteorclient.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.game.ReceiveMessageEvent;
 import meteordevelopment.meteorclient.mixininterface.IChatHud;
@@ -36,7 +37,7 @@ import java.util.List;
 public abstract class ChatComponentMixin implements IChatHud {
     @Shadow
     @Final
-    private Minecraft minecraft;
+    Minecraft minecraft;
 
     @Shadow
     @Final
@@ -49,14 +50,9 @@ public abstract class ChatComponentMixin implements IChatHud {
     private BetterChat betterChat;
     @Unique
     private int nextId;
-    @Unique
-    private boolean skipOnAddMessage;
 
     @Shadow
     public abstract void addMessage(Component message);
-
-    @Shadow
-    public abstract void addMessage(Component message, MessageSignature signature, GuiMessageTag tag);
 
     @Override
     public void meteor$add(Component message, int id) {
@@ -65,12 +61,12 @@ public abstract class ChatComponentMixin implements IChatHud {
         nextId = 0;
     }
 
-    @Inject(method = "addMessageToDisplayQueue", at = @At(value = "INVOKE", target = "Ljava/util/List;add(ILjava/lang/Object;)V", shift = At.Shift.AFTER))
+    @Inject(method = "addMessageToDisplayQueue", at = @At(value = "INVOKE", target = "Ljava/util/List;addFirst(Ljava/lang/Object;)V", shift = At.Shift.AFTER))
     private void onAddMessageAfterNewGuiMessageVisible(GuiMessage message, CallbackInfo ci) {
         ((IGuiMessage) (Object) trimmedMessages.getFirst()).meteor$setId(nextId);
     }
 
-    @Inject(method = "addMessageToQueue", at = @At(value = "INVOKE", target = "Ljava/util/List;add(ILjava/lang/Object;)V", shift = At.Shift.AFTER))
+    @Inject(method = "addMessageToQueue(Lnet/minecraft/client/GuiMessage;)V", at = @At(value = "INVOKE", target = "Ljava/util/List;addFirst(Ljava/lang/Object;)V", shift = At.Shift.AFTER))
     private void onAddMessageAfterNewGuiMessage(GuiMessage message, CallbackInfo ci) {
         ((IGuiMessage) (Object) allMessages.getFirst()).meteor$setId(nextId);
     }
@@ -99,9 +95,7 @@ public abstract class ChatComponentMixin implements IChatHud {
     }
 
     @Inject(at = @At("HEAD"), method = "addMessage(Lnet/minecraft/network/chat/Component;Lnet/minecraft/network/chat/MessageSignature;Lnet/minecraft/client/GuiMessageTag;)V", cancellable = true)
-    private void onAddMessage(Component message, MessageSignature signature, GuiMessageTag indicator, CallbackInfo ci) {
-        if (skipOnAddMessage) return;
-
+    private void onAddMessage(Component message, MessageSignature signature, GuiMessageTag indicator, CallbackInfo ci, @Local(argsOnly = true) LocalRef<Component> contents, @Local(argsOnly = true) LocalRef<GuiMessageTag> tag) {
         ReceiveMessageEvent event = MeteorClient.EVENT_BUS.post(ReceiveMessageEvent.get(message, indicator, nextId));
 
         if (event.isCancelled()) ci.cancel();
@@ -116,17 +110,14 @@ public abstract class ChatComponentMixin implements IChatHud {
             }
 
             if (event.isModified()) {
-                ci.cancel();
-
-                skipOnAddMessage = true;
-                addMessage(event.getMessage(), signature, event.getIndicator());
-                skipOnAddMessage = false;
+                contents.set(event.getMessage());
+                tag.set(event.getIndicator());
             }
         }
     }
 
     //modify max lengths for messages and visible messages
-    @ModifyExpressionValue(method = "addMessageToQueue", at = @At(value = "CONSTANT", args = "intValue=100"))
+    @ModifyExpressionValue(method = "addMessageToQueue(Lnet/minecraft/client/GuiMessage;)V", at = @At(value = "CONSTANT", args = "intValue=100"))
     private int maxLength(int size) {
         if (Modules.get() == null || !getBetterChat().isLongerChat()) return size;
 
@@ -142,7 +133,7 @@ public abstract class ChatComponentMixin implements IChatHud {
 
     // Player Heads
 
-    @ModifyExpressionValue(method = "render(Lnet/minecraft/client/gui/GuiGraphics;IIIZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;ceil(F)I"))
+    @ModifyExpressionValue(method = "render(Lnet/minecraft/client/gui/components/ChatComponent$ChatGraphicsAccess;IIZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;ceil(F)I"))
     private int onRender_modifyWidth(int width) {
         if (Modules.get() == null) return width;
 
@@ -152,13 +143,13 @@ public abstract class ChatComponentMixin implements IChatHud {
     // Anti spam
 
     @Inject(method = "addMessageToDisplayQueue", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/ChatComponent;isChatFocused()Z"))
-    private void onBreakChatMessageLines(GuiMessage message, CallbackInfo ci, @Local(index = 4) List<FormattedCharSequence> lines) {
+    private void onBreakChatMessageLines(GuiMessage message, CallbackInfo ci, @Local List<FormattedCharSequence> lines) {
         if (Modules.get() == null) return; // baritone calls addMessage before we initialise
 
         getBetterChat().lines.addFirst(lines.size());
     }
 
-    @Inject(method = "addMessageToQueue", at = @At(value = "INVOKE", target = "Ljava/util/List;remove(I)Ljava/lang/Object;"))
+    @Inject(method = "addMessageToQueue(Lnet/minecraft/client/GuiMessage;)V", at = @At(value = "INVOKE", target = "Ljava/util/List;removeLast()Ljava/lang/Object;"))
     private void onRemoveMessage(GuiMessage message, CallbackInfo ci) {
         if (Modules.get() == null) return;
 

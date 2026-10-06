@@ -43,11 +43,6 @@ public abstract class PlayerTabOverlayMixin {
         if (betterTab.isActive()) cir.setReturnValue(betterTab.getPlayerName(info));
     }
 
-    // PORT(1.21.4): extractRenderState/extractPingIcon do not exist on 1.21.4 - PlayerTabOverlay
-    // still does row/col layout and ping-icon drawing inline in render()/renderPingIcon(). The single
-    // Math.min(II)I call and the isLocalServer() call (right after the vanilla row/col balancing loop,
-    // which stores into locals p (rows) and q (cols), the 6th/7th int locals in scope there) are used
-    // as stable anchors, mirroring the pre-refactor (Yarn 1.21.4) BetterTab mixin.
     @ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I"), index = 0)
     private int modifyWidth(int width) {
         BetterTab module = Modules.get().get(BetterTab.class);
@@ -55,7 +50,7 @@ public abstract class PlayerTabOverlayMixin {
         return module.isActive() && module.accurateLatency.get() ? width + 30 : width;
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;isLocalServer()Z"))
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Ljava/lang/Math;min(II)I", shift = At.Shift.BEFORE))
     private void modifyHeight(CallbackInfo ci, @Local(ordinal = 5) LocalIntRef rows, @Local(ordinal = 6) LocalIntRef cols) {
         BetterTab module = Modules.get().get(BetterTab.class);
         if (!module.isActive()) return;

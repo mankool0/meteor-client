@@ -33,13 +33,13 @@ public abstract class CommandSuggestionsMixin {
 
     @Shadow
     @Final
-    private EditBox input;
+    EditBox input;
 
     @Shadow
     private CommandSuggestions.SuggestionsList suggestions;
 
     @Shadow
-    private boolean keepSuggestions;
+    boolean keepSuggestions;
 
     @Shadow
     private @Nullable CompletableFuture<Suggestions> pendingSuggestions;
@@ -51,7 +51,7 @@ public abstract class CommandSuggestionsMixin {
         at = @At(value = "INVOKE", target = "Lcom/mojang/brigadier/StringReader;canRead()Z", remap = false),
         cancellable = true
     )
-    public void onRefresh(CallbackInfo ci, @Local(index = 2) StringReader reader) {
+    public void onRefresh(CallbackInfo ci, @Local StringReader reader) {
         String prefix = Config.get().prefix.get();
         int length = prefix.length();
 
@@ -65,7 +65,7 @@ public abstract class CommandSuggestionsMixin {
             int cursor = input.getCursorPosition();
             if (cursor >= length && (this.suggestions == null || !this.keepSuggestions)) {
                 this.pendingSuggestions = Commands.DISPATCHER.getCompletionSuggestions(this.currentParse, cursor);
-                this.pendingSuggestions.thenAccept(suggestionResult -> {
+                this.pendingSuggestions.thenRun(() -> {
                     if (this.pendingSuggestions.isDone()) {
                         this.updateUsageInfo();
                     }

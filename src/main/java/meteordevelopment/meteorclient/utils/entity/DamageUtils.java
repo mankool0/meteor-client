@@ -263,7 +263,7 @@ public class DamageUtils {
 
     private static float fallDamageReductions(LivingEntity entity, int surface) {
         int fallHeight = (int) (entity.getY() - surface + entity.fallDistance - 3d);
-        @Nullable MobEffectInstance jumpBoostInstance = entity.getEffect(MobEffects.JUMP);
+        @Nullable MobEffectInstance jumpBoostInstance = entity.getEffect(MobEffects.JUMP_BOOST);
         if (jumpBoostInstance != null) fallHeight -= jumpBoostInstance.getAmplifier() + 1;
 
         return calculateReductions(fallHeight, entity, mc.level.damageSources().fall());
@@ -309,8 +309,7 @@ public class DamageUtils {
 
         Object2IntMap<Holder<Enchantment>> enchantments = new Object2IntOpenHashMap<>();
 
-        for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (!EquipmentSlotGroup.ARMOR.test(slot)) continue;
+        for (EquipmentSlot slot : EquipmentSlotGroup.ARMOR) {
             ItemStack stack = player.getItemBySlot(slot);
 
             Utils.getEnchantments(stack, enchantments);
@@ -348,7 +347,7 @@ public class DamageUtils {
      * @see LivingEntity#getDamageAfterMagicAbsorb(DamageSource, float)
      */
     private static float resistanceReduction(LivingEntity player, float damage) {
-        MobEffectInstance resistance = player.getEffect(MobEffects.DAMAGE_RESISTANCE);
+        MobEffectInstance resistance = player.getEffect(MobEffects.RESISTANCE);
         if (resistance != null) {
             int lvl = resistance.getAmplifier() + 1;
             damage *= (1 - (lvl * 0.2f));

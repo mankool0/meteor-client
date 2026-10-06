@@ -186,11 +186,11 @@ public class AutoFish extends Module {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean prepareRod(RodCandidate candidate) {
         if (candidate.hand() == InteractionHand.OFF_HAND) return true;
-        if (candidate.hotbarSlot() == mc.player.getInventory().selected) return true;
+        if (candidate.hotbarSlot() == mc.player.getInventory().getSelectedSlot()) return true;
         if (!autoSwitch.get()) return false;
 
         InvUtils.swap(candidate.hotbarSlot(), false);
-        return candidate.hotbarSlot() == mc.player.getInventory().selected;
+        return candidate.hotbarSlot() == mc.player.getInventory().getSelectedSlot();
     }
 
     private boolean isUsableRod(ItemStack stack) {
@@ -219,7 +219,7 @@ public class AutoFish extends Module {
     /// Candidates only replace the current best when they have a strictly higher score,
     /// preserving the ordering above for equal scores.
     private @Nullable RodCandidate findBestRodCandidate() {
-        int selectedSlot = mc.player.getInventory().selected;
+        int selectedSlot = mc.player.getInventory().getSelectedSlot();
         RodCandidate best = null;
 
         ItemStack mainHandStack = mc.player.getMainHandItem();

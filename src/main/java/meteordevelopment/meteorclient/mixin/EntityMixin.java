@@ -43,6 +43,21 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 @Mixin(Entity.class)
 public abstract class EntityMixin {
+    // PORT(1.21.11): EntityFluidInteraction does not exist on 1.21.11, fluid pushing happens in Entity#updateFluidHeightAndDoFluidPushing
+    @ModifyExpressionValue(method = "updateFluidHeightAndDoFluidPushing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/material/FluidState;getFlow(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/Vec3;"))
+    private Vec3 modifyFluidFlow(Vec3 flow) {
+        if ((Object) this != mc.player) return flow;
+
+        Velocity velocity = Modules.get().get(Velocity.class);
+        if (velocity.isActive() && velocity.liquids.get()) {
+            double h = velocity.getHorizontal(velocity.liquidsHorizontal);
+            double v = velocity.getVertical(velocity.liquidsVertical);
+            flow = flow.multiply(h, v, h);
+        }
+
+        return flow;
+    }
+
     @Inject(method = {"isInWater", "isInLava"}, at = @At("HEAD"), cancellable = true)
     private void onIsInFluid(CallbackInfoReturnable<Boolean> cir) {
         if ((Object) this != mc.player) return;
@@ -176,7 +191,7 @@ public abstract class EntityMixin {
             ci.cancel();
         } else if (Modules.get().isActive(HighwayBuilder.class)) {
             Camera camera = mc.gameRenderer.getMainCamera();
-            ((ICamera) camera).meteor$setRot(camera.getYRot() + xo * 0.15, camera.getXRot() + yo * 0.15);
+            ((ICamera) camera).meteor$setRot(camera.yRot() + xo * 0.15, camera.xRot() + yo * 0.15);
             ci.cancel();
         } else if (freeLook.cameraMode()) {
             freeLook.cameraYaw += (float) (xo / freeLook.sensitivity.get().floatValue());

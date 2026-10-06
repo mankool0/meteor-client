@@ -56,7 +56,7 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
         super(title);
     }
 
-    @Inject(method = "init", at = @At("TAIL"))
+    @Inject(method = "repositionElements", at = @At("TAIL"))
     private void onInit(CallbackInfo ci) {
         textColor1 = Color.fromRGBA(255, 255, 255, 255);
         textColor2 = Color.fromRGBA(175, 175, 175, 255);
@@ -64,18 +64,21 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
         loggedInAs = "Logged in as ";
         loggedInAsLength = font.width(loggedInAs);
 
-        // widgets are cleared on every (re)init, so the buttons must be recreated
-        accounts = addRenderableWidget(
-            new Button.Builder(Component.literal("Accounts"), unused1 -> minecraft.setScreen(GuiThemes.get().accountsScreen()))
-                .size(BUTTON_WIDTH, BUTTON_HEIGHT)
-                .build()
-        );
+        if (accounts == null) {
+            accounts = addRenderableWidget(
+                new Button.Builder(Component.literal("Accounts"), unused1 -> minecraft.setScreen(GuiThemes.get().accountsScreen()))
+                    .size(BUTTON_WIDTH, BUTTON_HEIGHT)
+                    .build()
+            );
+        }
 
-        proxies = addRenderableWidget(
-            new Button.Builder(Component.literal("Proxies"), unused2 -> minecraft.setScreen(GuiThemes.get().proxiesScreen()))
-                .size(BUTTON_WIDTH, BUTTON_HEIGHT)
-                .build()
-        );
+        if (proxies == null) {
+            proxies = addRenderableWidget(
+                new Button.Builder(Component.literal("Proxies"), unused2 -> minecraft.setScreen(GuiThemes.get().proxiesScreen()))
+                    .size(BUTTON_WIDTH, BUTTON_HEIGHT)
+                    .build()
+            );
+        }
 
         Config config = Config.get();
         Config.ButtonPosition accountPos = config.accountButtonAnchor.get();
@@ -104,8 +107,10 @@ public abstract class JoinMultiplayerScreenMixin extends Screen {
         }
     }
 
-    @Inject(method = "render", at = @At("TAIL"))
-    private void onRender(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks, CallbackInfo ci) {
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
+        super.render(graphics, mouseX, mouseY, deltaTicks);
+
         Config config = Config.get();
 
         if (!config.showAccountStatus.get() && !config.showProxiesStatus.get()) {

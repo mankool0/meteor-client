@@ -28,13 +28,13 @@ import net.minecraft.client.gui.screens.multiplayer.JoinMultiplayerScreen;
 import net.minecraft.client.gui.screens.options.*;
 import net.minecraft.client.gui.screens.options.controls.ControlsScreen;
 import net.minecraft.client.gui.screens.packs.PackSelectionScreen;
-import net.minecraft.client.gui.screens.worldselection.EditGameRulesScreen;
 import net.minecraft.client.gui.screens.worldselection.CreateWorldScreen;
+import net.minecraft.client.gui.screens.worldselection.EditGameRulesScreen;
 import net.minecraft.client.gui.screens.worldselection.EditWorldScreen;
 import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
 import net.minecraft.realms.RealmsScreen;
 import net.minecraft.util.Tuple;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import org.meteordev.starscript.Script;
 
 import java.util.ArrayList;
@@ -254,7 +254,7 @@ public class DiscordPresence extends Module {
                 else if (mc.screen instanceof EditWorldScreen) rpc.setState("Editing world");
                 else if (mc.screen instanceof LevelLoadingScreen) rpc.setState("Loading world");
                 else if (mc.screen instanceof JoinMultiplayerScreen) rpc.setState("Selecting server");
-                else if (mc.screen instanceof EditServerScreen) rpc.setState("Adding server");
+                else if (mc.screen instanceof ManageServerScreen) rpc.setState("Adding server");
                 else if (mc.screen instanceof ConnectScreen || mc.screen instanceof DirectJoinServerScreen)
                     rpc.setState("Connecting to server");
                 else if (mc.screen instanceof WidgetScreen) rpc.setState("Browsing Meteor's GUI");

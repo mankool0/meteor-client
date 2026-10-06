@@ -44,6 +44,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.util.profiling.Profiler;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -108,6 +109,13 @@ public abstract class MinecraftMixin implements IMinecraft {
     @Shadow
     protected abstract void continueAttack(boolean down);
 
+    @Final
+    @Shadow
+    public GameRenderer gameRenderer;
+
+    @Shadow
+    public abstract Entity getCameraEntity();
+
     @Inject(method = "<init>", at = @At("TAIL"))
     private void onInit(CallbackInfo ci) {
         MeteorClient.INSTANCE.onInitializeClient();
@@ -146,8 +154,8 @@ public abstract class MinecraftMixin implements IMinecraft {
         startUseItemCalled = true;
     }
 
-    @Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;Z)V", at = @At("HEAD"))
-    private void onDisconnect(Screen screen, boolean transferring, CallbackInfo ci) {
+    @Inject(method = "disconnect(Lnet/minecraft/client/gui/screens/Screen;ZZ)V", at = @At("HEAD"))
+    private void onDisconnect(Screen screen, boolean keepResourcePacks, boolean stopSound, CallbackInfo ci) {
         if (level != null) {
             MeteorClient.EVENT_BUS.post(GameLeftEvent.get());
         }
@@ -334,5 +342,4 @@ public abstract class MinecraftMixin implements IMinecraft {
     public void meteor$setFramebuffer(RenderTarget framebuffer) {
         this.mainRenderTarget = framebuffer;
     }
-
 }

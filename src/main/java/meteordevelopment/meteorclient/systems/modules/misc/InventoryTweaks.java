@@ -296,7 +296,7 @@ public class InventoryTweaks extends Module {
     private void onKey(KeyInputEvent event) {
         if (event.action != KeyAction.Press) return;
 
-        if (sortingKey.get().matches(event)) {
+        if (sortingKey.get().matches(event.input)) {
             if (sort()) event.cancel();
         }
     }
@@ -305,7 +305,7 @@ public class InventoryTweaks extends Module {
     private void onMouseClick(MouseClickEvent event) {
         if (event.action != KeyAction.Press) return;
 
-        if (sortingKey.get().matches(event)) {
+        if (sortingKey.get().matches(event.input)) {
             if (sort()) event.cancel();
         }
     }
@@ -490,7 +490,7 @@ public class InventoryTweaks extends Module {
     @EventHandler
     private void onInventory(InventoryEvent event) {
         AbstractContainerMenu handler = mc.player.containerMenu;
-        if (canSteal(handler) && event.packet.getContainerId() == handler.containerId) {
+        if (canSteal(handler) && event.packet.containerId() == handler.containerId) {
             if (autoSteal.get()) {
                 steal(handler);
             } else if (autoDump.get()) {

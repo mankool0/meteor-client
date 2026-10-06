@@ -38,7 +38,7 @@ public class GiveCommand extends Command {
         }).then(argument("number", IntegerArgumentType.integer(1, 99)).executes(context -> {
             if (!mc.player.getAbilities().instabuild) throw NOT_IN_CREATIVE.create();
 
-            ItemStack item = ItemArgument.getItem(context, "item").createItemStack(IntegerArgumentType.getInteger(context, "number"), false);
+            ItemStack item = ItemArgument.getItem(context, "item").createItemStack(IntegerArgumentType.getInteger(context, "number"), true);
             giveItem(item);
 
             return SINGLE_SUCCESS;

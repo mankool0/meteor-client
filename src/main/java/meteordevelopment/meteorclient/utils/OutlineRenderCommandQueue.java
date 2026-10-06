@@ -5,24 +5,114 @@
 
 package meteordevelopment.meteorclient.utils;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import meteordevelopment.meteorclient.utils.render.color.Color;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.model.Model;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.renderer.SubmitNodeCollection;
+import net.minecraft.client.renderer.SubmitNodeStorage;
+import net.minecraft.client.renderer.block.MovingBlockRenderState;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.client.renderer.rendertype.RenderType;
+import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Quaternionf;
 
-// PORT(1.21.4): The 26.1 SubmitNodeStorage/SubmitNodeCollection submit architecture does not exist on 1.21.4.
-// Entity/block outline tint on 1.21.4 is done through LevelRenderer's OutlineBufferSource
-// (outlineBufferSource.setColor(r, g, b, a)) — see the WorldRendererMixin pattern from the 1.21.4 tree.
-// This class is kept only as a color holder so call sites keep compiling; the render queueing itself
-// must be handled in LevelRendererMixin.
-public class OutlineRenderCommandQueue {
+import java.util.List;
+
+public class OutlineRenderCommandQueue extends SubmitNodeStorage {
     private int color;
+    private int[] tints;
 
     public void setColor(Color color) {
         this.color = color.getPacked();
     }
 
-    public int getColor() {
-        return color;
+    @Override
+    public SubmitNodeCollection order(int i) {
+        return submitsPerOrder.computeIfAbsent(i, unused1 -> new OutlineBatchingRenderCommandQueue(this));
     }
 
-    public void endFrame() {
+    private class OutlineBatchingRenderCommandQueue extends SubmitNodeCollection {
+        public OutlineBatchingRenderCommandQueue(SubmitNodeStorage orderedQueueImpl) {
+            super(orderedQueueImpl);
+        }
+
+        @Override
+        public void submitShadow(PoseStack poseStack, float shadowRadius, List<EntityRenderState.ShadowPiece> shadowPieces) {
+        }
+
+        @Override
+        public void submitNameTag(PoseStack poseStack, @Nullable Vec3 vec3, int i, Component component, boolean bl, int j, double d, CameraRenderState cameraRenderState) {
+        }
+
+        @Override
+        public void submitText(PoseStack poseStack, float x, float y, FormattedCharSequence text, boolean dropShadow, Font.DisplayMode layerType, int light, int color, int backgroundColor, int outlineColor) {
+        }
+
+        @Override
+        public void submitFlame(PoseStack poseStack, EntityRenderState entityRenderState, Quaternionf quaternionf) {
+        }
+
+        @Override
+        public void submitLeash(PoseStack poseStack, EntityRenderState.LeashState leashState) {
+        }
+
+        @Override
+        public <S> void submitModel(Model<? super S> model, S state, PoseStack matrices, RenderType renderLayer, int light, int overlay, int tintedColor, @Nullable TextureAtlasSprite sprite, int outlineColor, @Nullable ModelFeatureRenderer.CrumblingOverlay crumblingOverlay) {
+            super.submitModel(model, state, matrices, renderLayer, light, overlay, color, sprite, 0, crumblingOverlay);
+        }
+
+        @Override
+        public void submitModelPart(ModelPart part, PoseStack matrices, RenderType renderLayer, int light, int overlay, @Nullable TextureAtlasSprite sprite, boolean sheeted, boolean hasGlint, int tintedColor, @Nullable ModelFeatureRenderer.CrumblingOverlay crumblingOverlay, int i) {
+            super.submitModelPart(part, matrices, renderLayer, light, overlay, sprite, sheeted, hasGlint, color, crumblingOverlay, i);
+        }
+
+        // PORT(1.21.11): 1.21.11 submits single block states through submitBlock (no breaking block model submits), skipped like on 1.21.11
+        @Override
+        public void submitBlock(PoseStack poseStack, BlockState state, int lightCoords, int overlayCoords, int outlineColor) {
+        }
+
+        @Override
+        public void submitMovingBlock(PoseStack matrices, MovingBlockRenderState state) {
+        }
+
+        // PORT(1.21.11): block models are tinted with a single rgb color instead of per-part tint layers on 1.21.11
+        @Override
+        public void submitBlockModel(PoseStack poseStack, RenderType renderType, BlockStateModel model, float r, float g, float b, int lightCoords, int overlayCoords, int outlineColor) {
+            r = Color.toRGBAR(color) / 255f;
+            g = Color.toRGBAG(color) / 255f;
+            b = Color.toRGBAB(color) / 255f;
+
+            super.submitBlockModel(poseStack, renderType, model, r, g, b, lightCoords, overlayCoords, outlineColor);
+        }
+
+        @Override
+        public void submitItem(PoseStack poseStack, ItemDisplayContext displayContext, int lightCoords, int overlayCoords, int outlineColor, int[] tintLayers, List<BakedQuad> quads, RenderType renderType, ItemStackRenderState.FoilType foilType) {
+            if (tints == null || tints[0] != color) {
+                tints = new int[]{color, color, color, color};
+            }
+
+            super.submitItem(poseStack, displayContext, lightCoords, overlayCoords, outlineColor, tintLayers, quads, renderType, foilType);
+        }
+
+        @Override
+        public void submitCustomGeometry(PoseStack poseStack, RenderType renderType, CustomGeometryRenderer customGeometryRenderer) {
+        }
+
+        @Override
+        public void submitParticleGroup(ParticleGroupRenderer particleGroupRenderer) {
+        }
     }
 }

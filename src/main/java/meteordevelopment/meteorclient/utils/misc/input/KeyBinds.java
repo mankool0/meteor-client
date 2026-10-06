@@ -6,13 +6,11 @@
 package meteordevelopment.meteorclient.utils.misc.input;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import meteordevelopment.meteorclient.MeteorClient;
 import net.minecraft.client.KeyMapping;
 
 public class KeyBinds {
-    // PORT(1.21.4): KeyMapping.Category does not exist on 1.21.4 - categories are plain strings and custom ones
-    // must be registered in KeyMapping.CATEGORY_SORT_ORDER (private static, needs an accessor in mixin scope).
-    // Using the vanilla misc category to avoid an NPE in the controls screen sort until such an accessor exists.
-    private static final String CATEGORY = "key.categories.misc";
+    private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(MeteorClient.identifier("meteor-client"));
 
     public static KeyMapping OPEN_GUI = new KeyMapping("key.meteor-client.open-gui", InputConstants.Type.KEYSYM, InputConstants.KEY_RSHIFT, CATEGORY);
     public static KeyMapping OPEN_COMMANDS = new KeyMapping("key.meteor-client.open-commands", InputConstants.Type.KEYSYM, InputConstants.KEY_PERIOD, CATEGORY);

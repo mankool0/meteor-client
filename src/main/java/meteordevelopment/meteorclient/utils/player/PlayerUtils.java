@@ -23,6 +23,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.util.Mth;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
 import net.minecraft.world.entity.player.Player;
@@ -206,7 +207,7 @@ public class PlayerUtils {
             }
 
             // Check for beds if in nether
-            if (!mc.level.dimensionType().bedWorks()) {
+            if (mc.level.environmentAttributes().getDimensionValue(EnvironmentAttributes.BED_RULE).explodes()) {
                 for (BlockEntity blockEntity : Utils.blockEntities()) {
                     BlockPos bp = blockEntity.getBlockPos();
                     Vec3 pos = new Vec3(bp.getX(), bp.getY(), bp.getZ());
@@ -297,7 +298,7 @@ public class PlayerUtils {
     }
 
     public static double squaredDistanceToCamera(double x, double y, double z) {
-        Vec3 cameraPos = mc.gameRenderer.getMainCamera().getPosition();
+        Vec3 cameraPos = mc.gameRenderer.getMainCamera().position();
         return squaredDistance(cameraPos.x, cameraPos.y, cameraPos.z, x, y, z);
     }
 
@@ -340,7 +341,7 @@ public class PlayerUtils {
     public static Dimension getDimension() {
         if (mc.level == null) return Dimension.Overworld;
 
-        return switch (mc.level.dimension().location().getPath()) {
+        return switch (mc.level.dimension().identifier().getPath()) {
             case "the_nether" -> Dimension.Nether;
             case "the_end" -> Dimension.End;
             default -> Dimension.Overworld;

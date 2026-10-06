@@ -12,7 +12,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +51,7 @@ public class ParticleTypeListSetting extends Setting<List<ParticleType<?>>> {
     }
 
     @Override
-    public Iterable<ResourceLocation> getIdentifierSuggestions() {
+    public Iterable<Identifier> getIdentifierSuggestions() {
         return BuiltInRegistries.PARTICLE_TYPE.keySet();
     }
 
@@ -59,7 +59,7 @@ public class ParticleTypeListSetting extends Setting<List<ParticleType<?>>> {
     public CompoundTag save(CompoundTag tag) {
         ListTag valueTag = new ListTag();
         for (ParticleType<?> particleType : get()) {
-            ResourceLocation id = BuiltInRegistries.PARTICLE_TYPE.getKey(particleType);
+            Identifier id = BuiltInRegistries.PARTICLE_TYPE.getKey(particleType);
             if (id != null) valueTag.add(StringTag.valueOf(id.toString()));
         }
         tag.put("value", valueTag);
@@ -71,9 +71,9 @@ public class ParticleTypeListSetting extends Setting<List<ParticleType<?>>> {
     public List<ParticleType<?>> load(CompoundTag tag) {
         get().clear();
 
-        ListTag valueTag = tag.getList("value", Tag.TAG_STRING);
+        ListTag valueTag = tag.getListOrEmpty("value");
         for (Tag tagI : valueTag) {
-            ParticleType<?> particleType = BuiltInRegistries.PARTICLE_TYPE.getValue(ResourceLocation.parse(tagI.getAsString()));
+            ParticleType<?> particleType = BuiltInRegistries.PARTICLE_TYPE.getValue(Identifier.parse(tagI.asString().orElse("")));
             if (particleType != null) get().add(particleType);
         }
 

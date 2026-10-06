@@ -35,7 +35,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.ThrownEnderpearl;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.*;
@@ -373,12 +373,12 @@ public class Notifier extends Module {
                     ChatFormatting.GRAY + "["
                         + ChatFormatting.GREEN + "+"
                         + ChatFormatting.GRAY + "] "
-                        + entry.profile().getName()
+                        + entry.profile().name()
                 ));
             } else {
                 messageQueue.addLast(Component.literal(
                     ChatFormatting.WHITE
-                        + entry.profile().getName()
+                        + entry.profile().name()
                         + ChatFormatting.GRAY + " joined."
                 ));
             }
@@ -397,12 +397,12 @@ public class Notifier extends Module {
                     ChatFormatting.GRAY + "["
                         + ChatFormatting.RED + "-"
                         + ChatFormatting.GRAY + "] "
-                        + toRemove.getProfile().getName()
+                        + toRemove.getProfile().name()
                 ));
             } else {
                 messageQueue.addLast(Component.literal(
                     ChatFormatting.WHITE
-                        + toRemove.getProfile().getName()
+                        + toRemove.getProfile().name()
                         + ChatFormatting.GRAY + " left."
                 ));
             }

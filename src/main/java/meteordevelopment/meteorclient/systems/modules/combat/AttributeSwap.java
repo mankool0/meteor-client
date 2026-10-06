@@ -370,7 +370,7 @@ public class AttributeSwap extends Module {
         if (awaitingBack) return;
 
         if (slotIndex < 0 || slotIndex > 8) return;
-        if (slotIndex == mc.player.getInventory().selected) return;
+        if (slotIndex == mc.player.getInventory().getSelectedSlot()) return;
 
         if (!InvUtils.swap(slotIndex, swapBack.get())) return;
 
@@ -425,7 +425,7 @@ public class AttributeSwap extends Module {
         double bestScore = getItemScore(currentStack, isFalling, durability, isLiving, isPlayer, isOnFire, hasFireResistance, isUndead, isArthropod, isAquatic, armor, health);
 
         for (int i = 0; i < 9; i++) {
-            if (i == mc.player.getInventory().selected) continue;
+            if (i == mc.player.getInventory().getSelectedSlot()) continue;
 
             ItemStack stack = mc.player.getInventory().getItem(i);
             if (stack.isEmpty() && !durability) continue;
@@ -441,7 +441,18 @@ public class AttributeSwap extends Module {
     }
 
     private int getSmartSpearSlot(boolean requireLunge) {
-        // PORT(1.21.4): spears (ItemTags.SPEARS) and Enchantments.LUNGE do not exist on 1.21.4 - spear swapping disabled.
+        for (int i = 0; i < 9; i++) {
+            if (i == mc.player.getInventory().getSelectedSlot()) continue;
+            ItemStack stack = mc.player.getInventory().getItem(i);
+            if (!stack.is(ItemTags.SPEARS)) continue;
+
+            boolean hasLunge = Utils.getEnchantmentLevel(stack, Enchantments.LUNGE) > 0;
+            if (requireLunge && !hasLunge) continue;
+            if (!requireLunge && excludeLungeFromHitbox.get() && hasLunge) continue;
+
+            return i;
+        }
+
         return -1;
     }
 
@@ -614,8 +625,7 @@ public class AttributeSwap extends Module {
     }
 
     private boolean hasFireProtectionArmor(LivingEntity entity) {
-        for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (!slot.isArmor()) continue;
+        for (EquipmentSlot slot : EquipmentSlotGroup.ARMOR) {
             ItemStack stack = entity.getItemBySlot(slot);
             if (stack.isEmpty()) continue;
 

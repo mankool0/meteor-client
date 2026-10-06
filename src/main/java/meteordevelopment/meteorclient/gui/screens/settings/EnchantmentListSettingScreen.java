@@ -30,7 +30,7 @@ public class EnchantmentListSettingScreen extends DynamicRegistryListSettingScre
     protected String[] getValueNames(ResourceKey<Enchantment> value) {
         return new String[]{
             Names.get(value),
-            value.location().toString()
+            value.identifier().toString()
         };
     }
 }

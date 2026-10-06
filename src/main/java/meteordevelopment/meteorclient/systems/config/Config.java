@@ -217,7 +217,7 @@ public class Config extends System<Config> {
 
     @Override
     public Config fromTag(CompoundTag tag) {
-        if (tag.contains("settings")) settings.fromTag(tag.getCompound("settings"));
+        if (tag.contains("settings")) settings.fromTag(tag.getCompoundOrEmpty("settings"));
         if (tag.contains("dontShowAgainPrompts")) dontShowAgainPrompts = listFromTag(tag, "dontShowAgainPrompts");
 
         return this;
@@ -231,7 +231,7 @@ public class Config extends System<Config> {
 
     private List<String> listFromTag(CompoundTag tag, String key) {
         List<String> list = new ArrayList<>();
-        for (Tag item : tag.getList(key, Tag.TAG_STRING)) list.add(item.getAsString());
+        for (Tag item : tag.getListOrEmpty(key)) list.add(item.asString().orElse(""));
         return list;
     }
 

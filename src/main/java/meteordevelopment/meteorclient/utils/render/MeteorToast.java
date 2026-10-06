@@ -11,12 +11,12 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastManager;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -28,7 +28,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class MeteorToast implements Toast {
     private static final int TITLE_COLOR = Color.fromRGBA(145, 61, 226, 255);
     private static final int TEXT_COLOR = Color.fromRGBA(220, 220, 220, 255);
-    private static final ResourceLocation TEXTURE = ResourceLocation.parse("toast/advancement");
+    private static final Identifier TEXTURE = Identifier.parse("toast/advancement");
     private static final long DEFAULT_DURATION = 6000;
     private static final SimpleSoundInstance DEFAULT_SOUND = SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_CHIME.value(), 1.2f, 1);
 
@@ -109,7 +109,7 @@ public class MeteorToast implements Toast {
 
     @Override
     public void render(GuiGraphics graphics, Font font, long fullyVisibleForMs) {
-        graphics.blitSprite(RenderType::guiTextured, TEXTURE, 0, 0, width(), height());
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, TEXTURE, 0, 0, width(), height());
 
         int textX = icon != null ? 28 : 12;
         int titleY = 12;

@@ -12,11 +12,11 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.render.Xray;
 import meteordevelopment.meteorclient.systems.modules.world.Ambience;
 import meteordevelopment.meteorclient.utils.render.color.Color;
+import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.client.renderer.block.LiquidBlockRenderer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,13 +25,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-// PORT(1.21.4): The 26.1.2 FluidRenderer/FluidRenderer.Output/ChunkSectionLayer split does not exist here.
-// On 1.21.4 this class is LiquidBlockRenderer and tesselate() writes straight into a single VertexConsumer
-// (no per-call chunk render layer selection), so forcing the fluid onto the translucent layer for
-// partial-alpha xray/wallhack can't be done from within this mixin (there's no equivalent of
-// FluidRenderer.Output.getBuilder(ChunkSectionLayer) to redirect). Vanilla layer choice for a fluid's
-// BlockState is made before tesselate() is even called (via ItemBlockRenderTypes/RenderLayers on 26.1.2's
-// ancestor), which is out of scope for this file.
 @Mixin(LiquidBlockRenderer.class)
 public abstract class FluidRendererMixin {
     @Unique
@@ -43,14 +36,13 @@ public abstract class FluidRendererMixin {
     @Unique
     private Xray xray;
 
-    @Unique
-    private Xray getXray() {
-        if (xray == null) xray = Modules.get().get(Xray.class);
-        return xray;
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void onInit(CallbackInfo ci) {
+        xray = Modules.get().get(Xray.class);
     }
 
     @Inject(method = "tesselate", at = @At("HEAD"), cancellable = true)
-    private void onTesselate(BlockAndTintGetter level, BlockPos pos, VertexConsumer vertexConsumer, BlockState blockState, FluidState fluidState, CallbackInfo ci) {
+    private void onTesselate(BlockAndTintGetter level, BlockPos pos, VertexConsumer buffer, BlockState blockState, FluidState fluidState, CallbackInfo ci) {
         Ambience ambience = Modules.get().get(Ambience.class);
         AMBIENT.set(ambience.isActive() && ambience.customLavaColor.get() && fluidState.is(FluidTags.LAVA));
 
@@ -64,7 +56,7 @@ public abstract class FluidRendererMixin {
         }
 
         ALPHAS.set(alpha);
-        FORCE_XRAY_FLUID_SIDES.set(getXray().isActive());
+        FORCE_XRAY_FLUID_SIDES.set(xray.isActive());
     }
 
     @WrapOperation(
@@ -77,22 +69,24 @@ public abstract class FluidRendererMixin {
         if (!occluded) return false;
         if (direction.getAxis().isVertical()) return true;
         if (!FORCE_XRAY_FLUID_SIDES.get()) return true;
-        return !getXray().isBlocked(neighborState.getBlock(), null);
+        return !xray.isBlocked(neighborState.getBlock(), null);
     }
 
     @Inject(method = "vertex", at = @At("HEAD"), cancellable = true)
-    private void onVertex(VertexConsumer vertexConsumer, float x, float y, float z, float red, float green, float blue, float u, float v, int light, CallbackInfo ci) {
+    private void onVertex(VertexConsumer builder, float x, float y, float z, float red, float green, float blue, float u, float v, int lightCoords, CallbackInfo ci) {
         int alpha = ALPHAS.get();
 
         if (AMBIENT.get()) {
             Color c = Modules.get().get(Ambience.class).lavaColor.get();
-            vertex(vertexConsumer, x, y, z, c.r, c.g, c.b, (alpha != -1 ? alpha : c.a), u, v, light);
+            vertex(builder, x, y, z, c.r, c.g, c.b, (alpha != -1 ? alpha : c.a), u, v, lightCoords);
             ci.cancel();
         } else if (alpha != -1) {
-            vertex(vertexConsumer, x, y, z, (int) (red * 255), (int) (green * 255), (int) (blue * 255), alpha, u, v, light);
+            vertex(builder, x, y, z, (int) (red * 255), (int) (green * 255), (int) (blue * 255), alpha, u, v, lightCoords);
             ci.cancel();
         }
     }
+
+    // PORT(1.21.11): the fluid chunk layer is chosen by ItemBlockRenderTypes.getRenderLayer on 1.21.11, see ItemBlockRenderTypesMixin
 
     @Unique
     private void vertex(VertexConsumer vertexConsumer, float x, float y, float z, int red, int green, int blue, int alpha, float u, float v, int light) {

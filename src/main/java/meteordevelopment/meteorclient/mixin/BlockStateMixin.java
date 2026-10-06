@@ -22,8 +22,8 @@ import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(BlockState.class)
 public abstract class BlockStateMixin extends BlockBehaviour.BlockStateBase {
-    protected BlockStateMixin(Block owner, Reference2ObjectArrayMap<Property<?>, Comparable<?>> propertyMap, MapCodec<BlockState> codec) {
-        super(owner, propertyMap, codec);
+    protected BlockStateMixin(Block owner, Reference2ObjectArrayMap<Property<?>, Comparable<?>> values, MapCodec<BlockState> propertiesCodec) {
+        super(owner, values, propertiesCodec);
     }
 
     @Override

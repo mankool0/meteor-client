@@ -9,9 +9,9 @@ import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
 import meteordevelopment.meteorclient.gui.utils.Cell;
 import meteordevelopment.meteorclient.gui.widgets.WWidget;
 import net.minecraft.client.MouseHandler;
-import meteordevelopment.meteorclient.gui.utils.CharacterEvent;
-import meteordevelopment.meteorclient.gui.utils.KeyEvent;
-import meteordevelopment.meteorclient.gui.utils.MouseButtonEvent;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;

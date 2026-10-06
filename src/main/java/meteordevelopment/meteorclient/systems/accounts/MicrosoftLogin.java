@@ -7,7 +7,7 @@ package meteordevelopment.meteorclient.systems.accounts;
 
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.utils.network.MeteorExecutor;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.raphimc.minecraftauth.MinecraftAuth;
 import net.raphimc.minecraftauth.java.JavaAuthManager;
 import net.raphimc.minecraftauth.java.model.MinecraftProfile;

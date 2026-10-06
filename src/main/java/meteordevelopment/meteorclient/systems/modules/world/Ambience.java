@@ -13,8 +13,6 @@ import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import net.minecraft.client.renderer.DimensionSpecialEffects;
-import net.minecraft.world.phys.Vec3;
 
 /**
  * @author Walaryne
@@ -193,22 +191,6 @@ public class Ambience extends Module {
 
     private void reload() {
         if (mc.levelRenderer != null && isActive()) mc.levelRenderer.allChanged();
-    }
-
-    public static class Custom extends DimensionSpecialEffects {
-        public Custom() {
-            super(Float.NaN, true, DimensionSpecialEffects.SkyType.END, true, false);
-        }
-
-        @Override
-        public Vec3 getBrightnessDependentFogColor(Vec3 color, float sunHeight) {
-            return color.scale(0.15000000596046448D);
-        }
-
-        @Override
-        public boolean isFoggyAt(int camX, int camY) {
-            return false;
-        }
     }
 
     public SettingColor skyColor() {

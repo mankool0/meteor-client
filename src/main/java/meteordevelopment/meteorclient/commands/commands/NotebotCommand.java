@@ -22,7 +22,7 @@ import net.minecraft.client.multiplayer.ClientSuggestionProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 
 import java.io.FileWriter;

@@ -23,7 +23,7 @@ public class LongSetting extends Setting<Long> {
     protected Long parseImpl(String str) {
         try {
             return Long.parseLong(str.trim());
-        } catch (NumberFormatException unused) {
+        } catch (NumberFormatException unused1) {
             return null;
         }
     }
@@ -42,7 +42,7 @@ public class LongSetting extends Setting<Long> {
 
     @Override
     public Long load(CompoundTag tag) {
-        set(tag.contains("value") ? tag.getLong("value") : defaultValue);
+        set(tag.getLongOr("value", defaultValue));
 
         return get();
     }

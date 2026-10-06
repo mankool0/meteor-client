@@ -171,9 +171,11 @@ public class ModuleScreen extends WindowScreen {
     public boolean fromClipboard() {
         CompoundTag tag = NbtUtils.fromClipboard();
         if (tag == null) return false;
-        if (!tag.getString("name").equals(module.name)) return false;
+        if (!tag.getStringOr("name", "").equals(module.name)) return false;
 
-        if (tag.contains("settings")) module.settings.fromTag(tag.getCompound("settings"));
+        Optional<CompoundTag> settings = tag.getCompound("settings");
+
+        if (settings.isPresent()) module.settings.fromTag(settings.get());
         else module.settings.reset();
 
         if (parent instanceof WidgetScreen p) p.reload();

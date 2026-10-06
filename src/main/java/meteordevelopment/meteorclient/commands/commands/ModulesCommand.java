@@ -48,7 +48,7 @@ public class ModulesCommand extends Command {
         if (!module.isActive()) finalModule.withStyle(ChatFormatting.GRAY);
         if (!module.equals(Modules.get().getGroup(module.category).getLast()))
             finalModule.append(Component.literal(", ").withStyle(ChatFormatting.GRAY));
-        finalModule.setStyle(finalModule.getStyle().withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, tooltip)));
+        finalModule.setStyle(finalModule.getStyle().withHoverEvent(new HoverEvent.ShowText(tooltip)));
 
         return finalModule;
     }

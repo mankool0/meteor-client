@@ -10,7 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 
 import java.util.ArrayList;
@@ -50,7 +50,7 @@ public class SoundEventListSetting extends Setting<List<SoundEvent>> {
     }
 
     @Override
-    public Iterable<ResourceLocation> getIdentifierSuggestions() {
+    public Iterable<Identifier> getIdentifierSuggestions() {
         return BuiltInRegistries.SOUND_EVENT.keySet();
     }
 
@@ -58,7 +58,7 @@ public class SoundEventListSetting extends Setting<List<SoundEvent>> {
     public CompoundTag save(CompoundTag tag) {
         ListTag valueTag = new ListTag();
         for (SoundEvent sound : get()) {
-            ResourceLocation id = BuiltInRegistries.SOUND_EVENT.getKey(sound);
+            Identifier id = BuiltInRegistries.SOUND_EVENT.getKey(sound);
             if (id != null) valueTag.add(StringTag.valueOf(id.toString()));
         }
         tag.put("value", valueTag);
@@ -70,8 +70,8 @@ public class SoundEventListSetting extends Setting<List<SoundEvent>> {
     public List<SoundEvent> load(CompoundTag tag) {
         get().clear();
 
-        for (Tag tagI : tag.getList("value", Tag.TAG_STRING)) {
-            SoundEvent soundEvent = BuiltInRegistries.SOUND_EVENT.getValue(ResourceLocation.parse(tagI.getAsString()));
+        for (Tag tagI : tag.getListOrEmpty("value")) {
+            SoundEvent soundEvent = BuiltInRegistries.SOUND_EVENT.getValue(Identifier.parse(tagI.asString().orElse("")));
             if (soundEvent != null) get().add(soundEvent);
         }
 

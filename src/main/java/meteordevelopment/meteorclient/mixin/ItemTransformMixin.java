@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemTransform.class)
 public abstract class ItemTransformMixin {
     @Inject(method = "apply", at = @At("HEAD"), cancellable = true)
-    private void onApply(boolean applyLeftHandFix, PoseStack pose, CallbackInfo ci) {
+    private void onApply(boolean applyLeftHandFix, PoseStack.Pose pose, CallbackInfo ci) {
         ApplyTransformationEvent event = MeteorClient.EVENT_BUS.post(ApplyTransformationEvent.get((ItemTransform) (Object) this, applyLeftHandFix));
         if (event.isCancelled()) ci.cancel();
     }

@@ -143,7 +143,7 @@ public class ESPGroup {
         ESPBlockData blockData = blockEsp.getBlockData(block);
 
         if (blockData.tracer) {
-            RenderUtils.drawTracer(event.renderer, sumX / blocks.size() + 0.5, sumY / blocks.size() + 0.5, sumZ / blocks.size() + 0.5, blockData.tracerColor);
+            event.renderer.line(RenderUtils.center.x, RenderUtils.center.y, RenderUtils.center.z, sumX / blocks.size() + 0.5, sumY / blocks.size() + 0.5, sumZ / blocks.size() + 0.5, blockData.tracerColor);
         }
     }
 }

@@ -28,9 +28,12 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.protocol.game.ClientboundCommandSuggestionsPacket;
 import net.minecraft.network.protocol.game.ClientboundCommandsPacket;
 import net.minecraft.network.protocol.game.ServerboundCommandSuggestionPacket;
+import net.minecraft.server.permissions.PermissionSet;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.DifficultyInstance;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.level.dimension.DimensionType;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -118,19 +121,19 @@ public class ServerCommand extends Command {
         if (ipv4.isEmpty()) {
             ipText = Component.literal(ChatFormatting.GRAY + server.ip);
             ipText.setStyle(ipText.getStyle()
-                .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, server.ip))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Copy to clipboard")))
+                .withClickEvent(new ClickEvent.CopyToClipboard(server.ip))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal("Copy to clipboard")))
             );
         } else {
             ipText = Component.literal(ChatFormatting.GRAY + server.ip);
             ipText.setStyle(ipText.getStyle()
-                .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, server.ip))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Copy to clipboard")))
+                .withClickEvent(new ClickEvent.CopyToClipboard(server.ip))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal("Copy to clipboard")))
             );
             MutableComponent ipv4Text = Component.literal(String.format("%s (%s)", ChatFormatting.GRAY, ipv4));
             ipv4Text.setStyle(ipText.getStyle()
-                .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, ipv4))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Copy to clipboard")))
+                .withClickEvent(new ClickEvent.CopyToClipboard(ipv4))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal("Copy to clipboard")))
             );
             ipText.append(ipv4Text);
         }
@@ -150,7 +153,7 @@ public class ServerCommand extends Command {
                 mc.level.getDifficulty(),
                 mc.level.getGameTime(),
                 mc.level.getChunk(mc.player.blockPosition()).getInhabitedTime(),
-                DimensionType.MOON_BRIGHTNESS_PER_PHASE[mc.level.getMoonPhase()] // lol
+                DimensionType.MOON_BRIGHTNESS_PER_PHASE[mc.level.environmentAttributes().getValue(EnvironmentAttributes.MOON_PHASE, mc.player.blockPosition()).index()] // lol
             ).getDifficulty()
         );
         info("Day: %d", mc.level.getGameTime() / 24000L);
@@ -158,10 +161,12 @@ public class ServerCommand extends Command {
     }
 
     public String formatPerms() {
-        if (mc.player.hasPermissions(4)) return "4 (Owner)";
-        else if (mc.player.hasPermissions(3)) return "3 (Admin)";
-        else if (mc.player.hasPermissions(2)) return "2 (Gamemaster)";
-        else if (mc.player.hasPermissions(1)) return "1 (Moderator)";
+        PermissionSet permissions = mc.player.permissions();
+
+        if (permissions.hasPermission(Permissions.COMMANDS_OWNER)) return "4 (Owner)";
+        else if (permissions.hasPermission(Permissions.COMMANDS_ADMIN)) return "3 (Admin)";
+        else if (permissions.hasPermission(Permissions.COMMANDS_GAMEMASTER)) return "2 (Gamemaster)";
+        else if (permissions.hasPermission(Permissions.COMMANDS_MODERATOR)) return "1 (Moderator)";
         else return "0 (No Perms)";
     }
 
@@ -209,7 +214,8 @@ public class ServerCommand extends Command {
             // This gets the root node of the command tree. From there, all of its children have to be of type
             // LiteralCommandNode, so we don't need to worry about checking or casting and can just grab the name
             packet.getRoot(
-                CommandBuildContext.simple(handler.meteor$getRegistryAccess(), handler.meteor$getEnabledFeatures())
+                CommandBuildContext.simple(handler.meteor$getRegistryAccess(), handler.meteor$getEnabledFeatures()),
+                ClientPacketListenerAccessor.meteor$getCommandNodeFactory()
             ).getChildren().forEach(node -> {
                 String[] split = node.getName().split(":");
                 if (split.length > 1) {
@@ -250,7 +256,7 @@ public class ServerCommand extends Command {
     private String formatName(String name) {
         if (ANTICHEAT_LIST.contains(name.toLowerCase())) {
             return String.format("%s%s(default)", ChatFormatting.RED, name);
-        } else if (StringUtils.containsIgnoreCase(name, "exploit") || StringUtils.containsIgnoreCase(name, "cheat") || StringUtils.containsIgnoreCase(name, "illegal")) {
+        } else if (Strings.CI.contains(name, "exploit") || Strings.CI.contains(name, "cheat") || Strings.CI.contains(name, "illegal")) {
             return String.format("%s%s(default)", ChatFormatting.RED, name);
         }
 

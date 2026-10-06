@@ -96,7 +96,7 @@ public class Macro implements ISerializable<Macro> {
     @Override
     public Macro fromTag(CompoundTag tag) {
         if (tag.contains("settings")) {
-            settings.fromTag(tag.getCompound("settings"));
+            settings.fromTag(tag.getCompoundOrEmpty("settings"));
         }
 
         return this;

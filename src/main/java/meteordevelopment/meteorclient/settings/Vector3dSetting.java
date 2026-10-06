@@ -71,9 +71,9 @@ public class Vector3dSetting extends Setting<Vector3d> {
     protected Vector3d load(CompoundTag tag) {
         if (tag.getCompound("value").isEmpty()) return get();
 
-        CompoundTag valueTag = tag.getCompound("value");
+        CompoundTag valueTag = tag.getCompound("value").get();
 
-        set(valueTag.getDouble("x"), valueTag.getDouble("y"), valueTag.getDouble("z"));
+        set(valueTag.getDoubleOr("x", 0.0), valueTag.getDoubleOr("y", 0.0), valueTag.getDoubleOr("z", 0.0));
 
         return get();
     }

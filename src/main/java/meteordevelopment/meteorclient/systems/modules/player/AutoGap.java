@@ -194,7 +194,7 @@ public class AutoGap extends Module {
     }
 
     private void startEating() {
-        prevSlot = mc.player.getInventory().selected;
+        prevSlot = mc.player.getInventory().getSelectedSlot();
         eat();
 
         // Pause auras

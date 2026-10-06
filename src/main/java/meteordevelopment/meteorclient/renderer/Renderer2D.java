@@ -5,6 +5,8 @@
 
 package meteordevelopment.meteorclient.renderer;
 
+import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import meteordevelopment.meteorclient.gui.renderer.packer.TextureRegion;
 import meteordevelopment.meteorclient.utils.PreInit;
 import meteordevelopment.meteorclient.utils.render.color.Color;
@@ -47,13 +49,17 @@ public class Renderer2D {
     }
 
     public void render() {
-        render(null);
+        render(null, null, null);
     }
 
-    public void render(Texture texture) {
-        if (texture != null && !textured)
+    public void render(GpuTextureView textureView, GpuSampler sampler) {
+        if (!textured)
             throw new IllegalStateException("Tried to render with a texture with a non-textured Renderer2D");
 
+        render("u_Texture", textureView, sampler);
+    }
+
+    public void render(String samplerName, GpuTextureView samplerView, GpuSampler sampler) {
         if (lines.isBuilding()) lines.end();
         if (triangles.isBuilding()) triangles.end();
 
@@ -63,14 +69,12 @@ public class Renderer2D {
             .mesh(lines)
             .end();
 
-        MeshRenderer renderer = MeshRenderer.begin()
+        MeshRenderer.begin()
             .attachments(Minecraft.getInstance().getMainRenderTarget())
             .pipeline(textured ? MeteorRenderPipelines.UI_TEXTURED : MeteorRenderPipelines.UI_COLORED)
-            .mesh(triangles);
-
-        if (texture != null) renderer.sampler("u_Texture", texture);
-
-        renderer.end();
+            .mesh(triangles)
+            .sampler(samplerName, samplerView, sampler)
+            .end();
     }
 
     // Tris

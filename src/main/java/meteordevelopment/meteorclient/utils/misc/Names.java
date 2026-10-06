@@ -19,7 +19,7 @@ import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.effect.MobEffect;
@@ -45,7 +45,7 @@ public class Names {
     private static final Map<Holder<Enchantment>, String> enchantmentEntryNames = new Reference2ObjectOpenHashMap<>(16);
     private static final Map<EntityType<?>, String> entityTypeNames = new Reference2ObjectOpenHashMap<>(64);
     private static final Map<ParticleType<?>, String> particleTypesNames = new Reference2ObjectOpenHashMap<>(64);
-    private static final Map<ResourceLocation, String> soundNames = HashMap.newHashMap(64);
+    private static final Map<Identifier, String> soundNames = HashMap.newHashMap(64);
 
     private Names() {
     }
@@ -88,12 +88,12 @@ public class Names {
         return enchantmentKeyNames.computeIfAbsent(enchantment, enchantment1 -> Optional.ofNullable(Minecraft.getInstance().getConnection())
             .map(ClientPacketListener::registryAccess)
             .flatMap(registryManager -> registryManager.lookup(Registries.ENCHANTMENT))
-            .flatMap(registry -> registry.get(enchantment.location()))
+            .flatMap(registry -> registry.get(enchantment.identifier()))
             .map(Names::get)
             .orElseGet(() -> {
-                String key = "enchantment." + enchantment1.location().toLanguageKey();
+                String key = "enchantment." + enchantment1.identifier().toLanguageKey();
                 String translated = I18n.get(key);
-                return translated == key ? enchantment1.location().toString() : translated;
+                return translated == key ? enchantment1.identifier().toString() : translated;
             }));
     }
 
@@ -109,7 +109,7 @@ public class Names {
         return particleTypesNames.computeIfAbsent(type, unused2 -> StringUtils.capitalize(BuiltInRegistries.PARTICLE_TYPE.getKey(type).getPath().replace("_", " ")));
     }
 
-    public static String getSoundName(ResourceLocation id) {
+    public static String getSoundName(Identifier id) {
         return soundNames.computeIfAbsent(id, identifier -> {
             WeighedSoundEvents soundSet = mc.getSoundManager().getSoundEvent(identifier);
             if (soundSet == null) return identifier.getPath();

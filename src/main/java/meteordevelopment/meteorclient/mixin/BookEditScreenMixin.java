@@ -37,7 +37,7 @@ public abstract class BookEditScreenMixin extends Screen {
     private int currentPage;
 
     @Shadow
-    protected abstract void updateLocalCopy();
+    protected abstract void updatePageContent();
 
     @Shadow
     protected abstract void pageForward();
@@ -69,7 +69,7 @@ public abstract class BookEditScreenMixin extends Screen {
                 }
 
                 try {
-                    mc.keyboardHandler.setClipboard(Base64.getEncoder().encodeToString(bytes.array));
+                    mc.keyboardHandler.setClipboard(Base64.getEncoder().encodeToString(bytes.toByteArray()));
                 } catch (OutOfMemoryError exception) {
                     mc.keyboardHandler.setClipboard(exception.toString());
                 }
@@ -82,7 +82,7 @@ public abstract class BookEditScreenMixin extends Screen {
         addRenderableWidget(
             new Button.Builder(Component.literal("Paste"), unused2 -> {
                 String clipboard = mc.keyboardHandler.getClipboard();
-                if (clipboard == null) return;
+                if (clipboard.isEmpty()) return;
 
                 byte[] bytes;
                 try {
@@ -95,20 +95,20 @@ public abstract class BookEditScreenMixin extends Screen {
                 try {
                     CompoundTag tag = NbtIo.readCompressed(in, NbtAccounter.unlimitedHeap());
 
-                    ListTag listTag = tag.getList("pages", 8).copy();
+                    ListTag listTag = tag.getListOrEmpty("pages").copy();
 
                     pages.clear();
                     for (int i = 0; i < listTag.size(); ++i) {
-                        pages.add(listTag.getString(i));
+                        pages.add(listTag.getStringOr(i, ""));
                     }
 
                     if (pages.isEmpty()) {
                         pages.add("");
                     }
 
-                    currentPage = tag.getInt("currentPage");
+                    currentPage = tag.getIntOr("currentPage", 0);
 
-                    updateLocalCopy();
+                    updatePageContent();
                 } catch (IOException e) {
                     MeteorClient.LOG.error("Error reading the data from your clipboard", e);
                 }

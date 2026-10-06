@@ -24,7 +24,7 @@ public class NoStatusEffects extends Module {
         .description("Effects to block.")
         .defaultValue(
             LEVITATION.value(),
-            JUMP.value(),
+            JUMP_BOOST.value(),
             SLOW_FALLING.value(),
             DOLPHINS_GRACE.value()
         )

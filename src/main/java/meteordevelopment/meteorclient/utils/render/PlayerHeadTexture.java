@@ -1,6 +1,8 @@
 package meteordevelopment.meteorclient.utils.render;
 
 import com.mojang.blaze3d.platform.TextureUtil;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.TextureFormat;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.renderer.Texture;
 import meteordevelopment.meteorclient.utils.network.Http;
@@ -22,14 +24,14 @@ public class PlayerHeadTexture extends Texture {
     private boolean needsRotate;
 
     public PlayerHeadTexture(byte[] head, boolean needsRotate) {
-        super(8, 8, Texture.Format.RGBA8, Texture.Filter.NEAREST, Texture.Filter.NEAREST);
+        super(8, 8, TextureFormat.RGBA8, FilterMode.NEAREST, FilterMode.NEAREST);
 
         upload(BufferUtils.createByteBuffer(head.length).put(head));
         this.needsRotate = needsRotate;
     }
 
     public PlayerHeadTexture() {
-        super(8, 8, Texture.Format.RGBA8, Texture.Filter.NEAREST, Texture.Filter.NEAREST);
+        super(8, 8, TextureFormat.RGBA8, FilterMode.NEAREST, FilterMode.NEAREST);
 
         try (InputStream inputStream = mc.getResourceManager().getResource(MeteorClient.identifier("textures/steve.png")).get().open()) {
             ByteBuffer data = TextureUtil.readResource(inputStream);

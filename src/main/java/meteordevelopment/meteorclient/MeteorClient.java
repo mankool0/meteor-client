@@ -39,7 +39,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.MixinEnvironment;
@@ -151,20 +151,20 @@ public class MeteorClient implements ClientModInitializer {
     @EventHandler
     private void onTick(TickEvent.Post event) {
         if (mc.screen == null && mc.getOverlay() == null && KeyBinds.OPEN_COMMANDS.consumeClick()) {
-            mc.setScreen(new ChatScreen(Config.get().prefix.get()));
+            mc.setScreen(new ChatScreen(Config.get().prefix.get(), true));
         }
     }
 
     @EventHandler
     private void onKey(KeyInputEvent event) {
-        if (event.action == KeyAction.Press && KeyBinds.OPEN_GUI.matches(event.key, event.scancode)) {
+        if (event.action == KeyAction.Press && KeyBinds.OPEN_GUI.matches(event.input)) {
             toggleGui();
         }
     }
 
     @EventHandler
     private void onMouseClick(MouseClickEvent event) {
-        if (event.action == KeyAction.Press && KeyBinds.OPEN_GUI.matchesMouse(event.button)) {
+        if (event.action == KeyAction.Press && KeyBinds.OPEN_GUI.matchesMouse(event.click)) {
             toggleGui();
         }
     }
@@ -197,7 +197,7 @@ public class MeteorClient implements ClientModInitializer {
         wasWidgetScreen = event.screen instanceof WidgetScreen;
     }
 
-    public static ResourceLocation identifier(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MeteorClient.MOD_ID, path);
+    public static Identifier identifier(String path) {
+        return Identifier.fromNamespaceAndPath(MeteorClient.MOD_ID, path);
     }
 }

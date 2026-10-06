@@ -14,7 +14,7 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.Settings;
 import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
@@ -66,7 +66,7 @@ public class SettingValueArgumentType implements ArgumentType<String> {
     }
 
     public static CompletableFuture<Suggestions> suggest(SuggestionsBuilder builder, @NotNull Setting<?> setting) {
-        Iterable<ResourceLocation> identifiers = setting.getIdentifierSuggestions();
+        Iterable<Identifier> identifiers = setting.getIdentifierSuggestions();
         if (identifiers != null) {
             return SharedSuggestionProvider.suggestResource(identifiers, builder);
         }

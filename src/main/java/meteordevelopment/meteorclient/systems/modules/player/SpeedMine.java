@@ -20,7 +20,7 @@ import net.minecraft.world.level.block.Block;
 
 import java.util.List;
 
-import static net.minecraft.world.effect.MobEffects.DIG_SPEED;
+import static net.minecraft.world.effect.MobEffects.HASTE;
 
 public class SpeedMine extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -97,10 +97,10 @@ public class SpeedMine extends Module {
         if (!Utils.canUpdate()) return;
 
         if (mode.get() == Mode.Haste) {
-            MobEffectInstance haste = mc.player.getEffect(DIG_SPEED);
+            MobEffectInstance haste = mc.player.getEffect(HASTE);
 
             if (haste == null || haste.getAmplifier() <= hasteAmplifier.get() - 1) {
-                mc.player.addEffect(new MobEffectInstance(DIG_SPEED, -1, hasteAmplifier.get() - 1, false, false, false), null);
+                mc.player.addEffect(new MobEffectInstance(HASTE, -1, hasteAmplifier.get() - 1, false, false, false), null);
             }
         } else if (mode.get() == Mode.Damage) {
             MultiPlayerGameModeAccessor im = (MultiPlayerGameModeAccessor) mc.gameMode;
@@ -126,8 +126,8 @@ public class SpeedMine extends Module {
     private void removeHaste() {
         if (!Utils.canUpdate()) return;
 
-        MobEffectInstance haste = mc.player.getEffect(DIG_SPEED);
-        if (haste != null && !haste.showIcon()) mc.player.removeEffect(DIG_SPEED);
+        MobEffectInstance haste = mc.player.getEffect(HASTE);
+        if (haste != null && !haste.showIcon()) mc.player.removeEffect(HASTE);
     }
 
     public boolean filter(Block block) {

@@ -442,7 +442,7 @@ public class StashFinder extends Module {
             .setStyle(Style.EMPTY
                 .withColor(ChatFormatting.WHITE)
                 .applyFormat(ChatFormatting.UNDERLINE)
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("Path to stash")))
+                .withHoverEvent(new HoverEvent.ShowText(Component.literal("Path to stash")))
                 .withClickEvent(new RunnableClickEvent(() -> PathManagers.get().moveTo(new BlockPos(chunk.chunkPos.getMiddleBlockX(), 0, chunk.chunkPos.getMiddleBlockZ()), true))));
 
         MutableComponent message = Component.literal("Found stash at ")
@@ -475,7 +475,9 @@ public class StashFinder extends Module {
             if (horizontalDist > traceMaxDistance.get()) continue;
 
             if (renderTracer.get()) {
-                RenderUtils.drawTracer(event.renderer, pos.x, mc.player.getEyeY(), pos.z, traceColor.get());
+                event.renderer.line(
+                    RenderUtils.center.x, RenderUtils.center.y, RenderUtils.center.z, pos.x, mc.player.getEyeY(), pos.z, traceColor.get()
+                );
             }
 
             if (renderChunkColumn.get()) {

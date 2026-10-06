@@ -34,7 +34,7 @@ public class SoundBlocker extends Module {
     @EventHandler
     private void onPlaySound(PlaySoundEvent event) {
         for (SoundEvent sound : sounds.get()) {
-            if (sound.location().equals(event.sound.getLocation())) {
+            if (sound.location().equals(event.sound.getIdentifier())) {
                 event.cancel();
                 break;
             }
@@ -42,6 +42,6 @@ public class SoundBlocker extends Module {
     }
 
     public boolean shouldBlock(SoundInstance soundInstance) {
-        return isActive() && sounds.get().contains(Setting.parseId(BuiltInRegistries.SOUND_EVENT, soundInstance.getLocation().getPath()));
+        return isActive() && sounds.get().contains(Setting.parseId(BuiltInRegistries.SOUND_EVENT, soundInstance.getIdentifier().getPath()));
     }
 }

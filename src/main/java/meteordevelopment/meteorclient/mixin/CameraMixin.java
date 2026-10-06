@@ -14,9 +14,9 @@ import meteordevelopment.meteorclient.systems.modules.render.Freecam;
 import meteordevelopment.meteorclient.systems.modules.render.NoRender;
 import meteordevelopment.meteorclient.systems.modules.world.HighwayBuilder;
 import net.minecraft.client.Camera;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FogType;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -46,7 +46,7 @@ public abstract class CameraMixin implements ICamera {
         if (Modules.get().get(NoRender.class).noLiquidOverlay()) cir.setReturnValue(FogType.NONE);
     }
 
-    @ModifyVariable(method = "getMaxZoom", at = @At("HEAD"), argsOnly = true, ordinal = 0)
+    @ModifyVariable(method = "getMaxZoom", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private float modifyGetMaxZoom(float cameraDist) {
         if (Modules.get().get(Freecam.class).isActive()) return 0;
 
@@ -62,14 +62,14 @@ public abstract class CameraMixin implements ICamera {
     }
 
     @Inject(method = "setup", at = @At("TAIL"))
-    private void onSetupTail(BlockGetter level, Entity entity, boolean thirdPerson, boolean inverseView, float partialTicks, CallbackInfo ci) {
+    private void onAlignWithEntityTail(Level level, Entity entity, boolean thirdPerson, boolean mirror, float partialTicks, CallbackInfo ci) {
         if (Modules.get().isActive(Freecam.class)) {
             this.detached = true;
         }
     }
 
     @ModifyArgs(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setPosition(DDD)V"))
-    private void onAlignSetPosArgs(Args args, @Local(argsOnly = true, ordinal = 0) float partialTicks) {
+    private void onAlignSetPosArgs(Args args, @Local(argsOnly = true) float partialTicks) {
         Freecam freecam = Modules.get().get(Freecam.class);
 
         if (freecam.isActive()) {
@@ -80,7 +80,7 @@ public abstract class CameraMixin implements ICamera {
     }
 
     @ModifyArgs(method = "setup", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Camera;setRotation(FF)V"))
-    private void onAlignSetRotationArgs(Args args, @Local(argsOnly = true, ordinal = 0) float partialTicks) {
+    private void onAlignSetRotationArgs(Args args, @Local(argsOnly = true) float partialTicks) {
         Freecam freecam = Modules.get().get(Freecam.class);
         FreeLook freeLook = Modules.get().get(FreeLook.class);
 

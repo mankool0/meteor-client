@@ -29,12 +29,12 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.PlayerFaceRenderer;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.GuiMessage;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.UnknownNullability;
 
 import java.text.SimpleDateFormat;
@@ -398,7 +398,7 @@ public class BetterChat extends Module {
 
     // Player Heads
 
-    private record CustomHeadEntry(String prefix, ResourceLocation texture) {
+    private record CustomHeadEntry(String prefix, Identifier texture) {
     }
 
     private static final List<CustomHeadEntry> CUSTOM_HEAD_ENTRIES = new ArrayList<>();
@@ -411,7 +411,7 @@ public class BetterChat extends Module {
     /**
      * Registers a custom player head to render based on a message prefix
      */
-    public static void registerCustomHead(String prefix, ResourceLocation texture) {
+    public static void registerCustomHead(String prefix, Identifier texture) {
         CUSTOM_HEAD_ENTRIES.add(new CustomHeadEntry(prefix, texture));
     }
 
@@ -456,7 +456,7 @@ public class BetterChat extends Module {
         for (CustomHeadEntry entry : CUSTOM_HEAD_ENTRIES) {
             // Check prefix
             if (text.startsWith(entry.prefix(), startOffset)) {
-                graphics.blit(RenderType::guiTextured, entry.texture(), 0, y, 0, 0, 8, 8, 64, 64, 64, 64, color);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, entry.texture(), 0, y, 0, 0, 8, 8, 64, 64, 64, 64, color);
                 return;
             }
         }
@@ -465,7 +465,7 @@ public class BetterChat extends Module {
         GameProfile sender = getSender(line, text);
         if (sender == null) return;
 
-        PlayerInfo entry = mc.getConnection().getPlayerInfo(sender.getId());
+        PlayerInfo entry = mc.getConnection().getPlayerInfo(sender.id());
         if (entry == null) return;
 
         PlayerFaceRenderer.draw(graphics, entry.getSkin(), 0, y, 8, color);
@@ -577,7 +577,7 @@ public class BetterChat extends Module {
         sendButton.setStyle(sendButton.getStyle()
             .applyFormat(ChatFormatting.DARK_RED)
             .withClickEvent(new MeteorClickEvent(Commands.get("say").toString(message)))
-            .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
+            .withHoverEvent(new HoverEvent.ShowText(
                 hintBaseText
             )));
         return sendButton;

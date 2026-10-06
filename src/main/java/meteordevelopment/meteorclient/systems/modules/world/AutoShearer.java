@@ -19,7 +19,7 @@ import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.animal.Sheep;
+import net.minecraft.world.entity.animal.sheep.Sheep;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.EntityHitResult;
 
@@ -83,6 +83,8 @@ public class AutoShearer extends Module {
     }
 
     private void interact() {
+        EntityHitResult location = new EntityHitResult(entity, entity.getBoundingBox().getCenter());
+        mc.gameMode.interactAt(mc.player, entity, location, hand);
         mc.gameMode.interact(mc.player, entity, hand);
         InvUtils.swapBack();
     }

@@ -780,7 +780,7 @@ public class Notebot extends Module {
                     if (blockState.getBlock() != Blocks.NOTE_BLOCK) continue;
 
                     // Copied from ServerPlayNetworkHandler#onPlayerInteractBlock
-                    if (!mc.player.canInteractWithBlock(pos, 1)) continue;
+                    if (!mc.player.isWithinBlockInteractionRange(pos, 1)) continue;
 
                     if (!isValidScanSpot(pos)) continue;
 

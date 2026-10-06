@@ -17,6 +17,7 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -60,7 +61,7 @@ public class DropCommand extends Command {
 
         // Armor
         builder.then(literal("armor").executes(unused9 -> drop(unused10 -> {
-            for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
+            for (EquipmentSlot equipmentSlot : EquipmentSlotGroup.ARMOR) {
                 if (equipmentSlot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR) {
                     InvUtils.drop().slotArmor(equipmentSlot.getIndex());
                 }

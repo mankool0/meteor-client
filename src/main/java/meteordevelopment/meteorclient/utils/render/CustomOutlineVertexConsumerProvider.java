@@ -8,30 +8,20 @@ package meteordevelopment.meteorclient.utils.render;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.rendertype.RenderType;
 
 public class CustomOutlineVertexConsumerProvider implements MultiBufferSource {
     private final MultiBufferSource.BufferSource immediate = MultiBufferSource.immediate(new ByteBufferBuilder(1536));
 
-    private int red = 255, green = 255, blue = 255, alpha = 255;
-
-    // Like vanilla OutlineBufferSource, the configured color overrides whatever colors the model writes.
-    public void setColor(int red, int green, int blue, int alpha) {
-        this.red = red;
-        this.green = green;
-        this.blue = blue;
-        this.alpha = alpha;
-    }
-
     @Override
     public VertexConsumer getBuffer(RenderType layer) {
         if (layer.isOutline()) {
-            return new CustomVertexConsumer(this.immediate.getBuffer(layer), this);
+            return new CustomVertexConsumer(this.immediate.getBuffer(layer));
         }
 
         var optional = layer.outline();
         if (optional.isPresent()) {
-            return new CustomVertexConsumer(this.immediate.getBuffer(optional.get()), this);
+            return new CustomVertexConsumer(this.immediate.getBuffer(optional.get()));
         }
 
         return NoopVertexConsumer.INSTANCE;
@@ -41,21 +31,22 @@ public class CustomOutlineVertexConsumerProvider implements MultiBufferSource {
         immediate.endBatch();
     }
 
-    private record CustomVertexConsumer(VertexConsumer consumer, CustomOutlineVertexConsumerProvider provider) implements VertexConsumer {
+    private record CustomVertexConsumer(VertexConsumer consumer) implements VertexConsumer {
         @Override
         public VertexConsumer addVertex(float x, float y, float z) {
             consumer.addVertex(x, y, z);
-            consumer.setColor(provider.red, provider.green, provider.blue, provider.alpha);
             return this;
         }
 
         @Override
         public VertexConsumer setColor(int red, int green, int blue, int alpha) {
+            consumer.setColor(red, green, blue, alpha);
             return this;
         }
 
         @Override
         public VertexConsumer setColor(int argb) {
+            consumer.setColor(argb);
             return this;
         }
 
@@ -77,6 +68,11 @@ public class CustomOutlineVertexConsumerProvider implements MultiBufferSource {
 
         @Override
         public VertexConsumer setNormal(float x, float y, float z) {
+            return this;
+        }
+
+        @Override
+        public VertexConsumer setLineWidth(float width) {
             return this;
         }
     }

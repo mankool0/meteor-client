@@ -81,7 +81,7 @@ public class PacketListSetting extends Setting<Set<PacketType<? extends @NotNull
         Tag valueTag = tag.get("value");
         if (valueTag instanceof ListTag listTag) {
             for (Tag t : listTag) {
-                PacketType<? extends @NotNull Packet<?>> packet = PacketUtils.getPacket(t.getAsString());
+                PacketType<? extends @NotNull Packet<?>> packet = PacketUtils.getPacket(t.asString().orElse(""));
                 if (packet != null && (filter == null || filter.test(packet))) get().add(packet);
             }
         }

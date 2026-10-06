@@ -260,7 +260,7 @@ public class KeyboardHud extends HudElement {
     @EventHandler(priority = EventPriority.HIGH)
     private void onKey(KeyInputEvent event) {
         for (Key key : keys) {
-            if (key.matches(event.key(), event.scancode(), true)) {
+            if (key.matches(event.input.key(), event.input.scancode(), true)) {
                 key.update(event.action);
             }
         }
@@ -269,7 +269,7 @@ public class KeyboardHud extends HudElement {
     @EventHandler(priority = EventPriority.HIGH)
     private void onMouseClick(MouseClickEvent event) {
         for (Key key : keys) {
-            if (key.matches(event.button(), -1, false)) {
+            if (key.matches(event.input.button(), -1, false)) {
                 key.update(event.action);
             }
         }
@@ -384,7 +384,7 @@ public class KeyboardHud extends HudElement {
         double xPos = 0;
         keys.add(l.key(Keybind.fromKey(InputConstants.KEY_LCONTROL), xPos, row5, KeyDimensions.CTRL));
         xPos += l.px(KeyDimensions.CTRL) + l.keyGap;
-        keys.add(l.key(Keybind.fromKey(InputConstants.KEY_LWIN), xPos, row5, KeyDimensions.GUI));
+        keys.add(l.key(Keybind.fromKey(InputConstants.KEY_LSUPER), xPos, row5, KeyDimensions.GUI));
         xPos += l.px(KeyDimensions.GUI) + l.keyGap;
         keys.add(l.key(Keybind.fromKey(InputConstants.KEY_LALT), xPos, row5, KeyDimensions.ALT));
         xPos += l.px(KeyDimensions.ALT) + l.keyGap;
@@ -392,7 +392,7 @@ public class KeyboardHud extends HudElement {
         xPos += l.px(KeyDimensions.SPACEBAR) + l.keyGap;
         keys.add(l.key(Keybind.fromKey(InputConstants.KEY_RALT), xPos, row5, KeyDimensions.ALT));
         xPos += l.px(KeyDimensions.ALT) + l.keyGap;
-        keys.add(l.key(Keybind.fromKey(InputConstants.KEY_RWIN), xPos, row5, KeyDimensions.GUI));
+        keys.add(l.key(Keybind.fromKey(InputConstants.KEY_RSUPER), xPos, row5, KeyDimensions.GUI));
         xPos += l.px(KeyDimensions.GUI) + l.keyGap;
         keys.add(l.key(Keybind.fromKey(GLFW.GLFW_KEY_MENU), xPos, row5, KeyDimensions.MENU));
         xPos += l.px(KeyDimensions.MENU) + l.keyGap;
@@ -469,7 +469,7 @@ public class KeyboardHud extends HudElement {
         double xPos = 0;
         keys.add(l.key(Keybind.fromKey(InputConstants.KEY_LCONTROL), xPos, row5, KeyDimensions.CTRL));
         xPos += l.px(KeyDimensions.CTRL) + l.keyGap;
-        keys.add(l.key(Keybind.fromKey(InputConstants.KEY_LWIN), xPos, row5, KeyDimensions.GUI));
+        keys.add(l.key(Keybind.fromKey(InputConstants.KEY_LSUPER), xPos, row5, KeyDimensions.GUI));
         xPos += l.px(KeyDimensions.GUI) + l.keyGap;
         keys.add(l.key(Keybind.fromKey(InputConstants.KEY_LALT), xPos, row5, KeyDimensions.ALT));
         xPos += l.px(KeyDimensions.ALT) + l.keyGap;
@@ -477,7 +477,7 @@ public class KeyboardHud extends HudElement {
         xPos += l.px(KeyDimensions.SPACEBAR) + l.keyGap;
         keys.add(l.keyNamed(Keybind.fromKey(InputConstants.KEY_RALT), "AltGr", xPos, row5, KeyDimensions.ALT));
         xPos += l.px(KeyDimensions.ALT) + l.keyGap;
-        keys.add(l.key(Keybind.fromKey(InputConstants.KEY_RWIN), xPos, row5, KeyDimensions.GUI));
+        keys.add(l.key(Keybind.fromKey(InputConstants.KEY_RSUPER), xPos, row5, KeyDimensions.GUI));
         xPos += l.px(KeyDimensions.GUI) + l.keyGap;
         keys.add(l.key(Keybind.fromKey(GLFW.GLFW_KEY_MENU), xPos, row5, KeyDimensions.MENU));
         xPos += l.px(KeyDimensions.MENU) + l.keyGap;
@@ -673,13 +673,13 @@ public class KeyboardHud extends HudElement {
         }
 
         public Key(CompoundTag compound) {
-            this.keybind = Keybind.none().fromTag(compound.getCompound("key"));
-            this.name = compound.getString("name");
-            this.x = compound.getDouble("x");
-            this.y = compound.getDouble("y");
-            this.width = compound.contains("width") ? compound.getDouble("width") : 60;
-            this.height = compound.contains("height") ? compound.getDouble("height") : 60;
-            this.showCps = compound.getBoolean("showCps");
+            this.keybind = Keybind.none().fromTag(compound.getCompoundOrEmpty("key"));
+            this.name = compound.getStringOr("name", "");
+            this.x = compound.getDoubleOr("x", 0);
+            this.y = compound.getDoubleOr("y", 0);
+            this.width = compound.getDoubleOr("width", 60);
+            this.height = compound.getDoubleOr("height", 60);
+            this.showCps = compound.getBooleanOr("showCps", false);
         }
 
         Key(KeyMapping binding, String name, double x, double y, double width, double height) {
@@ -736,17 +736,17 @@ public class KeyboardHud extends HudElement {
         }
 
         public boolean isNativelyPressed() {
-            long window = mc.getWindow().getWindow();
+            long window = mc.getWindow().handle();
             if (keybind != null) {
                 if (!keybind.isSet()) return false;
                 return keybind.isKey()
-                    ? InputConstants.isKeyDown(window, keybind.getValue())
+                    ? InputConstants.isKeyDown(mc.getWindow(), keybind.getValue())
                     : GLFW.glfwGetMouseButton(window, keybind.getValue()) != InputConstants.RELEASE;
             } else {
                 int key = ((KeyMappingAccessor) binding).meteor$getKey().getValue();
                 return key >= 0 && key < 8
                     ? GLFW.glfwGetMouseButton(window, key) != InputConstants.RELEASE
-                    : InputConstants.isKeyDown(window, key);
+                    : InputConstants.isKeyDown(mc.getWindow(), key);
             }
         }
 
@@ -887,8 +887,8 @@ public class KeyboardHud extends HudElement {
         protected List<Key> load(CompoundTag tag) {
             get().clear();
 
-            for (Tag tagI : tag.getList("value", Tag.TAG_COMPOUND)) {
-                if (tagI instanceof CompoundTag compound) get().add(new Key(compound));
+            for (Tag tagI : tag.getListOrEmpty("value")) {
+                tagI.asCompound().ifPresent(CompoundTag -> get().add(new Key(CompoundTag)));
             }
 
             return get();

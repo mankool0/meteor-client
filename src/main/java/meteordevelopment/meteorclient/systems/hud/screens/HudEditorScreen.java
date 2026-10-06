@@ -17,6 +17,8 @@ import meteordevelopment.meteorclient.utils.other.Snapper;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.util.Mth;
 import com.mojang.blaze3d.platform.InputConstants;
 
@@ -65,13 +67,16 @@ public class HudEditorScreen extends WidgetScreen implements Snapper.Container {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent click, boolean doubled) {
         double s = mc.getWindow().getGuiScale();
+
+        double mouseX = click.x();
+        double mouseY = click.y();
 
         mouseX *= s;
         mouseY *= s;
 
-        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
+        if (click.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             pressed = true;
             selectionSnapBox = null;
 
@@ -111,13 +116,16 @@ public class HudEditorScreen extends WidgetScreen implements Snapper.Container {
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(MouseButtonEvent click) {
         double s = mc.getWindow().getGuiScale();
+
+        double mouseX = click.x();
+        double mouseY = click.y();
 
         mouseX *= s;
         mouseY *= s;
 
-        if (button == InputConstants.MOUSE_BUTTON_LEFT) pressed = false;
+        if (click.button() == InputConstants.MOUSE_BUTTON_LEFT) pressed = false;
 
         if (addedHoveredToSelectionWhenClickedElement != null) {
             selection.remove(addedHoveredToSelectionWhenClickedElement);
@@ -125,12 +133,12 @@ public class HudEditorScreen extends WidgetScreen implements Snapper.Container {
         }
 
         if (moved) {
-            if (button == InputConstants.MOUSE_BUTTON_LEFT && !dragging) fillSelection((int) mouseX, (int) mouseY);
+            if (click.button() == InputConstants.MOUSE_BUTTON_LEFT && !dragging) fillSelection((int) mouseX, (int) mouseY);
         } else {
-            if (button == InputConstants.MOUSE_BUTTON_LEFT) {
+            if (click.button() == InputConstants.MOUSE_BUTTON_LEFT) {
                 HudElement hovered = getHovered((int) mouseX, (int) mouseY);
                 if (hovered != null) hovered.toggle();
-            } else if (button == InputConstants.MOUSE_BUTTON_RIGHT) {
+            } else if (click.button() == InputConstants.MOUSE_BUTTON_RIGHT) {
                 HudElement hovered = getHovered((int) mouseX, (int) mouseY);
 
                 if (hovered != null) mc.setScreen(new HudElementScreen(theme, hovered));
@@ -138,7 +146,7 @@ public class HudEditorScreen extends WidgetScreen implements Snapper.Container {
             }
         }
 
-        if (button == InputConstants.MOUSE_BUTTON_LEFT) {
+        if (click.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             snapper.unsnap();
             moved = dragging = false;
         }
@@ -147,12 +155,12 @@ public class HudEditorScreen extends WidgetScreen implements Snapper.Container {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent input) {
         if (!pressed) {
-            if (keyCode == InputConstants.KEY_RETURN || keyCode == InputConstants.KEY_NUMPADENTER) {
+            if (input.key() == InputConstants.KEY_RETURN || input.key() == InputConstants.KEY_NUMPADENTER) {
                 HudElement hovered = getHovered(lastMouseX, lastMouseY);
                 if (hovered != null) hovered.toggle();
-            } else if (keyCode == InputConstants.KEY_DELETE) {
+            } else if (input.key() == InputConstants.KEY_DELETE) {
                 HudElement hovered = getHovered(lastMouseX, lastMouseY);
 
                 if (hovered != null) hovered.remove();
@@ -164,7 +172,7 @@ public class HudEditorScreen extends WidgetScreen implements Snapper.Container {
                 int pixels = (Input.isKeyPressed(InputConstants.KEY_LCONTROL) || Input.isKeyPressed(InputConstants.KEY_RCONTROL)) ? 10 : 1;
                 int dx = 0, dy = 0;
 
-                switch (keyCode) {
+                switch (input.key()) {
                     case InputConstants.KEY_UP -> dy = -pixels;
                     case InputConstants.KEY_DOWN -> dy = pixels;
                     case InputConstants.KEY_RIGHT -> dx = pixels;
@@ -178,7 +186,7 @@ public class HudEditorScreen extends WidgetScreen implements Snapper.Container {
             }
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(input);
     }
 
     private void fillSelection(int mouseX, int mouseY) {

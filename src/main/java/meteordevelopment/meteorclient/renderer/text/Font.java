@@ -5,6 +5,8 @@
 
 package meteordevelopment.meteorclient.renderer.text;
 
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.TextureFormat;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import meteordevelopment.meteorclient.renderer.MeshBuilder;
 import meteordevelopment.meteorclient.renderer.Texture;
@@ -61,7 +63,7 @@ public class Font {
         STBTruetype.stbtt_PackEnd(packContext);
 
         // Create texture object and get font scale
-        texture = new Texture(size, size, Texture.Format.RED8, Texture.Filter.LINEAR, Texture.Filter.LINEAR);
+        texture = new Texture(size, size, TextureFormat.RED8, FilterMode.LINEAR, FilterMode.LINEAR);
         texture.upload(bitmap);
         scale = STBTruetype.stbtt_ScaleForPixelHeight(fontInfo, height);
 

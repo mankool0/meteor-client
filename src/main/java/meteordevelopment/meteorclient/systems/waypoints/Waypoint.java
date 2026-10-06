@@ -6,8 +6,6 @@
 package meteordevelopment.meteorclient.systems.waypoints;
 
 import meteordevelopment.meteorclient.MeteorClient;
-import meteordevelopment.meteorclient.renderer.MeshRenderer;
-import meteordevelopment.meteorclient.renderer.MeteorRenderPipelines;
 import meteordevelopment.meteorclient.renderer.Renderer2D;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
@@ -16,6 +14,7 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.Dimension;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.UUIDUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 
@@ -129,7 +128,7 @@ public class Waypoint implements ISerializable<Waypoint> {
     public Waypoint(Tag tag) {
         CompoundTag nbt = (CompoundTag) tag;
 
-        uuid = nbt.hasUUID("uuid") ? nbt.getUUID("uuid") : UUID.randomUUID();
+        uuid = nbt.read("uuid", UUIDUtil.CODEC).orElse(UUID.randomUUID());
         createdAt = System.currentTimeMillis();
 
         fromTag(nbt);
@@ -144,14 +143,7 @@ public class Waypoint implements ISerializable<Waypoint> {
 
         Renderer2D.TEXTURE.begin();
         Renderer2D.TEXTURE.texQuad(x, y, size, size, color.get());
-        Renderer2D.TEXTURE.end();
-
-        MeshRenderer.begin()
-            .attachments(MeteorClient.mc.getMainRenderTarget())
-            .pipeline(MeteorRenderPipelines.UI_TEXTURED)
-            .mesh(Renderer2D.TEXTURE.triangles)
-            .sampler("u_Texture", texture)
-            .end();
+        Renderer2D.TEXTURE.render(texture.getTextureView(), texture.getSampler());
 
         color.get().a = preA;
     }
@@ -227,7 +219,7 @@ public class Waypoint implements ISerializable<Waypoint> {
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
 
-        tag.putUUID("uuid", uuid);
+        tag.store("uuid", UUIDUtil.CODEC, uuid);
         tag.put("settings", settings.toTag());
 
         return tag;
@@ -236,7 +228,7 @@ public class Waypoint implements ISerializable<Waypoint> {
     @Override
     public Waypoint fromTag(CompoundTag tag) {
         if (tag.contains("settings")) {
-            settings.fromTag(tag.getCompound("settings"));
+            settings.fromTag(tag.getCompoundOrEmpty("settings"));
         }
 
         return this;

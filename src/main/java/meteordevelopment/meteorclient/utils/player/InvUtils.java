@@ -93,7 +93,7 @@ public class InvUtils {
         }
 
         if (testInMainHand(isGood)) {
-            return new FindItemResult(mc.player.getInventory().selected, mc.player.getMainHandItem().getCount());
+            return new FindItemResult(mc.player.getInventory().getSelectedSlot(), mc.player.getMainHandItem().getCount());
         }
 
         return find(isGood, 0, 8);
@@ -148,10 +148,10 @@ public class InvUtils {
     public static boolean swap(int slot, boolean swapBack) {
         if (slot == SlotUtils.OFFHAND) return true;
         if (slot < 0 || slot > 8) return false;
-        if (swapBack && previousSlot == -1) previousSlot = mc.player.getInventory().selected;
+        if (swapBack && previousSlot == -1) previousSlot = mc.player.getInventory().getSelectedSlot();
         else if (!swapBack) previousSlot = -1;
 
-        mc.player.getInventory().selected = slot;
+        mc.player.getInventory().setSelectedSlot(slot);
         ((IMultiPlayerGameMode) mc.gameMode).meteor$syncSelected();
         return true;
     }

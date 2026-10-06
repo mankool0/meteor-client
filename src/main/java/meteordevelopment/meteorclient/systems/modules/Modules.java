@@ -362,10 +362,10 @@ public class Modules extends System<Modules> {
     public Modules fromTag(CompoundTag tag) {
         disableAll();
 
-        ListTag modulesTag = tag.getList("modules", Tag.TAG_COMPOUND);
+        ListTag modulesTag = tag.getListOrEmpty("modules");
         for (Tag moduleTagI : modulesTag) {
             CompoundTag moduleTag = (CompoundTag) moduleTagI;
-            Module module = get(moduleTag.getString("name"));
+            Module module = get(moduleTag.getStringOr("name", ""));
             if (module != null) module.fromTag(moduleTag);
         }
 

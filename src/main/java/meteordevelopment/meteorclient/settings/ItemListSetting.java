@@ -10,7 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 
 import java.util.ArrayList;
@@ -57,7 +57,7 @@ public class ItemListSetting extends Setting<List<Item>> {
     }
 
     @Override
-    public Iterable<ResourceLocation> getIdentifierSuggestions() {
+    public Iterable<Identifier> getIdentifierSuggestions() {
         return BuiltInRegistries.ITEM.keySet();
     }
 
@@ -77,9 +77,9 @@ public class ItemListSetting extends Setting<List<Item>> {
     public List<Item> load(CompoundTag tag) {
         get().clear();
 
-        ListTag valueTag = tag.getList("value", Tag.TAG_STRING);
+        ListTag valueTag = tag.getListOrEmpty("value");
         for (Tag tagI : valueTag) {
-            Item item = BuiltInRegistries.ITEM.getValue(ResourceLocation.parse(tagI.getAsString()));
+            Item item = BuiltInRegistries.ITEM.getValue(Identifier.parse(tagI.asString().orElse("")));
 
             if (bypassFilterWhenSavingAndLoading || (filter == null || filter.test(item))) get().add(item);
         }

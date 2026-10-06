@@ -272,7 +272,7 @@ public class Proxy implements ISerializable<Proxy> {
 
     @Override
     public Proxy fromTag(CompoundTag tag) {
-        if (tag.contains("settings")) settings.fromTag(tag.getCompound("settings"));
+        tag.getCompound("settings").ifPresent(settings::fromTag);
 
         return this;
     }

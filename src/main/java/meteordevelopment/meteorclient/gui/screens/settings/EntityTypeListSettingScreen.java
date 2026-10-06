@@ -5,6 +5,7 @@
 
 package meteordevelopment.meteorclient.gui.screens.settings;
 
+import com.mojang.blaze3d.textures.FilterMode;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.WindowScreen;
 import meteordevelopment.meteorclient.gui.utils.Cell;
@@ -19,12 +20,12 @@ import meteordevelopment.meteorclient.settings.EntityTypeListSetting;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.Names;
 import meteordevelopment.meteorclient.utils.render.DisplayItemUtils;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.SpawnEggItem;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -136,9 +137,8 @@ public class EntityTypeListSettingScreen extends WindowScreen {
         Cell<WSection> miscCell = add(misc).expandX();
         miscT = misc.add(theme.table()).expandX().widget();
 
-        // PORT(1.21.4): spawn egg -> entity mapping is not a data component on 1.21.4, use SpawnEggItem instead
-        List<Item> spawnEggItems = BuiltInRegistries.ITEM.stream()
-            .filter(item -> item instanceof SpawnEggItem)
+        var spawnEggItems = BuiltInRegistries.ITEM.stream()
+            .filter(item -> item.components().has(DataComponents.ENTITY_DATA)) // PORT(1.21.11): item components are always bound on 1.21.11
             .toList();
 
         Consumer<EntityType<?>> entityTypeForEach = entityType -> {
@@ -234,15 +234,20 @@ public class EntityTypeListSettingScreen extends WindowScreen {
 
         ItemStack stack = null;
 
-        SpawnEggItem egg = SpawnEggItem.byId(entityType);
-        if (egg != null && spawnEggItems.contains(egg)) {
-            stack = DisplayItemUtils.toStack(egg);
+        for (var item : spawnEggItems) {
+            var component = item.components().get(DataComponents.ENTITY_DATA);
+
+            //noinspection DataFlowIssue
+            if (component.type() == entityType) {
+                stack = DisplayItemUtils.toStack(item);
+                break;
+            }
         }
 
         if (stack != null) table.add(theme.item(stack));
         else {
             if (EMPTY_SPAWN_EGG_TEXTURE == null) {
-                EMPTY_SPAWN_EGG_TEXTURE = Texture.readResource("/assets/meteor-client/textures/empty_spawn_egg.png", false, Texture.Filter.NEAREST);
+                EMPTY_SPAWN_EGG_TEXTURE = Texture.readResource("/assets/meteor-client/textures/empty_spawn_egg.png", false, FilterMode.NEAREST);
             }
 
             table.add(theme.texture(32, 32, 0, EMPTY_SPAWN_EGG_TEXTURE));

@@ -72,9 +72,9 @@ public class ModuleListSetting extends Setting<List<Module>> {
     public List<Module> load(CompoundTag tag) {
         get().clear();
 
-        ListTag valueTag = tag.getList("modules", Tag.TAG_STRING);
+        ListTag valueTag = tag.getListOrEmpty("modules");
         for (Tag tagI : valueTag) {
-            Module module = Modules.get().get(tagI.getAsString());
+            Module module = Modules.get().get(tagI.asString().orElse(""));
             if (module != null) get().add(module);
         }
 

@@ -33,7 +33,7 @@ public class ClickTP extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        if (mc.player.getInventory().getSelected().getUseAnimation() != ItemUseAnimation.NONE) return;
+        if (mc.player.getInventory().getSelectedItem().getUseAnimation() != ItemUseAnimation.NONE) return;
         if (!mc.options.keyUse.isDown()) return;
 
         if (mc.hitResult != null) {
@@ -44,12 +44,12 @@ public class ClickTP extends Module {
         }
 
         Camera camera = mc.gameRenderer.getMainCamera();
-        Vec3 cameraPos = camera.getPosition();
+        Vec3 cameraPos = camera.position();
 
         // Calculate the direction the camera is looking based on its pitch and yaw, and extend this direction 210 units away from the camera position
         // 210 is used here as the maximum distance for this exploit is 200 blocks
         // This is done to be able to click tp while in freecam
-        Vec3 direction = Vec3.directionFromRotation(camera.getXRot(), camera.getYRot()).scale(210);
+        Vec3 direction = Vec3.directionFromRotation(camera.xRot(), camera.yRot()).scale(210);
         Vec3 targetPos = cameraPos.add(direction);
 
         ClipContext context = new ClipContext(

@@ -31,7 +31,6 @@ import net.minecraft.network.protocol.game.ServerboundSetCreativeModeSlotPacket;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.commands.data.DataAccessor;
 import net.minecraft.server.commands.data.EntityDataAccessor;
-import net.minecraft.util.Unit;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.HashSet;
@@ -48,7 +47,7 @@ public class NbtCommand extends Command {
         .withClickEvent(new MeteorClickEvent(
             this.toString("copy")
         ))
-        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, 
+        .withHoverEvent(new HoverEvent.ShowText(
             Component.literal("Copy the NBT data to your clipboard.")
         )));
 
@@ -59,7 +58,7 @@ public class NbtCommand extends Command {
     @Override
     public void build(LiteralArgumentBuilder<ClientSuggestionProvider> builder) {
         builder.then(literal("add").then(argument("component", ComponentMapArgumentType.componentMap(REGISTRY_ACCESS)).executes(ctx -> {
-            ItemStack stack = mc.player.getInventory().getSelected();
+            ItemStack stack = mc.player.getInventory().getSelectedItem();
 
             if (validBasic(stack)) {
                 DataComponentMap itemComponents = stack.getComponents();
@@ -68,7 +67,7 @@ public class NbtCommand extends Command {
                 DataComponentMap testComponents = DataComponentMap.composite(itemComponents, newComponents);
                 ItemStack testStack = stack.copy();
                 testStack.applyComponents(testComponents);
-                DataResult<Unit> dataResult = ItemStack.validateComponents(testStack.getComponents());
+                DataResult<ItemStack> dataResult = ItemStack.validateStrict(testStack);
                 dataResult.getOrThrow(MALFORMED_ITEM_EXCEPTION::create);
 
                 stack.applyComponents(testComponents);
@@ -80,7 +79,7 @@ public class NbtCommand extends Command {
         })));
 
         builder.then(literal("set").then(argument("component", ComponentMapArgumentType.componentMap(REGISTRY_ACCESS)).executes(ctx -> {
-            ItemStack stack = mc.player.getInventory().getSelected();
+            ItemStack stack = mc.player.getInventory().getSelectedItem();
 
             if (validBasic(stack)) {
                 DataComponentMap components = ComponentMapArgumentType.getComponentMap(ctx, "component");
@@ -88,7 +87,7 @@ public class NbtCommand extends Command {
 
                 ItemStack testStack = stack.copy();
                 testStack.applyComponents(components);
-                DataResult<Unit> dataResult = ItemStack.validateComponents(testStack.getComponents());
+                DataResult<ItemStack> dataResult = ItemStack.validateStrict(testStack);
                 dataResult.getOrThrow(MALFORMED_ITEM_EXCEPTION::create);
 
                 DataComponentPatch.Builder changesBuilder = DataComponentPatch.builder();
@@ -114,7 +113,7 @@ public class NbtCommand extends Command {
         })));
 
         builder.then(literal("remove").then(argument("component", ResourceKeyArgument.key(Registries.DATA_COMPONENT_TYPE)).executes(ctx -> {
-            ItemStack stack = mc.player.getInventory().getSelected();
+            ItemStack stack = mc.player.getInventory().getSelectedItem();
 
             if (validBasic(stack)) {
                 @SuppressWarnings("unchecked")
@@ -130,19 +129,19 @@ public class NbtCommand extends Command {
 
             return SINGLE_SUCCESS;
         }).suggests((unused1, suggestionsBuilder) -> {
-            ItemStack stack = mc.player.getInventory().getSelected();
+            ItemStack stack = mc.player.getInventory().getSelectedItem();
             if (stack != ItemStack.EMPTY) {
                 DataComponentMap components = stack.getComponents();
                 String remaining = suggestionsBuilder.getRemaining().toLowerCase(Locale.ROOT);
 
                 SharedSuggestionProvider.filterResources(components.keySet().stream().map(BuiltInRegistries.DATA_COMPONENT_TYPE::wrapAsHolder).toList(), remaining, entry -> {
-                    if (entry.unwrapKey().isPresent()) return entry.unwrapKey().get().location();
+                    if (entry.unwrapKey().isPresent()) return entry.unwrapKey().get().identifier();
                     return null;
                 }, entry -> {
                     DataComponentType<?> dataComponentType = entry.value();
                     if (dataComponentType.codec() != null) {
                         if (entry.unwrapKey().isPresent()) {
-                            suggestionsBuilder.suggest(entry.unwrapKey().get().location().toString());
+                            suggestionsBuilder.suggest(entry.unwrapKey().get().identifier().toString());
                         }
                     }
                 });
@@ -197,7 +196,7 @@ public class NbtCommand extends Command {
         }));
 
         builder.then(literal("count").then(argument("count", IntegerArgumentType.integer(-127, 127)).executes(context -> {
-            ItemStack stack = mc.player.getInventory().getSelected();
+            ItemStack stack = mc.player.getInventory().getSelectedItem();
 
             if (validBasic(stack)) {
                 int count = IntegerArgumentType.getInteger(context, "count");
@@ -211,7 +210,7 @@ public class NbtCommand extends Command {
     }
 
     private void setStack(ItemStack stack) {
-        mc.player.connection.send(new ServerboundSetCreativeModeSlotPacket(36 + mc.player.getInventory().selected, stack));
+        mc.player.connection.send(new ServerboundSetCreativeModeSlotPacket(36 + mc.player.getInventory().getSelectedSlot(), stack));
     }
 
     private boolean validBasic(ItemStack stack) {

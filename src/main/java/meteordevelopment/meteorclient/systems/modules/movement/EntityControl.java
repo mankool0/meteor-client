@@ -191,8 +191,7 @@ public class EntityControl extends Module {
         double velZ = entity.getDeltaMovement().z;
 
         // Horizontal movement
-        // PORT(1.21.4): Entity.isFlyingVehicle() does not exist on 1.21.4 (no flying vehicles) - clause dropped.
-        if (speed.get() && (!onlyOnGround.get() || entity.onGround()) && (inWater.get() || !entity.isInWater())) {
+        if (speed.get() && (!onlyOnGround.get() || entity.onGround() || entity.isFlyingVehicle()) && (inWater.get() || !entity.isInWater())) {
             Vec3 vel = PlayerUtils.getHorizontalVelocity(horizontalSpeed.get());
             velX = vel.x;
             velZ = vel.z;
@@ -215,7 +214,7 @@ public class EntityControl extends Module {
         if (!(event.packet instanceof ServerboundMoveVehiclePacket packet) || !antiKick.get()) return;
 
         double currentY = packet.position().y;
-        if (delayLeft <= 0 && !sentPacket && shouldFlyDown(currentY) && EntityUtils.isOnAir(mc.player.getVehicle())) {
+        if (delayLeft <= 0 && !sentPacket && shouldFlyDown(currentY) && EntityUtils.isOnAir(mc.player.getVehicle()) && !mc.player.getVehicle().isFlyingVehicle()) {
             ((IVec3) packet.position()).meteor$setY(lastPacketY - 0.03130D);
             sentPacket = true;
             delayLeft = delay.get();

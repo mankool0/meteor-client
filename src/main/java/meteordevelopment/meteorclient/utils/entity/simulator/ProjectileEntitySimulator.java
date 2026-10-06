@@ -21,12 +21,13 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.monster.breeze.Breeze;
 import net.minecraft.world.entity.projectile.*;
-import net.minecraft.world.entity.projectile.AbstractArrow;
-import net.minecraft.world.entity.projectile.Arrow;
-import net.minecraft.world.entity.projectile.SpectralArrow;
-import net.minecraft.world.entity.projectile.ThrownTrident;
-import net.minecraft.world.entity.projectile.AbstractHurtingProjectile;
-import net.minecraft.world.entity.projectile.windcharge.AbstractWindCharge;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.entity.projectile.arrow.Arrow;
+import net.minecraft.world.entity.projectile.arrow.SpectralArrow;
+import net.minecraft.world.entity.projectile.arrow.ThrownTrident;
+import net.minecraft.world.entity.projectile.hurtingprojectile.AbstractHurtingProjectile;
+import net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.AbstractWindCharge;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.*;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.ChargedProjectiles;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -78,8 +79,8 @@ public class ProjectileEntitySimulator {
     private static final MotionData ENDER_PEARL = new MotionData(1.5f, 0, 0.03, 0.99f, 0.8f, EntityType.ENDER_PEARL);
     private static final MotionData SNOWBALL = new MotionData(1.5f, 0, 0.03, 0.99f, 0.8f, EntityType.SNOWBALL);
     private static final MotionData EXPERIENCE_BOTTLE = new MotionData(0.7f, -20, 0.07, 0.99f, 0.8f, EntityType.EXPERIENCE_BOTTLE);
-    private static final MotionData LINGERING_POTION = new MotionData(0.5f, -20, 0.05, 0.99f, 0.8f, EntityType.POTION);
-    private static final MotionData SPLASH_POTION = new MotionData(0.5f, -20, 0.05, 0.99f, 0.8f, EntityType.POTION);
+    private static final MotionData LINGERING_POTION = new MotionData(0.5f, -20, 0.05, 0.99f, 0.8f, EntityType.LINGERING_POTION);
+    private static final MotionData SPLASH_POTION = new MotionData(0.5f, -20, 0.05, 0.99f, 0.8f, EntityType.SPLASH_POTION);
 
     // AbstractHurtingProjectile
     private static final MotionData EXPLOSIVE = new MotionData(0, 0, 0, 1, 1, null); // fireball, wither skull, etc.
@@ -232,7 +233,8 @@ public class ProjectileEntitySimulator {
             case Snowball e -> set(e, SNOWBALL);
             case ThrownEgg e -> set(e, EGG);
             case ThrownExperienceBottle e -> set(e, EXPERIENCE_BOTTLE);
-            case ThrownPotion e -> set(e, SPLASH_POTION); // PORT(1.21.4): splash and lingering potions are one entity type with identical motion data
+            case ThrownSplashPotion e -> set(e, SPLASH_POTION);
+            case ThrownLingeringPotion e -> set(e, LINGERING_POTION);
             case AbstractWindCharge e -> set(e, WIND_CHARGE);
             case AbstractHurtingProjectile e -> set(e, EXPLOSIVE);
             case LlamaSpit e -> set(e, LLAMA_SPIT);
@@ -361,28 +363,19 @@ public class ProjectileEntitySimulator {
             ((IVec3) pos3d).meteor$set(blockCollision.getLocation());
         }
 
-        /// {@link AbstractArrow}
+        /// {@link AbstractArrow#stepMoveAndHit(BlockHitResult)}
         if (simulatingEntity instanceof AbstractArrow) {
-            // PORT(1.21.4): ProjectileUtil.getManyEntityHitResult does not exist on 1.21.4 -
-            // collect the entities along the path by repeatedly querying the closest hit.
-            Collection<EntityHitResult> entityCollisions = new ArrayList<>();
-            java.util.Set<Entity> alreadyHit = new java.util.HashSet<>();
-            AABB searchBox = dimensions.makeBoundingBox(prevPos3d).expandTowards(velocity.x, velocity.y, velocity.z).inflate(1.0D);
-
-            EntityHitResult hitResult;
-            while ((hitResult = ProjectileUtil.getEntityHitResult(
+            Collection<EntityHitResult> entityCollisions = ProjectileUtil.getManyEntityHitResult(
                 mc.level,
                 simulatingEntity,
                 prevPos3d,
                 pos3d,
-                searchBox,
-                entity -> !entity.isSpectator() && entity.isAlive() && entity.isPickable() && !alreadyHit.contains(entity),
-                getToleranceMargin()
-            )) != null) {
-                entityCollisions.add(hitResult);
-                alreadyHit.add(hitResult.getEntity());
-                if (alreadyHit.size() > 64) break;
-            }
+                dimensions.makeBoundingBox(prevPos3d).expandTowards(velocity.x, velocity.y, velocity.z).inflate(1.0D),
+                entity -> !entity.isSpectator() && entity.isAlive() && entity.isPickable(),
+                getToleranceMargin(),
+                ClipContext.Block.COLLIDER,
+                false
+            );
 
             // prevent simulating projectiles as colliding with ourselves on the first tick of movement
             entityCollisions.removeIf(collision -> tickCount <= 1 && collision.getEntity() == mc.player);
@@ -455,8 +448,7 @@ public class ProjectileEntitySimulator {
         } else if (hitResult instanceof BlockHitResult bhr) {
             Utils.set(pos, bhr.getLocation());
 
-            // PORT(1.21.4): shouldBounceOnWorldBorder is protected; on 1.21.4 only AbstractArrow and FishingHook return true
-            if ((simulatingEntity instanceof AbstractArrow || simulatingEntity instanceof FishingHook) && bhr.isWorldBorderHit()) {
+            if (simulatingEntity.shouldBounceOnWorldBorder() && bhr.isWorldBorderHit()) {
                 velocity.mul(-0.5).mul(0.2);
                 return false;
             }

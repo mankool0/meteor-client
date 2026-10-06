@@ -10,7 +10,6 @@ import meteordevelopment.meteorclient.mixin.KeyMappingAccessor;
 import meteordevelopment.meteorclient.utils.misc.CursorStyle;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
-import org.lwjgl.glfw.GLFW;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -57,17 +56,17 @@ public class Input {
 
     public static void setCursorStyle(CursorStyle style) {
         if (lastCursorStyle != style) {
-            GLFW.glfwSetCursor(mc.getWindow().getWindow(), style.getGlfwCursor());
+            style.getCursor().select(mc.getWindow());
             lastCursorStyle = style;
         }
     }
 
     public static int getModifier(int key) {
         return switch (key) {
-            case InputConstants.KEY_LSHIFT, InputConstants.KEY_RSHIFT -> GLFW.GLFW_MOD_SHIFT;
+            case InputConstants.KEY_LSHIFT, InputConstants.KEY_RSHIFT -> InputConstants.MOD_SHIFT;
             case InputConstants.KEY_LCONTROL, InputConstants.KEY_RCONTROL -> InputConstants.MOD_CONTROL;
-            case InputConstants.KEY_LALT, InputConstants.KEY_RALT -> GLFW.GLFW_MOD_ALT;
-            case InputConstants.KEY_LWIN, InputConstants.KEY_RWIN -> GLFW.GLFW_MOD_SUPER;
+            case InputConstants.KEY_LALT, InputConstants.KEY_RALT -> InputConstants.MOD_ALT;
+            case InputConstants.KEY_LSUPER, InputConstants.KEY_RSUPER -> InputConstants.MOD_SUPER;
             default -> 0;
         };
     }

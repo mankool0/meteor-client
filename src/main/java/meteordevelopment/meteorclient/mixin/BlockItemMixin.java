@@ -39,7 +39,7 @@ public abstract class BlockItemMixin {
             value = "INVOKE",
             target = "Lnet/minecraft/world/level/block/state/BlockState;is(Lnet/minecraft/world/level/block/Block;)Z"
         ),
-        index = 3)
+        ordinal = 1)
     private BlockState modifyState(BlockState placedState, BlockPlaceContext placeContext) {
         var noGhostBlocks = Modules.get().get(NoGhostBlocks.class);
 

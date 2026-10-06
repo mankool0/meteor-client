@@ -5,6 +5,7 @@
 
 package meteordevelopment.meteorclient.gui.screens;
 
+import com.mojang.blaze3d.platform.MacosUtil;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.tabs.TabScreen;
 import meteordevelopment.meteorclient.gui.tabs.Tabs;
@@ -20,7 +21,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.misc.NbtUtils;
 import meteordevelopment.meteorclient.utils.render.DisplayItemUtils;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.item.Items;
 
@@ -31,7 +32,6 @@ import java.util.Set;
 import static meteordevelopment.meteorclient.utils.Utils.getWindowHeight;
 import static meteordevelopment.meteorclient.utils.Utils.getWindowWidth;
 import static com.mojang.blaze3d.platform.InputConstants.*;
-import static org.lwjgl.glfw.GLFW.GLFW_MOD_SUPER;
 
 public class ModulesScreen extends TabScreen {
     private WCategoryController controller;
@@ -151,12 +151,12 @@ public class ModulesScreen extends TabScreen {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+    public boolean keyPressed(KeyEvent value) {
         if (locked) return false;
 
-        boolean cntrl = Minecraft.ON_OSX ? modifiers == GLFW_MOD_SUPER : modifiers == MOD_CONTROL;
+        boolean cntrl = MacosUtil.IS_MACOS ? value.modifiers() == MOD_SUPER : value.modifiers() == MOD_CONTROL;
 
-        if (cntrl && keyCode == KEY_F) {
+        if (cntrl && value.key() == KEY_F) {
             if (searchWindow != null) searchWindow.setExpanded(true);
             if (searchTextBox != null) {
                 searchTextBox.setFocused(true);
@@ -166,7 +166,7 @@ public class ModulesScreen extends TabScreen {
             return true;
         }
 
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(value);
     }
 
     // Favorites

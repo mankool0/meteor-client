@@ -44,10 +44,10 @@ public class AirJump extends Module {
 
         if (event.action != KeyAction.Press) return;
 
-        if (mc.options.keyJump.matches(event.key, event.scancode)) {
+        if (mc.options.keyJump.matches(event.input)) {
             level = mc.player.blockPosition().getY();
             mc.player.jumpFromGround();
-        } else if (mc.options.keyShift.matches(event.key, event.scancode)) {
+        } else if (mc.options.keyShift.matches(event.input)) {
             level--;
         }
     }

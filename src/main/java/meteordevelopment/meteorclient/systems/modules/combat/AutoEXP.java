@@ -93,8 +93,7 @@ public class AutoEXP extends Module {
 
         if (repairingI == -1) {
             if (mode.get() != Mode.Hands) {
-                for (EquipmentSlot slot : EquipmentSlot.values()) {
-                    if (!slot.isArmor()) continue;
+                for (EquipmentSlot slot : EquipmentSlotGroup.ARMOR) {
                     ItemStack stack = mc.player.getItemBySlot(slot);
                     if (needsRepair(stack, minThreshold.get())) {
                         repairingI = SlotUtils.ARMOR_START + slot.getIndex();
@@ -106,7 +105,7 @@ public class AutoEXP extends Module {
             if (mode.get() != Mode.Armor && repairingI == -1) {
                 for (InteractionHand hand : InteractionHand.values()) {
                     if (needsRepair(mc.player.getItemInHand(hand), minThreshold.get())) {
-                        repairingI = hand == InteractionHand.MAIN_HAND ? mc.player.getInventory().selected : SlotUtils.OFFHAND;
+                        repairingI = hand == InteractionHand.MAIN_HAND ? mc.player.getInventory().getSelectedSlot() : SlotUtils.OFFHAND;
                         break;
                     }
                 }

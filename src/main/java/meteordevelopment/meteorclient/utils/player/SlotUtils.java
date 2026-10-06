@@ -13,7 +13,7 @@ import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.animal.camel.Camel;
-import net.minecraft.world.entity.animal.horse.*;
+import net.minecraft.world.entity.animal.equine.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.*;
 
@@ -22,7 +22,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class SlotUtils {
     /**
      * These constants refer to the slot index of relevant player slots. They are used when dealing directly with the
-     * player inventory - e.g. {@code mc.player.getInventory().selected} returns the slot index of your
+     * player inventory - e.g. {@code mc.player.getInventory().getSelectedSlot()} returns the slot index of your
      * selected slot (i.e. main hand).
      *
      * @see net.minecraft.world.entity.player.Inventory
@@ -58,7 +58,9 @@ public class SlotUtils {
             case CreativeModeInventoryScreen.ItemPickerMenu unused2 -> creativeInventory(i);
             case ChestMenu chestMenu -> genericContainer(i, chestMenu.getRowCount());
             case CraftingMenu unused3 -> craftingTable(i);
-            case AbstractFurnaceMenu unused4 -> furnace(i); // FurnaceMenu, BlastFurnaceMenu, SmokerMenu
+            case FurnaceMenu unused4 -> furnace(i);
+            case BlastFurnaceMenu unused5 -> furnace(i);
+            case SmokerMenu unused6 -> furnace(i);
             case DispenserMenu unused7 -> generic3x3(i);
             case EnchantmentMenu unused8 -> enchantmentTable(i);
             case BrewingStandMenu unused9 -> brewingStand(i);

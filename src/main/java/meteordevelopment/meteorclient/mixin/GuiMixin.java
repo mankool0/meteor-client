@@ -6,17 +6,13 @@
 package meteordevelopment.meteorclient.mixin;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import meteordevelopment.meteorclient.MeteorClient;
-import meteordevelopment.meteorclient.events.render.Render2DEvent;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.misc.BetterChat;
 import meteordevelopment.meteorclient.systems.modules.render.Freecam;
 import meteordevelopment.meteorclient.systems.modules.render.NoRender;
-import meteordevelopment.meteorclient.utils.Utils;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.util.profiling.Profiler;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.scores.Objective;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,24 +24,8 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(Gui.class)
 public abstract class GuiMixin {
-    @Inject(method = "render", at = @At("TAIL"))
-    private void onRender(GuiGraphics graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
-        graphics.flush();
-
-        Profiler.get().push(MeteorClient.MOD_ID + "_render_2d");
-
-        Utils.unscaledProjection();
-
-        MeteorClient.EVENT_BUS.post(Render2DEvent.get(graphics, graphics.guiWidth(), graphics.guiHeight(), deltaTracker.getGameTimeDeltaPartialTick(true)));
-
-        graphics.flush();
-        Utils.scaledProjection();
-
-        Profiler.get().pop();
-    }
-
     @Inject(method = "renderEffects", at = @At("HEAD"), cancellable = true)
-    private void onExtractStatusEffectOverlay(GuiGraphics graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    private void onExtractStatusEffectOverlay(CallbackInfo ci) {
         if (Modules.get().get(NoRender.class).noPotionIcons()) ci.cancel();
     }
 
@@ -54,12 +34,12 @@ public abstract class GuiMixin {
         if (Modules.get().get(NoRender.class).noPortalOverlay()) ci.cancel();
     }
 
-    @ModifyArgs(method = "renderCameraOverlays", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;renderTextureOverlay(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/resources/ResourceLocation;F)V", ordinal = 0))
+    @ModifyArgs(method = "renderCameraOverlays", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;renderTextureOverlay(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/resources/Identifier;F)V", ordinal = 0))
     private void onExtractPumpkinOverlay(Args args) {
         if (Modules.get().get(NoRender.class).noPumpkinOverlay()) args.set(2, 0f);
     }
 
-    @ModifyArgs(method = "renderCameraOverlays", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;renderTextureOverlay(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/resources/ResourceLocation;F)V", ordinal = 1))
+    @ModifyArgs(method = "renderCameraOverlays", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Gui;renderTextureOverlay(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/resources/Identifier;F)V", ordinal = 1))
     private void onExtractPowderedSnowOverlay(Args args) {
         if (Modules.get().get(NoRender.class).noPowderedSnowOverlay()) args.set(2, 0f);
     }
@@ -75,7 +55,7 @@ public abstract class GuiMixin {
     }
 
     @Inject(method = "renderScoreboardSidebar", at = @At("HEAD"), cancellable = true)
-    private void onRenderScoreboardSidebar(GuiGraphics graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
+    private void onExtractScoreboardSidebar(GuiGraphics graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
         if (Modules.get().get(NoRender.class).noScoreboard()) ci.cancel();
     }
 

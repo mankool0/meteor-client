@@ -16,10 +16,9 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(ItemRenderer.class)
 public abstract class ItemRendererMixin {
     @ModifyVariable(
-        method = "renderItem",
+        method = "renderItem(Lnet/minecraft/world/item/ItemDisplayContext;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;II[ILjava/util/List;Lnet/minecraft/client/renderer/rendertype/RenderType;Lnet/minecraft/client/renderer/item/ItemStackRenderState$FoilType;)V",
         at = @At("HEAD"),
-        argsOnly = true,
-        ordinal = 0
+        argsOnly = true
     )
     private static ItemStackRenderState.FoilType modifyEnchant(ItemStackRenderState.FoilType foilType) {
         if (Modules.get().get(NoRender.class).noEnchantGlint()) {

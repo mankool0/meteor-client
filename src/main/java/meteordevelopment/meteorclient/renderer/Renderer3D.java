@@ -5,6 +5,7 @@
 
 package meteordevelopment.meteorclient.renderer;
 
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.PoseStack;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.world.Dir;
@@ -15,10 +16,10 @@ import net.minecraft.world.phys.AABB;
 public class Renderer3D {
     public final MeshBuilder lines;
     public final MeshBuilder triangles;
-    private final MeteorRenderPipeline linesPipeline;
-    private final MeteorRenderPipeline trianglesPipeline;
+    private final RenderPipeline linesPipeline;
+    private final RenderPipeline trianglesPipeline;
 
-    public Renderer3D(MeteorRenderPipeline lines, MeteorRenderPipeline triangles) {
+    public Renderer3D(RenderPipeline lines, RenderPipeline triangles) {
         this.lines = new MeshBuilder(lines);
         this.triangles = new MeshBuilder(triangles);
         this.linesPipeline = lines;

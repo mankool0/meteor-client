@@ -37,12 +37,12 @@ public abstract class BossHealthOverlayMixin {
     }
 
     @ModifyExpressionValue(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/LerpingBossEvent;getName()Lnet/minecraft/network/chat/Component;"))
-    public Component modifyBossBarName(Component original, @Local(index = 6) LerpingBossEvent event) {
+    public Component modifyBossBarName(Component original, @Local LerpingBossEvent event) {
         RenderBossBarEvent.BossText bossTextEvent = MeteorClient.EVENT_BUS.post(RenderBossBarEvent.BossText.get(event, original));
         return bossTextEvent.name;
     }
 
-    @ModifyConstant(method = "render", constant = @Constant(intValue = 9, ordinal = 0))
+    @ModifyConstant(method = "render", constant = @Constant(intValue = 9, ordinal = 1))
     public int modifySpacingConstant(int j) {
         RenderBossBarEvent.BossSpacing event = MeteorClient.EVENT_BUS.post(RenderBossBarEvent.BossSpacing.get(j));
         return event.spacing;

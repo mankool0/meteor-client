@@ -58,9 +58,9 @@ public class StringListSetting extends Setting<List<String>> {
     public List<String> load(CompoundTag tag) {
         get().clear();
 
-        ListTag valueTag = tag.getList("value", Tag.TAG_STRING);
+        ListTag valueTag = tag.getListOrEmpty("value");
         for (Tag tagI : valueTag) {
-            get().add(tagI.getAsString());
+            get().add(tagI.asString().orElse(""));
         }
 
         return get();

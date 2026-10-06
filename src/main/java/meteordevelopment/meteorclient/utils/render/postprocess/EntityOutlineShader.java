@@ -27,10 +27,11 @@ public class EntityOutlineShader extends EntityShader {
 
     @Override
     protected void setupPass(MeshRenderer renderer) {
-        renderer
-            .uniform("u_Width", esp.outlineWidth.get().intValue())
-            .uniform("u_FillOpacity", esp.fillOpacity.get().doubleValue())
-            .uniform("u_ShapeMode", esp.shapeMode.get().ordinal())
-            .uniform("u_GlowMultiplier", esp.glowMultiplier.get().doubleValue());
+        renderer.uniform("OutlineData", OutlineUniforms.write(
+            esp.outlineWidth.get(),
+            esp.fillOpacity.get().floatValue(),
+            esp.shapeMode.get().ordinal(),
+            esp.glowMultiplier.get().floatValue()
+        ));
     }
 }

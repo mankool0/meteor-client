@@ -124,7 +124,8 @@ public abstract class MultiPlayerGameModeMixin implements IMultiPlayerGameMode {
         destroyDelay = event.cooldown;
     }
 
-    @ModifyExpressionValue(method = "continueDestroyBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;getDestroyProgress(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)F"))
+    // PORT(1.21.11): the insta-break check lives in the startDestroyBlock prediction lambda on 1.21.11
+    @ModifyExpressionValue(method = "method_41930", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/state/BlockState;getDestroyProgress(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)F"))
     private float modifyBlockBreakingDelta(float original) {
         if (Modules.get().get(BreakDelay.class).preventInstaBreak() && original >= 1) {
             BlockBreakingCooldownEvent event = MeteorClient.EVENT_BUS.post(BlockBreakingCooldownEvent.get(destroyDelay));

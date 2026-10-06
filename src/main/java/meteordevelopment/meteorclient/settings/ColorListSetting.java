@@ -58,7 +58,7 @@ public class ColorListSetting extends Setting<List<SettingColor>> {
     protected List<SettingColor> load(CompoundTag tag) {
         get().clear();
 
-        for (Tag e : tag.getList("value", Tag.TAG_COMPOUND)) {
+        for (Tag e : tag.getListOrEmpty("value")) {
             get().add(new SettingColor().fromTag((CompoundTag) e));
         }
 

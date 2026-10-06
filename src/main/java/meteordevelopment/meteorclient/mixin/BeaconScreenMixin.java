@@ -60,7 +60,7 @@ public abstract class BeaconScreenMixin extends AbstractContainerScreen<BeaconMe
     }
 
     @Inject(method = "renderBg", at = @At("TAIL"))
-    private void onExtractBackground(GuiGraphics graphics, float partialTick, int mouseX, int mouseY, CallbackInfo ci) {
+    private void onExtractBackground(GuiGraphics graphics, float a, int mouseX, int mouseY, CallbackInfo ci) {
         if (!Modules.get().get(BetterBeacons.class).isActive()) return;
         //this will clear the background from useless pyramid graphics
         graphics.fill(leftPos + 10, topPos + 7, leftPos + 220, topPos + 98, 0xFF212121);

@@ -178,7 +178,7 @@ public class AutoEat extends Module {
     }
 
     private void startEating() {
-        prevSlot = mc.player.getInventory().selected;
+        prevSlot = mc.player.getInventory().getSelectedSlot();
         eat();
         if (!eating) return;
 

@@ -44,6 +44,7 @@ public class FakeClientPlayer {
             if (world == null) {
                 world = new ClientLevel(
                     new ClientPacketListener(mc, new Connection(PacketFlow.CLIENTBOUND), new CommonListenerCookie(
+                        null,
                         new GameProfile(mc.getUser().getProfileId(), mc.getUser().getName()),
                         null,
                         null,
@@ -54,7 +55,9 @@ public class FakeClientPlayer {
                         null,
                         null,
                         null,
-                        null)
+                        null,
+                        null,
+                        false)
                     ),
                     new ClientLevel.ClientLevelData(Difficulty.NORMAL, false, false),
                     world.dimension(),

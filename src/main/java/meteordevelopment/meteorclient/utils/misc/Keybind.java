@@ -6,14 +6,12 @@
 package meteordevelopment.meteorclient.utils.misc;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import meteordevelopment.meteorclient.events.meteor.KeyInputEvent;
-import meteordevelopment.meteorclient.events.meteor.MouseClickEvent;
 import meteordevelopment.meteorclient.utils.misc.input.Input;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
-import net.minecraft.nbt.Tag;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,12 +21,12 @@ import java.util.Set;
 
 public class Keybind implements ISerializable<Keybind>, ICopyable<Keybind> {
     public enum Modifier {
-        SHIFT(GLFW.GLFW_MOD_SHIFT),
+        SHIFT(InputConstants.MOD_SHIFT),
         CONTROL(InputConstants.MOD_CONTROL),
-        ALT(GLFW.GLFW_MOD_ALT),
-        SUPER(GLFW.GLFW_MOD_SUPER),
-        CAPS_LOCK(GLFW.GLFW_MOD_CAPS_LOCK),
-        NUM_LOCK(GLFW.GLFW_MOD_NUM_LOCK),
+        ALT(InputConstants.MOD_ALT),
+        SUPER(InputConstants.MOD_SUPER),
+        CAPS_LOCK(InputConstants.MOD_CAPS_LOCK),
+        NUM_LOCK(InputConstants.MOD_NUM_LOCK),
         ;
 
         private static final Modifier[] VALUES = values();
@@ -42,7 +40,7 @@ public class Keybind implements ISerializable<Keybind>, ICopyable<Keybind> {
         public boolean isKeyPressed() {
             return switch (this) {
                 case CONTROL -> Input.isKeyPressed(InputConstants.KEY_LCONTROL) || Input.isKeyPressed(InputConstants.KEY_RCONTROL);
-                case SUPER -> Input.isKeyPressed(InputConstants.KEY_LWIN) || Input.isKeyPressed(InputConstants.KEY_RWIN);
+                case SUPER -> Input.isKeyPressed(InputConstants.KEY_LSUPER) || Input.isKeyPressed(InputConstants.KEY_RSUPER);
                 case ALT -> Input.isKeyPressed(InputConstants.KEY_LALT) || Input.isKeyPressed(InputConstants.KEY_RALT);
                 case SHIFT -> Input.isKeyPressed(InputConstants.KEY_LSHIFT) || Input.isKeyPressed(InputConstants.KEY_RSHIFT);
                 case CAPS_LOCK -> Input.isKeyPressed(InputConstants.KEY_CAPSLOCK);
@@ -161,11 +159,11 @@ public class Keybind implements ISerializable<Keybind>, ICopyable<Keybind> {
         return matches(isKey ? keyboard(value) : mouse(value), isKey ? Modifier.fromRawValue(modifiers) : Set.of());
     }
 
-    public boolean matches(KeyInputEvent input) {
-        return matches(InputConstants.getKey(input.key(), input.scancode()), Modifier.fromRawValue(input.modifiers()));
+    public boolean matches(KeyEvent input) {
+        return matches(InputConstants.getKey(input), Modifier.fromRawValue(input.modifiers()));
     }
 
-    public boolean matches(MouseClickEvent input) {
+    public boolean matches(MouseButtonInfo input) {
         return matches(mouse(input.button()), Set.of());
     }
 
@@ -186,7 +184,7 @@ public class Keybind implements ISerializable<Keybind>, ICopyable<Keybind> {
     }
 
     private boolean isKeyMod(InputConstants.Key key) {
-        return key.getValue() >= InputConstants.KEY_LSHIFT && key.getValue() <= InputConstants.KEY_RWIN;
+        return key.getValue() >= InputConstants.KEY_LSHIFT && key.getValue() <= InputConstants.KEY_RSUPER;
     }
 
     @Override
@@ -247,23 +245,23 @@ public class Keybind implements ISerializable<Keybind>, ICopyable<Keybind> {
         if (tag.contains("key")) {
             // New format: key name + modifier enum names
             try {
-                key = InputConstants.getKey(tag.getString("key"));
+                key = InputConstants.getKey(tag.getStringOr("key", ""));
             } catch (IllegalArgumentException e) {
                 key = InputConstants.UNKNOWN;
             }
 
             modifiers.clear();
-            ListTag modifiersTag = tag.getList("modifiers", Tag.TAG_STRING);
+            ListTag modifiersTag = tag.getListOrEmpty("modifiers");
             for (int i = 0; i < modifiersTag.size(); i++) {
                 try {
-                    modifiers.add(Modifier.valueOf(modifiersTag.getString(i)));
+                    modifiers.add(Modifier.valueOf(modifiersTag.getStringOr(i, "")));
                 } catch (IllegalArgumentException ignored) {}
             }
         } else {
             // Legacy format: raw ints (GLFW)
-            boolean isKey = !tag.contains("isKey") || tag.getBoolean("isKey");
-            int value = tag.contains("value") ? tag.getInt("value") : InputConstants.UNKNOWN.getValue();
-            int mods = tag.getInt("modifiers");
+            boolean isKey = tag.getBooleanOr("isKey", true);
+            int value = tag.getIntOr("value", InputConstants.UNKNOWN.getValue());
+            int mods = tag.getIntOr("modifiers", 0);
 
             set(isKey ? keyboard(value) : mouse(value), isKey ? Modifier.fromRawValue(mods) : Set.of());
         }

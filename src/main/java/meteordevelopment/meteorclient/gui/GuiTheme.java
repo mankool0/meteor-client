@@ -373,14 +373,13 @@ public abstract class GuiTheme implements ISerializable<GuiTheme> {
 
     @Override
     public GuiTheme fromTag(CompoundTag tag) {
-        if (tag.contains("settings")) settings.fromTag(tag.getCompound("settings"));
+        tag.getCompound("settings").ifPresent(settings::fromTag);
 
-        if (tag.contains("windowConfigs")) {
-            CompoundTag configs = tag.getCompound("windowConfigs");
-            for (String id : configs.getAllKeys()) {
-                windowConfigs.put(id, new WindowConfig().fromTag(configs.getCompound(id)));
+        tag.getCompound("windowConfigs").ifPresent(configs -> {
+            for (String id : configs.keySet()) {
+                windowConfigs.put(id, new WindowConfig().fromTag(configs.getCompound(id).get()));
             }
-        }
+        });
 
         return this;
     }

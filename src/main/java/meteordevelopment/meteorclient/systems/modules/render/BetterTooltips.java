@@ -26,6 +26,9 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
+import net.minecraft.client.input.InputWithModifiers;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.core.HolderSet;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
@@ -34,6 +37,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.network.Filterable;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.entity.EntitySpawnReason;
@@ -54,7 +58,6 @@ import net.minecraft.world.level.saveddata.maps.MapId;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 import static com.mojang.blaze3d.platform.InputConstants.KEY_LALT;
@@ -350,9 +353,8 @@ public class BetterTooltips extends Module {
         // Banner preview
         else if (event.itemStack.getItem() instanceof BannerItem && previewBanners()) {
             event.tooltipData = new BannerTooltipComponent(event.itemStack);
-        } else if (event.itemStack.getItem() instanceof BannerPatternItem bannerPatternItem && previewBanners()) {
-            // PORT(1.21.4): DataComponents.PROVIDES_BANNER_PATTERNS does not exist on 1.21.4 - use BannerPatternItem's pattern tag.
-            event.tooltipData = createBannerFromBannerPatternItem(bannerPatternItem);
+        } else if (event.itemStack.has(DataComponents.PROVIDES_BANNER_PATTERNS) && previewBanners()) {
+            event.tooltipData = createBannerFromBannerPatternItem(event.itemStack);
         } else if (event.itemStack.getItem() == Items.SHIELD && previewBanners()) {
             if (!event.itemStack.getOrDefault(DataComponents.BANNER_PATTERNS, BannerPatternLayers.EMPTY).layers().isEmpty()) {
                 event.tooltipData = createBannerFromShield(event.itemStack);
@@ -370,8 +372,7 @@ public class BetterTooltips extends Module {
                     return;
                 }
 
-                // PORT(1.21.4): Entity.applyComponentsFromItemStack does not exist on 1.21.4 - apply the custom name manually.
-                if (event.itemStack.has(DataComponents.CUSTOM_NAME)) entity.setCustomName(event.itemStack.get(DataComponents.CUSTOM_NAME));
+                entity.applyComponentsFromItemStack(event.itemStack);
                 ((Bucketable) entity).loadFromBucketTag(nbtComponent.copyTag());
                 ((EntityAccessor) entity).meteor$setInWater(true);
                 event.tooltipData = new EntityTooltipComponent(entity);
@@ -394,25 +395,29 @@ public class BetterTooltips extends Module {
         }
     }
 
-    // PORT(1.21.4): ItemStackTemplate does not exist on 1.21.4 - ItemContainerContents stores plain ItemStacks.
     public void applyCompactShulkerTooltip(List<ItemStack> stacks, Consumer<Component> textConsumer) {
         Object2IntMap<Item> counts = new Object2IntOpenHashMap<>();
 
         for (ItemStack stack : stacks) {
             if (stack.isEmpty()) continue;
 
-            int count = counts.getInt(stack.getItem());
-            counts.put(stack.getItem(), count + stack.getCount());
+            var stackItem = stack.getItem();
+            var stackCount = stack.getCount();
+
+            if (stackCount == 0) continue;
+
+            int count = counts.getInt(stackItem);
+            counts.put(stackItem, count + stackCount);
         }
 
         counts.keySet().stream().sorted(Comparator.comparingInt(value -> -counts.getInt(value))).limit(5).forEach(item -> {
-            MutableComponent mutableText = item.components().get(DataComponents.ITEM_NAME).plainCopy();
+            MutableComponent mutableText = item.getName().plainCopy();
             mutableText.append(Component.literal(" x").append(String.valueOf(counts.getInt(item))).withStyle(ChatFormatting.GRAY));
             textConsumer.accept(mutableText);
         });
 
         if (counts.size() > 5) {
-            textConsumer.accept((Component.translatable("item.container.more_items", counts.size() - 5)).withStyle(ChatFormatting.ITALIC));
+            textConsumer.accept((Component.translatable("container.shulkerBox.more", counts.size() - 5)).withStyle(ChatFormatting.ITALIC));
         }
     }
 
@@ -426,7 +431,7 @@ public class BetterTooltips extends Module {
                 || (event.itemStack().getItem() instanceof MobBucketItem && entitiesInBuckets.get())
                 || (event.itemStack().getItem() instanceof BundleItem && bundles.get())
                 || (event.itemStack().getItem() instanceof BannerItem && banners.get())
-                || (event.itemStack().getItem() instanceof BannerPatternItem && banners.get())
+                || (event.itemStack().has(DataComponents.PROVIDES_BANNER_PATTERNS) && banners.get())
                 || (event.itemStack().getItem() == Items.SHIELD && banners.get())
         );
 
@@ -475,9 +480,11 @@ public class BetterTooltips extends Module {
         return 0;
     }
 
-    private BannerTooltipComponent createBannerFromBannerPatternItem(BannerPatternItem item) {
-        HolderSet.Named<BannerPattern> providedPatterns = mc.player.registryAccess().lookupOrThrow(Registries.BANNER_PATTERN).getOrThrow(item.getBannerPattern());
-        if (providedPatterns.size() == 0) {
+    private BannerTooltipComponent createBannerFromBannerPatternItem(ItemStack item) {
+        TagKey<BannerPattern> providedPatternsTag = item.get(DataComponents.PROVIDES_BANNER_PATTERNS);
+        HolderSet<BannerPattern> providedPatterns = providedPatternsTag == null || mc.player == null ? null
+            : mc.player.registryAccess().lookupOrThrow(Registries.BANNER_PATTERN).get(providedPatternsTag).orElse(null);
+        if (providedPatterns == null || providedPatterns.size() == 0) {
             return new BannerTooltipComponent(DyeColor.GRAY, BannerPatternLayers.EMPTY);
         }
 
@@ -495,9 +502,12 @@ public class BetterTooltips extends Module {
         return (isActive() && openContents.get()) && (!pauseInCreative.get() || !mc.player.hasInfiniteMaterials());
     }
 
-    // PORT(1.21.4): InputWithModifiers/KeyEvent/MouseButtonEvent do not exist on 1.21.4 - callers pass plain ints (isKey, value, modifiers).
-    public boolean shouldOpenContents(boolean isKey, int value, int modifiers) {
-        return openContents() && openContentsKey.get().matches(isKey, value, modifiers);
+    public boolean shouldOpenContents(InputWithModifiers input) {
+        if (input instanceof MouseButtonEvent click)
+            return openContents() && openContentsKey.get().matches(click.buttonInfo());
+        if (input instanceof KeyEvent keyInput) return openContents() && openContentsKey.get().matches(keyInput);
+
+        return false;
     }
 
     public boolean openContent(ItemStack itemStack) {

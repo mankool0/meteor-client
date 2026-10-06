@@ -6,8 +6,10 @@
 package meteordevelopment.meteorclient.gui.renderer.packer;
 
 import com.mojang.blaze3d.platform.TextureUtil;
+import com.mojang.blaze3d.textures.FilterMode;
+import com.mojang.blaze3d.textures.TextureFormat;
 import meteordevelopment.meteorclient.renderer.Texture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.stb.STBImageResize;
@@ -29,7 +31,7 @@ public class TexturePacker {
 
     private final List<Image> images = new ArrayList<>();
 
-    public GuiTexture add(ResourceLocation id) {
+    public GuiTexture add(Identifier id) {
         try {
             InputStream in = mc.getResourceManager().getResource(id).get().open();
             GuiTexture texture = new GuiTexture();
@@ -140,7 +142,7 @@ public class TexturePacker {
 
         ((Buffer) buffer).rewind();
 
-        Texture texture = new Texture(width, height, Texture.Format.RGBA8, Texture.Filter.LINEAR, Texture.Filter.LINEAR);
+        Texture texture = new Texture(width, height, TextureFormat.RGBA8, FilterMode.LINEAR, FilterMode.LINEAR);
         texture.upload(buffer);
 
         return texture;

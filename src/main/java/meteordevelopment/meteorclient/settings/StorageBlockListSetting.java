@@ -17,7 +17,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -81,7 +81,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
     }
 
     @Override
-    public Iterable<ResourceLocation> getIdentifierSuggestions() {
+    public Iterable<Identifier> getIdentifierSuggestions() {
         return BuiltInRegistries.BLOCK_ENTITY_TYPE.keySet();
     }
 
@@ -89,7 +89,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
     public CompoundTag save(CompoundTag tag) {
         ListTag valueTag = new ListTag();
         for (BlockEntityType<?> type : get()) {
-            ResourceLocation id = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(type);
+            Identifier id = BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(type);
             if (id != null) valueTag.add(StringTag.valueOf(id.toString()));
         }
         tag.put("value", valueTag);
@@ -101,9 +101,9 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
     public List<BlockEntityType<?>> load(CompoundTag tag) {
         get().clear();
 
-        ListTag valueTag = tag.getList("value", Tag.TAG_STRING);
+        ListTag valueTag = tag.getListOrEmpty("value");
         for (Tag tagI : valueTag) {
-            BlockEntityType<?> type = BuiltInRegistries.BLOCK_ENTITY_TYPE.getValue(ResourceLocation.parse(tagI.getAsString()));
+            BlockEntityType<?> type = BuiltInRegistries.BLOCK_ENTITY_TYPE.getValue(Identifier.parse(tagI.asString().orElse("")));
             if (type != null) get().add(type);
         }
 
@@ -137,7 +137,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
 
         @Nullable
         @Override
-        public ResourceLocation getKey(BlockEntityType<?> entry) {
+        public Identifier getKey(BlockEntityType<?> entry) {
             return null;
         }
 
@@ -159,7 +159,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
 
         @Nullable
         @Override
-        public BlockEntityType<?> getValue(@Nullable ResourceLocation id) {
+        public BlockEntityType<?> getValue(@Nullable Identifier id) {
             return null;
         }
 
@@ -169,7 +169,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
         }
 
         @Override
-        public Set<ResourceLocation> keySet() {
+        public Set<Identifier> keySet() {
             return null;
         }
 
@@ -179,7 +179,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
         }
 
         @Override
-        public boolean containsKey(ResourceLocation id) {
+        public boolean containsKey(Identifier id) {
             return false;
         }
 
@@ -226,7 +226,7 @@ public class StorageBlockListSetting extends Setting<List<BlockEntityType<?>>> {
         }
 
         @Override
-        public Optional<Holder.Reference<BlockEntityType<?>>> get(ResourceLocation id) {
+        public Optional<Holder.Reference<BlockEntityType<?>>> get(Identifier id) {
             return Optional.empty();
         }
 

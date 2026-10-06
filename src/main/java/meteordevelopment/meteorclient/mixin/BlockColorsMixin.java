@@ -27,8 +27,8 @@ public abstract class BlockColorsMixin {
         ),
         index = 0
     )
-    private static BlockColor modifySpruceLeavesColor(BlockColor provider) {
-        return (state, world, pos, tintIndex) -> getModifiedColor(-10380959);
+    private static BlockColor modifySpruceLeavesColor(BlockColor color) {
+        return (state, level, pos, tintIndex) -> getModifiedColor(-10380959);
     }
 
     @ModifyArg(
@@ -40,8 +40,8 @@ public abstract class BlockColorsMixin {
         ),
         index = 0
     )
-    private static BlockColor modifyBirchLeavesColor(BlockColor provider) {
-        return (state, world, pos, tintIndex) -> getModifiedColor(-8345771);
+    private static BlockColor modifyBirchLeavesColor(BlockColor color) {
+        return (state, level, pos, tintIndex) -> getModifiedColor(-8345771);
     }
 
     @Unique

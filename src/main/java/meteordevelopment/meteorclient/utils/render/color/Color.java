@@ -333,10 +333,10 @@ public class Color implements ICopyable<Color>, ISerializable<Color> {
 
     @Override
     public Color fromTag(CompoundTag tag) {
-        r = tag.getInt("r");
-        g = tag.getInt("g");
-        b = tag.getInt("b");
-        a = tag.getInt("a");
+        r = tag.getIntOr("r", 0);
+        g = tag.getIntOr("g", 0);
+        b = tag.getIntOr("b", 0);
+        a = tag.getIntOr("a", 0);
 
         validate();
         return this;

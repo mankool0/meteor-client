@@ -815,7 +815,7 @@ public class CrystalAura extends Module {
         // Anti weakness
         if (antiWeakness.get()) {
             MobEffectInstance weakness = mc.player.getEffect(MobEffects.WEAKNESS);
-            MobEffectInstance strength = mc.player.getEffect(MobEffects.DAMAGE_BOOST);
+            MobEffectInstance strength = mc.player.getEffect(MobEffects.STRENGTH);
 
             // Check for strength
             if (weakness != null && (strength == null || strength.getAmplifier() <= weakness.getAmplifier())) {
@@ -1025,7 +1025,7 @@ public class CrystalAura extends Module {
         FindItemResult item = InvUtils.findInHotbar(targetItem);
         if (!item.found()) return;
 
-        int prevSlot = mc.player.getInventory().selected;
+        int prevSlot = mc.player.getInventory().getSelectedSlot();
 
         if (autoSwitch.get() != AutoSwitchMode.None && !item.isOffhand()) InvUtils.swap(item.slot(), false);
 
@@ -1120,8 +1120,7 @@ public class CrystalAura extends Module {
         for (LivingEntity target : targets) {
             if (EntityUtils.getTotalHealth(target) <= facePlaceHealth.get()) return true;
 
-            for (EquipmentSlot slot : EquipmentSlot.values()) {
-                if (!slot.isArmor()) continue;
+            for (EquipmentSlot slot : EquipmentSlotGroup.ARMOR) {
                 ItemStack itemStack = target.getItemBySlot(slot);
 
                 if (itemStack == null || itemStack.isEmpty()) {

@@ -13,7 +13,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -41,9 +41,9 @@ public class EnchantmentListSetting extends Setting<Set<ResourceKey<Enchantment>
         for (String value : values) {
             String name = value.trim();
 
-            ResourceLocation id;
-            if (name.contains(":")) id = ResourceLocation.parse(name);
-            else id = ResourceLocation.withDefaultNamespace(name);
+            Identifier id;
+            if (name.contains(":")) id = Identifier.parse(name);
+            else id = Identifier.withDefaultNamespace(name);
 
             enchs.add(ResourceKey.create(Registries.ENCHANTMENT, id));
         }
@@ -57,7 +57,7 @@ public class EnchantmentListSetting extends Setting<Set<ResourceKey<Enchantment>
     }
 
     @Override
-    public Iterable<ResourceLocation> getIdentifierSuggestions() {
+    public Iterable<Identifier> getIdentifierSuggestions() {
         return Optional.ofNullable(Minecraft.getInstance().getConnection())
             .flatMap(networkHandler -> networkHandler.registryAccess().lookup(Registries.ENCHANTMENT))
             .map(Registry::keySet).orElse(Set.of());
@@ -67,7 +67,7 @@ public class EnchantmentListSetting extends Setting<Set<ResourceKey<Enchantment>
     public CompoundTag save(CompoundTag tag) {
         ListTag valueTag = new ListTag();
         for (ResourceKey<Enchantment> ench : get()) {
-            valueTag.add(StringTag.valueOf(ench.location().toString()));
+            valueTag.add(StringTag.valueOf(ench.identifier().toString()));
         }
         tag.put("value", valueTag);
 
@@ -78,8 +78,8 @@ public class EnchantmentListSetting extends Setting<Set<ResourceKey<Enchantment>
     public Set<ResourceKey<Enchantment>> load(CompoundTag tag) {
         get().clear();
 
-        for (Tag tagI : tag.getList("value", Tag.TAG_STRING)) {
-            get().add(ResourceKey.create(Registries.ENCHANTMENT, ResourceLocation.parse(tagI.getAsString())));
+        for (Tag tagI : tag.getListOrEmpty("value")) {
+            get().add(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse(tagI.asString().orElse(""))));
         }
 
         return get();
