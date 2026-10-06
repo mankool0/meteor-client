@@ -27,6 +27,7 @@ public class VanillaTextRenderer implements TextRenderer {
     private final Matrix4f emptyMatrix = new Matrix4f();
 
     public double scale = 2;
+    //todo remove in 26.3 update
     public boolean scaleIndividually;
 
     private boolean building;

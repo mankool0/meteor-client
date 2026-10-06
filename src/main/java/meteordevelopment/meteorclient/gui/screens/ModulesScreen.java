@@ -30,7 +30,8 @@ import java.util.Set;
 
 import static meteordevelopment.meteorclient.utils.Utils.getWindowHeight;
 import static meteordevelopment.meteorclient.utils.Utils.getWindowWidth;
-import static org.lwjgl.glfw.GLFW.*;
+import static com.mojang.blaze3d.platform.InputConstants.*;
+import static org.lwjgl.glfw.GLFW.GLFW_MOD_SUPER;
 
 public class ModulesScreen extends TabScreen {
     private WCategoryController controller;
@@ -46,9 +47,11 @@ public class ModulesScreen extends TabScreen {
         controller = add(new WCategoryController()).widget();
 
         // Help
-        WVerticalList help = add(theme.verticalList()).pad(4).bottom().widget();
-        help.add(theme.label("Left click - Toggle module"));
-        help.add(theme.label("Right click - Open module settings"));
+        if (theme.modulesHelpText()) {
+            WVerticalList help = add(theme.verticalList()).pad(4).bottom().widget();
+            help.add(theme.label("Left click - Toggle module"));
+            help.add(theme.label("Right click - Open module settings"));
+        }
     }
 
     @Override
@@ -151,9 +154,9 @@ public class ModulesScreen extends TabScreen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (locked) return false;
 
-        boolean cntrl = Minecraft.ON_OSX ? modifiers == GLFW_MOD_SUPER : modifiers == GLFW_MOD_CONTROL;
+        boolean cntrl = Minecraft.ON_OSX ? modifiers == GLFW_MOD_SUPER : modifiers == MOD_CONTROL;
 
-        if (cntrl && keyCode == GLFW_KEY_F) {
+        if (cntrl && keyCode == KEY_F) {
             if (searchWindow != null) searchWindow.setExpanded(true);
             if (searchTextBox != null) {
                 searchTextBox.setFocused(true);

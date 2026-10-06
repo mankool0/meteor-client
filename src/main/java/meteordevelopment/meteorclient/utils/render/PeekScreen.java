@@ -17,7 +17,7 @@ import net.minecraft.util.ARGB;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.inventory.ShulkerBoxMenu;
 import net.minecraft.world.item.ItemStack;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -58,7 +58,7 @@ public class PeekScreen extends ShulkerBoxScreen {
             }
         }
 
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE || mc.options.keyInventory.matches(keyCode, scanCode)) {
+        if (keyCode == InputConstants.KEY_ESCAPE || mc.options.keyInventory.matches(keyCode, scanCode)) {
             onClose();
             return true;
         }

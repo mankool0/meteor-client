@@ -16,13 +16,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
+import static com.mojang.blaze3d.platform.InputConstants.RELEASE;
 
 @Mixin(MouseHandler.class)
 public abstract class MouseHandlerMixin {
     @Inject(method = "onPress", at = @At("HEAD"), cancellable = true)
     private void onMouseButton(long window, int button, int action, int modifiers, CallbackInfo ci) {
-        Input.setButtonState(button, action != GLFW_RELEASE);
+        Input.setButtonState(button, action != RELEASE);
 
         if (MeteorClient.EVENT_BUS.post(MouseClickEvent.get(button, modifiers, KeyAction.get(action))).isCancelled()) ci.cancel();
     }

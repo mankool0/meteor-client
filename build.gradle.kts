@@ -1,7 +1,12 @@
+import net.ltgt.gradle.errorprone.errorprone
+
 plugins {
     alias(libs.plugins.fabric.loom)
     id("maven-publish")
+    alias(libs.plugins.errorprone)
 }
+
+val runErrorProne = providers.gradleProperty("errorprone").isPresent
 
 base {
     archivesName = properties["archives_base_name"] as String
@@ -92,6 +97,14 @@ dependencies {
     jij(libs.netty.handler.proxy) { isTransitive = false }
     jij(libs.netty.codec.socks) { isTransitive = false }
     jij(libs.waybackauthlib)
+    jij(libs.minecraft.auth) {
+        exclude("com.google.code.gson")
+        exclude("com.google.errorprone")
+    }
+
+    // Error Prone
+    errorprone(libs.errorprone.core)
+    errorprone(libs.nullaway)
 }
 
 sourceSets {
@@ -201,6 +214,18 @@ tasks {
                 "-Xmaxerrs", "10000"
             )
         )
+
+        options.errorprone.enabled.set(runErrorProne)
+
+        if (runErrorProne) {
+            options.errorprone {
+                check("NullAway", net.ltgt.gradle.errorprone.CheckSeverity.ERROR)
+                option("NullAway:AnnotatedPackages", "meteordevelopment.meteorclient")
+                option("NullAway:JSpecifyMode", "true")
+                // Event handlers are discovered reflectively by Orbit.
+                option("UnusedMethod:ExcludedAnnotations", "meteordevelopment.orbit.EventHandler")
+            }
+        }
     }
 
     javadoc {

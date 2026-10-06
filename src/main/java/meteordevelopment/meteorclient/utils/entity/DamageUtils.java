@@ -307,11 +307,12 @@ public class DamageUtils {
 
         int damageProtection = 0;
 
+        Object2IntMap<Holder<Enchantment>> enchantments = new Object2IntOpenHashMap<>();
+
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (!EquipmentSlotGroup.ARMOR.test(slot)) continue;
             ItemStack stack = player.getItemBySlot(slot);
 
-            Object2IntMap<Holder<Enchantment>> enchantments = new Object2IntOpenHashMap<>();
             Utils.getEnchantments(stack, enchantments);
 
             int protection = Utils.getEnchantmentLevel(enchantments, Enchantments.PROTECTION);

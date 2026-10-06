@@ -35,7 +35,8 @@ import java.util.function.Consumer;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 import static meteordevelopment.meteorclient.utils.Utils.getWindowHeight;
 import static meteordevelopment.meteorclient.utils.Utils.getWindowWidth;
-import static org.lwjgl.glfw.GLFW.*;
+import static com.mojang.blaze3d.platform.InputConstants.*;
+import static org.lwjgl.glfw.GLFW.GLFW_MOD_SUPER;
 
 public abstract class WidgetScreen extends Screen {
     private static final GuiRenderer RENDERER = new GuiRenderer();
@@ -146,7 +147,7 @@ public abstract class WidgetScreen extends Screen {
         mouseX *= s;
         mouseY *= s;
 
-        if (debug && button == GLFW_MOUSE_BUTTON_RIGHT)
+        if (debug && button == MOUSE_BUTTON_RIGHT)
             DEBUG_RENDERER.mouseReleased(root, new MouseButtonEvent(mouseX, mouseY, button, 0), 0);
 
         return root.mouseReleased(new MouseButtonEvent(mouseX, mouseY, button, 0));
@@ -179,12 +180,12 @@ public abstract class WidgetScreen extends Screen {
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
         if (locked) return false;
 
-        if ((modifiers == GLFW_MOD_CONTROL || modifiers == GLFW_MOD_SUPER) && keyCode == GLFW_KEY_9) {
+        if ((modifiers == MOD_CONTROL || modifiers == GLFW_MOD_SUPER) && keyCode == KEY_9) {
             debug = !debug;
             return true;
         }
 
-        if ((keyCode == GLFW_KEY_ENTER || keyCode == GLFW_KEY_KP_ENTER) && enterAction != null) {
+        if ((keyCode == KEY_RETURN || keyCode == KEY_NUMPADENTER) && enterAction != null) {
             enterAction.run();
             return true;
         }
@@ -200,7 +201,7 @@ public abstract class WidgetScreen extends Screen {
         if (shouldReturn) return true;
 
         // Select next text box if TAB was pressed
-        if (keyCode == GLFW_KEY_TAB) {
+        if (keyCode == KEY_TAB) {
             AtomicReference<WTextBox> firstTextBox = new AtomicReference<>(null);
             AtomicBoolean done = new AtomicBoolean(false);
             AtomicBoolean foundFocused = new AtomicBoolean(false);
@@ -231,10 +232,10 @@ public abstract class WidgetScreen extends Screen {
             return true;
         }
 
-        boolean control = Minecraft.ON_OSX ? modifiers == GLFW_MOD_SUPER : modifiers == GLFW_MOD_CONTROL;
+        boolean control = Minecraft.ON_OSX ? modifiers == GLFW_MOD_SUPER : modifiers == MOD_CONTROL;
 
-        return (control && keyCode == GLFW_KEY_C && toClipboard())
-            || (control && keyCode == GLFW_KEY_V && fromClipboard());
+        return (control && keyCode == KEY_C && toClipboard())
+            || (control && keyCode == KEY_V && fromClipboard());
     }
 
     public void keyRepeated(int key, int modifiers) {
@@ -354,7 +355,7 @@ public abstract class WidgetScreen extends Screen {
 
                     // Restore mouse position to where it was when the screen was closed
                     if (parent != null) {
-                        glfwSetCursorPos(mc.getWindow().getWindow(), restoreX, restoreY);
+                        grabOrReleaseMouse(mc.getWindow().getWindow(), CURSOR_NORMAL, restoreX, restoreY);
                     }
                 };
             }

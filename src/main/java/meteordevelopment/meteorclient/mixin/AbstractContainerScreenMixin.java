@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
+import static com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT;
 
 @Mixin(AbstractContainerScreen.class)
 public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMenu> extends Screen implements MenuAccess<T> {
@@ -85,7 +85,7 @@ public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMe
     // Inventory Tweaks
     @Inject(method = "mouseDragged", at = @At("TAIL"))
     private void onMouseDragged(double mouseX, double mouseY, int button, double dx, double dy, CallbackInfoReturnable<Boolean> cir) {
-        if (button != GLFW_MOUSE_BUTTON_LEFT || doubleclick || !Modules.get().get(InventoryTweaks.class).mouseDragItemMove())
+        if (button != MOUSE_BUTTON_LEFT || doubleclick || !Modules.get().get(InventoryTweaks.class).mouseDragItemMove())
             return;
 
         Slot slot = getHoveredSlot(mouseX, mouseY);

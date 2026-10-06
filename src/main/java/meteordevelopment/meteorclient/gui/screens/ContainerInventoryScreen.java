@@ -18,7 +18,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.BundleItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.BundleContents;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -151,7 +151,7 @@ public class ContainerInventoryScreen extends Screen {
             return tooltips.openContent(stack);
         }
 
-        if (keyCode == GLFW.GLFW_KEY_ESCAPE || mc.options.keyInventory.matches(keyCode, scanCode)) {
+        if (keyCode == InputConstants.KEY_ESCAPE || mc.options.keyInventory.matches(keyCode, scanCode)) {
             onClose();
             return true;
         }

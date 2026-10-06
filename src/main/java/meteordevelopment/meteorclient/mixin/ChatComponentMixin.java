@@ -144,6 +144,8 @@ public abstract class ChatComponentMixin implements IChatHud {
 
     @ModifyExpressionValue(method = "render(Lnet/minecraft/client/gui/GuiGraphics;IIIZ)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Mth;ceil(F)I"))
     private int onRender_modifyWidth(int width) {
+        if (Modules.get() == null) return width;
+
         return getBetterChat().modifyChatWidth(width);
     }
 
@@ -171,11 +173,15 @@ public abstract class ChatComponentMixin implements IChatHud {
 
     @Inject(method = "clearMessages", at = @At("HEAD"))
     private void onClearMessages(boolean history, CallbackInfo ci) {
+        if (Modules.get() == null) return;
+
         getBetterChat().lines.clear();
     }
 
     @Inject(method = "refreshTrimmedMessages", at = @At("HEAD"))
     private void onRefreshTrimmedMessages(CallbackInfo ci) {
+        if (Modules.get() == null) return;
+
         getBetterChat().lines.clear();
     }
 

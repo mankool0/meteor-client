@@ -12,7 +12,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.BookEditScreen;
 import net.minecraft.nbt.*;
 import net.minecraft.network.chat.Component;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -70,9 +69,9 @@ public abstract class BookEditScreenMixin extends Screen {
                 }
 
                 try {
-                    GLFW.glfwSetClipboardString(mc.getWindow().getWindow(), Base64.getEncoder().encodeToString(bytes.array));
+                    mc.keyboardHandler.setClipboard(Base64.getEncoder().encodeToString(bytes.array));
                 } catch (OutOfMemoryError exception) {
-                    GLFW.glfwSetClipboardString(mc.getWindow().getWindow(), exception.toString());
+                    mc.keyboardHandler.setClipboard(exception.toString());
                 }
             })
                 .pos(4, 4)
@@ -82,7 +81,7 @@ public abstract class BookEditScreenMixin extends Screen {
 
         addRenderableWidget(
             new Button.Builder(Component.literal("Paste"), unused2 -> {
-                String clipboard = GLFW.glfwGetClipboardString(mc.getWindow().getWindow());
+                String clipboard = mc.keyboardHandler.getClipboard();
                 if (clipboard == null) return;
 
                 byte[] bytes;

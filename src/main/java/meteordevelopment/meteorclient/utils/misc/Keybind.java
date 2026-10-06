@@ -5,146 +5,209 @@
 
 package meteordevelopment.meteorclient.utils.misc;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import meteordevelopment.meteorclient.events.meteor.KeyInputEvent;
 import meteordevelopment.meteorclient.events.meteor.MouseClickEvent;
-import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.input.Input;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.Tag;
+import org.lwjgl.glfw.GLFW;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Objects;
-
-import static org.lwjgl.glfw.GLFW.*;
+import java.util.Set;
 
 public class Keybind implements ISerializable<Keybind>, ICopyable<Keybind> {
-    private boolean isKey;
-    private int value;
-    private int modifiers;
+    public enum Modifier {
+        SHIFT(GLFW.GLFW_MOD_SHIFT),
+        CONTROL(InputConstants.MOD_CONTROL),
+        ALT(GLFW.GLFW_MOD_ALT),
+        SUPER(GLFW.GLFW_MOD_SUPER),
+        CAPS_LOCK(GLFW.GLFW_MOD_CAPS_LOCK),
+        NUM_LOCK(GLFW.GLFW_MOD_NUM_LOCK),
+        ;
 
-    private Keybind(boolean isKey, int value, int modifiers) {
-        set(isKey, value, modifiers);
+        private static final Modifier[] VALUES = values();
+
+        public final int mask;
+
+        Modifier(int mask) {
+            this.mask = mask;
+        }
+
+        public boolean isKeyPressed() {
+            return switch (this) {
+                case CONTROL -> Input.isKeyPressed(InputConstants.KEY_LCONTROL) || Input.isKeyPressed(InputConstants.KEY_RCONTROL);
+                case SUPER -> Input.isKeyPressed(InputConstants.KEY_LWIN) || Input.isKeyPressed(InputConstants.KEY_RWIN);
+                case ALT -> Input.isKeyPressed(InputConstants.KEY_LALT) || Input.isKeyPressed(InputConstants.KEY_RALT);
+                case SHIFT -> Input.isKeyPressed(InputConstants.KEY_LSHIFT) || Input.isKeyPressed(InputConstants.KEY_RSHIFT);
+                case CAPS_LOCK -> Input.isKeyPressed(InputConstants.KEY_CAPSLOCK);
+                case NUM_LOCK -> Input.isKeyPressed(InputConstants.KEY_NUMLOCK);
+            };
+        }
+
+        private static EnumSet<Modifier> fromRawValue(int modifiers) {
+            var result = EnumSet.noneOf(Modifier.class);
+            for (var mod : VALUES) {
+                if ((mod.mask & modifiers) != 0) result.add(mod);
+            }
+            return result;
+        }
+    }
+
+    public InputConstants.Key key;
+    private final EnumSet<Modifier> modifiers = EnumSet.noneOf(Modifier.class);
+
+    private Keybind(InputConstants.Key key, Collection<Modifier> modifiers) {
+        this.key = key;
+        this.modifiers.addAll(modifiers);
     }
 
     public static Keybind none() {
-        return new Keybind(true, GLFW_KEY_UNKNOWN, 0);
+        return new Keybind(InputConstants.UNKNOWN, Set.of());
+    }
+
+    public static Keybind fromKey(InputConstants.Key key) {
+        return new Keybind(key, Set.of());
     }
 
     public static Keybind fromKey(int key) {
-        return new Keybind(true, key, 0);
+        return fromKey(keyboard(key));
+    }
+
+    public static Keybind fromKeys(InputConstants.Key key, Collection<Modifier> modifiers) {
+        return new Keybind(key, modifiers);
+    }
+
+    public static Keybind fromKeys(InputConstants.Key key, Modifier... modifiers) {
+        return fromKeys(key, Arrays.asList(modifiers));
     }
 
     public static Keybind fromKeys(int key, int modifiers) {
-        return new Keybind(true, key, modifiers);
+        return fromKeys(keyboard(key), Modifier.fromRawValue(modifiers));
     }
 
     public static Keybind fromButton(int button) {
-        return new Keybind(false, button, 0);
-    }
-
-    public int getValue() {
-        return value;
+        return fromKey(mouse(button));
     }
 
     public boolean isSet() {
-        return value != GLFW_KEY_UNKNOWN;
+        return !key.equals(InputConstants.UNKNOWN);
     }
 
     public boolean isKey() {
-        return isKey;
+        return key.getType() != InputConstants.Type.MOUSE;
     }
 
     public boolean hasMods() {
-        return isKey && modifiers != 0;
+        return !modifiers.isEmpty();
+    }
+
+    public int getValue() {
+        return key.getValue();
+    }
+
+    public void set(InputConstants.Key key, Collection<Modifier> modifiers) {
+        this.key = key;
+        this.modifiers.clear();
+        this.modifiers.addAll(modifiers);
+    }
+
+    public void set(InputConstants.Key key, Modifier... modifiers) {
+        set(key, Arrays.asList(modifiers));
     }
 
     public void set(boolean isKey, int value, int modifiers) {
-        this.isKey = isKey;
-        this.value = value;
-        this.modifiers = modifiers;
+        set(isKey ? keyboard(value) : mouse(value), isKey ? Modifier.fromRawValue(modifiers) : Set.of());
     }
 
     @Override
     public Keybind set(Keybind value) {
-        this.isKey = value.isKey;
-        this.value = value.value;
-        this.modifiers = value.modifiers;
+        set(value.key, value.modifiers);
 
         return this;
     }
 
     public void reset() {
-        set(true, GLFW_KEY_UNKNOWN, 0);
+        set(InputConstants.UNKNOWN, Set.of());
+    }
+
+    public boolean canBindTo(InputConstants.Key key, Collection<Modifier> modifiers) {
+        if (key.getType() != InputConstants.Type.MOUSE) {
+            if (!modifiers.isEmpty() && isKeyMod(key)) return false;
+            return !key.equals(InputConstants.UNKNOWN) && !key.equals(keyboard(InputConstants.KEY_ESCAPE));
+        }
+
+        return !key.equals(mouse(InputConstants.MOUSE_BUTTON_LEFT)) && !key.equals(mouse(InputConstants.MOUSE_BUTTON_RIGHT));
     }
 
     public boolean canBindTo(boolean isKey, int value, int modifiers) {
-        if (isKey) {
-            if (modifiers != 0 && isKeyMod(value)) return false;
-            return value != GLFW_KEY_UNKNOWN && value != GLFW_KEY_ESCAPE;
-        }
-        return value != GLFW_MOUSE_BUTTON_LEFT && value != GLFW_MOUSE_BUTTON_RIGHT;
+        return canBindTo(isKey ? keyboard(value) : mouse(value), isKey ? Modifier.fromRawValue(modifiers) : Set.of());
+    }
+
+    public boolean matches(InputConstants.Key key, Set<Modifier> modifiers) {
+        if (!isSet() || !this.key.equals(key)) return false;
+        // Modifiers held for other reasons (sneaking, sprinting, or the bound key being a modifier
+        // itself, which sets its own bit on press) must not stop a bind without modifiers from
+        // matching. Binds that do have modifiers take precedence, see Modules#onAction.
+        return !hasMods() || this.modifiers.equals(modifiers);
     }
 
     public boolean matches(boolean isKey, int value, int modifiers) {
-        if (!this.isSet() || this.isKey != isKey) return false;
-        if (!hasMods()) return this.value == value;
-        return this.value == value && this.modifiers == modifiers;
+        return matches(isKey ? keyboard(value) : mouse(value), isKey ? Modifier.fromRawValue(modifiers) : Set.of());
     }
 
     public boolean matches(KeyInputEvent input) {
-        return matches(true, input.key(), input.modifiers());
+        return matches(InputConstants.getKey(input.key(), input.scancode()), Modifier.fromRawValue(input.modifiers()));
     }
 
     public boolean matches(MouseClickEvent input) {
-        return matches(false, input.button(), 0);
+        return matches(mouse(input.button()), Set.of());
     }
 
     public boolean isPressed() {
-        return isKey ? modifiersPressed() && Input.isKeyPressed(value) : Input.isButtonPressed(value);
+        if (key.getType() == InputConstants.Type.MOUSE) return Input.isButtonPressed(key.getValue());
+
+        return modifiersPressed() && Input.isKeyPressed(key.getValue());
     }
 
     private boolean modifiersPressed() {
         if (!hasMods()) return true;
 
-        if (!isModPressed(GLFW_MOD_CONTROL, GLFW_KEY_LEFT_CONTROL, GLFW_KEY_RIGHT_CONTROL)) return false;
-        if (!isModPressed(GLFW_MOD_SUPER, GLFW_KEY_LEFT_SUPER, GLFW_KEY_RIGHT_SUPER)) return false;
-        if (!isModPressed(GLFW_MOD_ALT, GLFW_KEY_LEFT_ALT, GLFW_KEY_RIGHT_ALT)) return false;
-        if (!isModPressed(GLFW_MOD_SHIFT, GLFW_KEY_LEFT_SHIFT, GLFW_KEY_RIGHT_SHIFT)) return false;
+        for (Modifier modifier : modifiers) {
+            if (!modifier.isKeyPressed()) return false;
+        }
 
         return true;
     }
 
-    private boolean isModPressed(int value, int... keys) {
-        if ((modifiers & value) == 0) return true;
-
-        for (int key : keys) {
-            if (Input.isKeyPressed(key)) return true;
-        }
-
-        return false;
-    }
-
-    private boolean isKeyMod(int key) {
-        return key >= GLFW_KEY_LEFT_SHIFT && key <= GLFW_KEY_RIGHT_SUPER;
+    private boolean isKeyMod(InputConstants.Key key) {
+        return key.getValue() >= InputConstants.KEY_LSHIFT && key.getValue() <= InputConstants.KEY_RWIN;
     }
 
     @Override
     public Keybind copy() {
-        return new Keybind(isKey, value, modifiers);
+        return new Keybind(key, modifiers);
     }
 
     @Override
     public String toString() {
         if (!isSet()) return "None";
-        if (!isKey) return Utils.getButtonName(value);
-        if (modifiers == 0) return Utils.getKeyName(value);
+        if (key.getType() == InputConstants.Type.MOUSE) return key.getDisplayName().getString();
+        if (modifiers.isEmpty()) return key.getDisplayName().getString();
 
         StringBuilder label = new StringBuilder();
-        if ((modifiers & GLFW_MOD_CONTROL) != 0) label.append("Ctrl + ");
-        if ((modifiers & GLFW_MOD_SUPER) != 0) label.append("Cmd + ");
-        if ((modifiers & GLFW_MOD_ALT) != 0) label.append("Alt + ");
-        if ((modifiers & GLFW_MOD_SHIFT) != 0) label.append("Shift + ");
-        if ((modifiers & GLFW_MOD_CAPS_LOCK) != 0) label.append("Caps Lock + ");
-        if ((modifiers & GLFW_MOD_NUM_LOCK) != 0) label.append("Num Lock + ");
-        label.append(Utils.getKeyName(value));
+        if (modifiers.contains(Modifier.CONTROL)) label.append("Ctrl + ");
+        if (modifiers.contains(Modifier.SUPER)) label.append("Cmd + ");
+        if (modifiers.contains(Modifier.ALT)) label.append("Alt + ");
+        if (modifiers.contains(Modifier.SHIFT)) label.append("Shift + ");
+        if (modifiers.contains(Modifier.CAPS_LOCK)) label.append("Caps Lock + ");
+        if (modifiers.contains(Modifier.NUM_LOCK)) label.append("Num Lock + ");
+        label.append(key.getDisplayName().getString());
 
         return label.toString();
     }
@@ -154,12 +217,12 @@ public class Keybind implements ISerializable<Keybind>, ICopyable<Keybind> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Keybind keybind = (Keybind) o;
-        return isKey == keybind.isKey && value == keybind.value && modifiers == keybind.modifiers;
+        return key.equals(keybind.key) && modifiers.equals(keybind.modifiers);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(isKey, value, modifiers);
+        return Objects.hash(key, modifiers);
     }
 
     // Serialization
@@ -168,19 +231,52 @@ public class Keybind implements ISerializable<Keybind>, ICopyable<Keybind> {
     public CompoundTag toTag() {
         CompoundTag tag = new CompoundTag();
 
-        tag.putBoolean("isKey", isKey);
-        tag.putInt("value", value);
-        tag.putInt("modifiers", modifiers);
+        tag.putString("key", key.getName());
+
+        ListTag modifiersTag = new ListTag();
+        for (Modifier modifier : modifiers) {
+            modifiersTag.add(StringTag.valueOf(modifier.name()));
+        }
+        tag.put("modifiers", modifiersTag);
 
         return tag;
     }
 
     @Override
     public Keybind fromTag(CompoundTag tag) {
-        isKey = tag.getBoolean("isKey");
-        value = tag.getInt("value");
-        modifiers = tag.getInt("modifiers");
+        if (tag.contains("key")) {
+            // New format: key name + modifier enum names
+            try {
+                key = InputConstants.getKey(tag.getString("key"));
+            } catch (IllegalArgumentException e) {
+                key = InputConstants.UNKNOWN;
+            }
+
+            modifiers.clear();
+            ListTag modifiersTag = tag.getList("modifiers", Tag.TAG_STRING);
+            for (int i = 0; i < modifiersTag.size(); i++) {
+                try {
+                    modifiers.add(Modifier.valueOf(modifiersTag.getString(i)));
+                } catch (IllegalArgumentException ignored) {}
+            }
+        } else {
+            // Legacy format: raw ints (GLFW)
+            boolean isKey = !tag.contains("isKey") || tag.getBoolean("isKey");
+            int value = tag.contains("value") ? tag.getInt("value") : InputConstants.UNKNOWN.getValue();
+            int mods = tag.getInt("modifiers");
+
+            set(isKey ? keyboard(value) : mouse(value), isKey ? Modifier.fromRawValue(mods) : Set.of());
+        }
 
         return this;
     }
+
+    private static InputConstants.Key keyboard(int key) {
+        return InputConstants.Type.KEYSYM.getOrCreate(key);
+    }
+
+    private static InputConstants.Key mouse(int button) {
+        return InputConstants.Type.MOUSE.getOrCreate(button);
+    }
+
 }
