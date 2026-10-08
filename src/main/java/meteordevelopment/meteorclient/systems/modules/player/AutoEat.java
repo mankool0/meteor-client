@@ -80,6 +80,24 @@ public class AutoEat extends Module {
         .build()
     );
 
+    private final Setting<Boolean> autoMove = sgGeneral.add(new BoolSetting.Builder()
+        .name("auto-move")
+        .description("Swaps food from the inventory into a selected hotbar slot, instead of only using empty hotbar slots.")
+        .defaultValue(false)
+        .visible(searchInventory::get)
+        .build()
+    );
+
+    private final Setting<Integer> autoMoveSlot = sgGeneral.add(new IntSetting.Builder()
+        .name("auto-move-slot")
+        .description("The hotbar slot auto move swaps food into.")
+        .defaultValue(9)
+        .range(1, 9)
+        .sliderRange(1, 9)
+        .visible(() -> searchInventory.get() && autoMove.get())
+        .build()
+    );
+
     private final Setting<Priority> prioritise = sgGeneral.add(new EnumSetting.Builder<Priority>()
         .name("food-priority")
         .description("Which aspect of the food to prioritise selecting for.")
@@ -238,7 +256,7 @@ public class AutoEat extends Module {
 
     /**
      * Prepares a slot for eating. Uses offhand or hotbar directly.
-     * Moves a main-inventory item to an empty hotbar slot; returns false if none.
+     * Moves a main-inventory item to the auto move slot if enabled, otherwise to an empty hotbar slot; returns false if none.
      */
     private boolean changeSlot(int slot) {
         // offhand: use directly
@@ -254,13 +272,15 @@ public class AutoEat extends Module {
             return true;
         }
 
-        // main inventory: move to empty hotbar, abort if none
-        int emptySlot = InvUtils.find(ItemStack::isEmpty, SlotUtils.HOTBAR_START, SlotUtils.HOTBAR_END).slot();
-        if (emptySlot == -1) return false;
+        // main inventory: swap into the auto move slot, or move to an empty hotbar slot, abort if none
+        int hotbarSlot = autoMove.get()
+            ? autoMoveSlot.get() - 1
+            : InvUtils.find(ItemStack::isEmpty, SlotUtils.HOTBAR_START, SlotUtils.HOTBAR_END).slot();
+        if (hotbarSlot == -1) return false;
 
-        InvUtils.move().from(slot).toHotbar(emptySlot);
-        InvUtils.swap(emptySlot, false);
-        this.slot = emptySlot;
+        InvUtils.move().from(slot).toHotbar(hotbarSlot);
+        InvUtils.swap(hotbarSlot, false);
+        this.slot = hotbarSlot;
         return true;
     }
 
