@@ -81,7 +81,8 @@ public abstract class LivingEntityMixin extends Entity {
     private boolean isGlidingHook(boolean original) {
         if ((Object) this != mc.player) return original;
 
-        if (Modules.get().get(ElytraFly.class).canPacketEfly()) {
+        ElytraFly elytraFly = Modules.get().get(ElytraFly.class);
+        if (elytraFly.canPacketEfly() || elytraFly.holdsGlide()) {
             return true;
         }
 

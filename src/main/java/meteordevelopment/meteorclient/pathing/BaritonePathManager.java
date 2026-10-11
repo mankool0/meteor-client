@@ -32,6 +32,8 @@ public class BaritonePathManager implements IPathManager {
 
     private GoalDirection directionGoal;
     private boolean pathingPaused;
+    private boolean tickPauseRequested;
+    private boolean safeToPause = true;
 
     public BaritonePathManager() {
         // Subscribe to event bus
@@ -42,6 +44,7 @@ public class BaritonePathManager implements IPathManager {
 
         // Baritone pathing control
         BaritoneAPI.getProvider().getPrimaryBaritone().getPathingControlManager().registerProcess(new BaritoneProcess());
+        BaritoneAPI.getProvider().getPrimaryBaritone().getPathingControlManager().registerProcess(new TickPauseProcess());
     }
 
     @Override
@@ -66,6 +69,16 @@ public class BaritonePathManager implements IPathManager {
     @Override
     public void resume() {
         pathingPaused = false;
+    }
+
+    @Override
+    public void pauseForTick() {
+        tickPauseRequested = true;
+    }
+
+    @Override
+    public boolean isSafeToPause() {
+        return safeToPause;
     }
 
     @Override
@@ -223,6 +236,43 @@ public class BaritonePathManager implements IPathManager {
         @Override
         public String displayName0() {
             return "Meteor Client";
+        }
+    }
+
+    private class TickPauseProcess implements IBaritoneProcess {
+        @Override
+        public boolean isActive() {
+            // always active so every tick reports whether stopping is safe, even before the first request
+            return true;
+        }
+
+        @Override
+        public PathingCommand onTick(boolean calcFailed, boolean isSafeToCancel) {
+            safeToPause = isSafeToCancel;
+            if (!tickPauseRequested) return new PathingCommand(null, PathingCommandType.DEFER);
+
+            tickPauseRequested = false;
+            return new PathingCommand(null, PathingCommandType.REQUEST_PAUSE);
+        }
+
+        @Override
+        public boolean isTemporary() {
+            return true;
+        }
+
+        @Override
+        public void onLostControl() {
+        }
+
+        @Override
+        public double priority() {
+            // above every Baritone process (inventory pauser is 5.1) so this one always gets ticked
+            return 10d;
+        }
+
+        @Override
+        public String displayName0() {
+            return "Meteor Client tick pause";
         }
     }
 }

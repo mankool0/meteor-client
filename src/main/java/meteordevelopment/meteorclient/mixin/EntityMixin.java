@@ -160,8 +160,11 @@ public abstract class EntityMixin {
     private void getPoseHook(CallbackInfoReturnable<Pose> cir) {
         if ((Object) this != mc.player) return;
 
-        if (Modules.get().get(ElytraFly.class).canPacketEfly()) {
+        ElytraFly elytraFly = Modules.get().get(ElytraFly.class);
+        if (elytraFly.canPacketEfly()) {
             cir.setReturnValue(Pose.FALL_FLYING);
+        } else if (elytraFly.holdsStanding()) {
+            cir.setReturnValue(Pose.STANDING);
         }
     }
 

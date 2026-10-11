@@ -7,9 +7,12 @@ package meteordevelopment.meteorclient.systems.modules.movement.elytrafly;
 
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
+import meteordevelopment.meteorclient.events.game.GameLeftEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixin.BlockBehaviourAccessor;
+import meteordevelopment.meteorclient.mixin.EntityAccessor;
+import meteordevelopment.meteorclient.mixin.LocalPlayerAccessor;
 import meteordevelopment.meteorclient.mixininterface.IVec3;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Categories;
@@ -23,12 +26,16 @@ import meteordevelopment.meteorclient.systems.modules.player.ChestSwap;
 import meteordevelopment.meteorclient.systems.modules.player.Rotation;
 import meteordevelopment.meteorclient.systems.modules.render.Freecam;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Block;
@@ -310,6 +317,22 @@ public class ElytraFly extends Module {
         .build()
     );
 
+    public final Setting<Boolean> saveDurability = sgInventory.add(new BoolSetting.Builder()
+        .name("save-durability")
+        .description("Stops and restarts the server's glide with every movement packet, so the elytra never wears: it takes durability only after a second of unbroken gliding.")
+        .defaultValue(false)
+        .visible(() -> flightMode.get() == ElytraFlightModes.Vanilla)
+        .build()
+    );
+
+    public final Setting<Boolean> standingBox = sgInventory.add(new BoolSetting.Builder()
+        .name("standing-box")
+        .description("While saving durability, keeps a standing player's hitbox: the server has you standing half the time. Over a road three blocks under the nether roof its head meets the bedrock.")
+        .defaultValue(false)
+        .visible(() -> flightMode.get() == ElytraFlightModes.Vanilla && saveDurability.get())
+        .build()
+    );
+
     public final Setting<Boolean> autoReplenish = sgInventory.add(new BoolSetting.Builder()
         .name("replenish-fireworks")
         .description("Moves fireworks into a selected hotbar slot.")
@@ -366,6 +389,16 @@ public class ElytraFly extends Module {
     );
 
     private ElytraFlightMode currentMode = new Vanilla();
+    private static final int SAVE_STUCK_TICKS = 5;
+    private static final long SAME_FRAME_NANOS = 15_000_000L;
+
+    private boolean glideHeld;
+    // The server's glide as it last reported it (shared flag 7), and how many times that changed:
+    // written on the network thread.
+    private volatile boolean serverGlides;
+    private volatile int glideReports;
+    private int seenReports, changedTick, resetTick = -1;
+    private long startedNanos;
 
     public ElytraFly() {
         super(Categories.Movement, "elytra-fly", "Gives you more control over your elytra.");
@@ -382,6 +415,11 @@ public class ElytraFly extends Module {
 
     @Override
     public void onDeactivate() {
+        if (glideHeld) {
+            glideHeld = false;
+            mc.player.refreshDimensions();
+        }
+
         if (autoPilot.get()) mc.options.keyUp.setDown(false);
 
         if (chestSwap.get() == ChestSwapMode.Always && mc.player.getItemBySlot(EquipmentSlot.CHEST).getItem() == Items.ELYTRA) {
@@ -399,6 +437,8 @@ public class ElytraFly extends Module {
 
     @EventHandler
     private void onPlayerMove(PlayerMoveEvent event) {
+        updateGlideHeld();
+
         if (!(mc.player.getItemBySlot(EquipmentSlot.CHEST).has(DataComponents.GLIDER))) return;
 
         currentMode.autoTakeoff();
@@ -488,6 +528,38 @@ public class ElytraFly extends Module {
         return isActive() && flightMode.get() == ElytraFlightModes.Packet && mc.player.getItemBySlot(EquipmentSlot.CHEST).has(DataComponents.GLIDER) && !mc.player.onGround();
     }
 
+    public boolean holdsGlide() {
+        return glideHeld && isActive();
+    }
+
+    public boolean holdsStanding() {
+        return holdsGlide() && standingBox.get();
+    }
+
+    // Held from the first tick the real flag says gliding: the server's reports turn it off half the time after.
+    private void updateGlideHeld() {
+        LocalPlayer player = mc.player;
+        boolean held = glideHeld;
+        if (!saveDurability.get() || flightMode.get() != ElytraFlightModes.Vanilla
+            || player.onGround() || player.isPassenger() || player.isInWater()
+            || !LivingEntity.canGlideUsing(player.getItemBySlot(EquipmentSlot.CHEST), EquipmentSlot.CHEST)) {
+            held = false;
+        } else if (((EntityAccessor) player).meteor$getSharedFlag(7)) {
+            held = true;
+        }
+        if (held != glideHeld) {
+            glideHeld = held;
+            player.refreshDimensions();
+            seenReports = glideReports;
+            changedTick = player.tickCount;
+        }
+    }
+
+    @EventHandler
+    private void onGameLeft(GameLeftEvent event) {
+        glideHeld = false;
+    }
+
     @EventHandler
     private void onTick(TickEvent.Post event) {
         currentMode.onTick();
@@ -495,19 +567,71 @@ public class ElytraFly extends Module {
 
     @EventHandler
     private void onPreTick(TickEvent.Pre event) {
+        if (holdsGlide()) {
+            // A position packet every tick, hovering or not: a start goes before each.
+            ((LocalPlayerAccessor) mc.player).meteor$setPositionReminder(20);
+            int reports = glideReports;
+            if (reports != seenReports) {
+                seenReports = reports;
+                changedTick = mc.player.tickCount;
+            }
+        }
+
         currentMode.onPreTick();
     }
 
+    /**
+     * A start-gliding packet before the movement packets of each frame: the server stops its glide
+     * on one and starts it on the next, and Grim, which takes a start as gliding whatever the server
+     * last said, judges every move as a glide. Under 20 fps a frame runs two ticks back to back and
+     * their packets land in one server tick: a start for each would cancel. A lagging server does the
+     * same to the starts of two frames, and the glide it reports stands still, on (it wears) or off
+     * (80 ticks of it is the "flying" kick); after SAVE_STUCK_TICKS of that, one more start puts the
+     * pairs out of step.
+     */
     @EventHandler
     private void onPacketSend(PacketEvent.Send event) {
+        if (event.packet instanceof ServerboundMovePlayerPacket && holdsGlide() && mc.player.tickCount != resetTick) {
+            resetTick = mc.player.tickCount;
+            long now = System.nanoTime();
+            if (now - startedNanos > SAME_FRAME_NANOS) {
+                startedNanos = now;
+                startFallFlying();
+                if (resetTick - changedTick > SAVE_STUCK_TICKS) {
+                    startFallFlying();
+                    changedTick = resetTick;
+                }
+            }
+        }
+
         currentMode.onPacketSend(event);
+    }
+
+    private void startFallFlying() {
+        mc.getConnection().send(new ServerboundPlayerCommandPacket(mc.player, ServerboundPlayerCommandPacket.Action.START_FALL_FLYING));
     }
 
     @EventHandler
     private void onPacketReceive(PacketEvent.Receive event) {
         if (event.packet instanceof ClientboundPlayerPositionPacket) currentMode.zeroAcceleration();
+        if (event.packet instanceof ClientboundSetEntityDataPacket data) readGlide(data);
 
         currentMode.onPacketReceive(event);
+    }
+
+    // Network thread: the packet only, nothing of the world.
+    private void readGlide(ClientboundSetEntityDataPacket data) {
+        LocalPlayer player = mc.player;
+        if (player == null || data.id() != player.getId()) return;
+        for (SynchedEntityData.DataValue<?> value : data.packedItems()) {
+            if (value.id() == 0 && value.value() instanceof Byte flags) {
+                boolean glides = (flags & (1 << 7)) != 0;
+                if (glides != serverGlides) {
+                    serverGlides = glides;
+                    glideReports++;
+                }
+            }
+        }
     }
 
     private void onModeChanged(ElytraFlightModes mode) {

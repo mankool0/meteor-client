@@ -12,6 +12,7 @@ import meteordevelopment.meteorclient.events.entity.player.*;
 import meteordevelopment.meteorclient.mixininterface.IMultiPlayerGameMode;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.player.BreakDelay;
+import meteordevelopment.meteorclient.systems.modules.player.CalmInventory;
 import meteordevelopment.meteorclient.systems.modules.player.SpeedMine;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -64,6 +65,8 @@ public abstract class MultiPlayerGameModeMixin implements IMultiPlayerGameMode {
             if (MeteorClient.EVENT_BUS.post(DropItemsEvent.get(player.containerMenu.getCarried())).isCancelled())
                 ci.cancel();
         }
+
+        if (!ci.isCancelled() && !Modules.get().get(CalmInventory.class).allowClick()) ci.cancel();
     }
 
     @Inject(method = "startDestroyBlock", at = @At("HEAD"), cancellable = true)

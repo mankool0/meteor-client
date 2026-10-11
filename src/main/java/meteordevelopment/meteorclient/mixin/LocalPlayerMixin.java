@@ -16,6 +16,7 @@ import meteordevelopment.meteorclient.events.entity.player.PlayerTickMovementEve
 import meteordevelopment.meteorclient.events.entity.player.SendMovementPacketsEvent;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.*;
+import meteordevelopment.meteorclient.systems.modules.player.CalmInventory;
 import meteordevelopment.meteorclient.systems.modules.player.LiquidInteract;
 import meteordevelopment.meteorclient.systems.modules.player.NoMiningTrace;
 import meteordevelopment.meteorclient.systems.modules.player.Portals;
@@ -88,6 +89,7 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer {
 
     @ModifyExpressionValue(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/ClientInput;keyPresses:Lnet/minecraft/world/entity/player/Input;", opcode = Opcodes.GETFIELD))
     private Input isSneaking(Input original) {
+        if (Modules.get().get(CalmInventory.class).isHolding()) return original;
         if (Modules.get().get(Sneak.class).doPacket() || Modules.get().get(NoSlow.class).airStrict()) {
             return new Input(
                 original.forward(),
@@ -105,6 +107,12 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer {
     @Inject(method = "aiStep", at = @At("HEAD"))
     private void preAiStep(CallbackInfo ci) {
         MeteorClient.EVENT_BUS.post(PlayerTickMovementEvent.get());
+    }
+
+    // after input.tick() and auto-jump's makeJump(), before the sprint logic reads the input
+    @Inject(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;noPhysics:Z", opcode = Opcodes.GETFIELD, ordinal = 0))
+    private void onInputReady(CallbackInfo ci) {
+        Modules.get().get(CalmInventory.class).onInput(input);
     }
 
     @ModifyReturnValue(method = "getJumpRidingScale", at = @At("RETURN"))
@@ -163,6 +171,12 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer {
         Sprint s = Modules.get().get(Sprint.class);
 
         return !s.rageSprint() || s.unsprintInWater() && isInWater();
+    }
+
+    @Inject(method = "sendIsSprintingIfNeeded", at = @At("HEAD"))
+    private void onSendIsSprintingIfNeeded(CallbackInfo ci) {
+        // last word before the sprint state goes out, after Sprint or Baritone may have turned it back on
+        if (Modules.get().get(CalmInventory.class).isHolding()) setSprinting(false);
     }
 
     // Rotations

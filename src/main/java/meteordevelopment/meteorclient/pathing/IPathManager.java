@@ -22,6 +22,20 @@ public interface IPathManager {
 
     void resume();
 
+    /**
+     * Pauses for the next tick only. Unlike {@link #pause()} it has to be requested again every tick it should
+     * last, so it ends on its own once the caller stops asking.
+     */
+    default void pauseForTick() {
+    }
+
+    /**
+     * @return whether movement can stop right now without breaking the current path, e.g. not in the middle of a jump
+     */
+    default boolean isSafeToPause() {
+        return true;
+    }
+
     void stop();
 
     default void moveTo(BlockPos pos) {

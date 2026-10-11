@@ -13,4 +13,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface LocalPlayerAccessor {
     @Accessor("positionReminder")
     void meteor$setPositionReminder(int ticks);
+
+    @Accessor("wasSprinting")
+    boolean meteor$wasSprinting();
 }
