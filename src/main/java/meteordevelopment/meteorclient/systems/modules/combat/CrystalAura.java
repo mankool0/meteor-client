@@ -24,7 +24,6 @@ import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.DamageUtils;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.entity.Target;
 import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
@@ -48,6 +47,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.boss.enderdragon.EndCrystal;
+import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -215,7 +215,7 @@ public class CrystalAura extends Module {
 
     private final Setting<Double> placeRange = sgPlace.add(new DoubleSetting.Builder()
         .name("place-range")
-        .description("Range in which to place crystals.")
+        .description("Range in which to place crystals, measured from your eyes to the block.")
         .defaultValue(4.5)
         .min(0)
         .sliderMax(6)
@@ -224,7 +224,7 @@ public class CrystalAura extends Module {
 
     private final Setting<Double> placeWallsRange = sgPlace.add(new DoubleSetting.Builder()
         .name("walls-range")
-        .description("Range in which to place crystals when behind blocks.")
+        .description("Range in which to place crystals when behind blocks, measured from your eyes to the block.")
         .defaultValue(4.5)
         .min(0)
         .sliderMax(6)
@@ -327,8 +327,8 @@ public class CrystalAura extends Module {
 
     private final Setting<Double> breakRange = sgBreak.add(new DoubleSetting.Builder()
         .name("break-range")
-        .description("Range in which to break crystals.")
-        .defaultValue(4.5)
+        .description("Range in which to break crystals, measured from your eyes to the crystal's hitbox. Grim only allows 3.")
+        .defaultValue(3)
         .min(0)
         .sliderMax(6)
         .build()
@@ -336,8 +336,8 @@ public class CrystalAura extends Module {
 
     private final Setting<Double> breakWallsRange = sgBreak.add(new DoubleSetting.Builder()
         .name("walls-range")
-        .description("Range in which to break crystals when behind blocks.")
-        .defaultValue(4.5)
+        .description("Range in which to break crystals when behind blocks, measured from your eyes to the crystal's hitbox.")
+        .defaultValue(3)
         .min(0)
         .sliderMax(6)
         .build()
@@ -426,7 +426,7 @@ public class CrystalAura extends Module {
 
     public final Setting<SwingMode> swingMode = sgRender.add(new EnumSetting.Builder<SwingMode>()
         .name("swing-mode")
-        .description("How to swing when placing.")
+        .description("How to swing when placing and breaking. Grim cancels attacks that aren't followed by a swing packet.")
         .defaultValue(SwingMode.Both)
         .build()
     );
@@ -570,6 +570,11 @@ public class CrystalAura extends Module {
     private final Vec3 vec3dRayTraceEnd = new Vec3(0, 0, 0);
     private ClipContext clipContext;
 
+    // How far inside a hitbox to aim, so the look ray still enters it after float rotation rounding
+    private static final double AIM_INSET = 0.05;
+    private final Vec3 breakAimPos = new Vec3(0, 0, 0);
+    private final AABB rangeBox = new AABB(0, 0, 0, 0, 0, 0);
+
     private final IntSet placedCrystals = new IntOpenHashSet();
     private boolean placing;
     private int placingTimer;
@@ -620,6 +625,8 @@ public class CrystalAura extends Module {
 
         serverYaw = mc.player.getYRot();
 
+        didRotateThisTick = false;
+
         bestTargetDamage = 0;
         bestTargetTimer = 0;
 
@@ -650,7 +657,6 @@ public class CrystalAura extends Module {
     @EventHandler(priority = EventPriority.HIGH)
     private void onPreTick(TickEvent.Pre event) {
         // Update last rotation
-        didRotateThisTick = false;
         lastRotationTimer++;
 
         // Decrement placing timer
@@ -696,8 +702,7 @@ public class CrystalAura extends Module {
             }
         }
 
-        // Set player eye pos
-        ((IVec3) playerEyePos).meteor$set(mc.player.position().x, mc.player.position().y + mc.player.getEyeHeight(mc.player.getPose()), mc.player.position().z);
+        updateEyePos();
 
         // Find targets, break and place
         findTargets();
@@ -717,6 +722,13 @@ public class CrystalAura extends Module {
     }
 
     @EventHandler
+    private void onPostTick(TickEvent.Post event) {
+        // Reset here instead of in pre tick, so a fast break rotation queued between ticks blocks the next tick's
+        // rotations. Otherwise both get sent, the second one as an extra rotation packet.
+        didRotateThisTick = false;
+    }
+
+    @EventHandler
     private void onEntityAdded(EntityAddedEvent event) {
         if (!(event.entity instanceof EndCrystal)) return;
 
@@ -727,6 +739,9 @@ public class CrystalAura extends Module {
         }
 
         if (fastBreak.get() && !didRotateThisTick && attacks < attackFrequency.get()) {
+            // The player has moved since the last tick
+            updateEyePos();
+
             float damage = getBreakDamage(event.entity, true);
             if (damage > minDamage.get()) doBreak(event.entity);
         }
@@ -739,6 +754,10 @@ public class CrystalAura extends Module {
             removed.remove(event.entity.getId());
             waitingToExplode.remove(event.entity.getId());
         }
+    }
+
+    private void updateEyePos() {
+        ((IVec3) playerEyePos).meteor$set(mc.player.getX(), mc.player.getEyeY(), mc.player.getZ());
     }
 
     private void setRotation(boolean isPos, Vec3 pos, double yaw, double pitch) {
@@ -793,7 +812,7 @@ public class CrystalAura extends Module {
         if (checkCrystalAge && entity.tickCount < ticksExisted.get()) return 0;
 
         // Check range
-        if (isOutOfRange(entity.position(), entity.blockPosition(), false)) return 0;
+        if (!isInBreakRange(entity.getBoundingBox())) return 0;
 
         // Check damage to self and anti suicide
         blockPos.set(entity.blockPosition()).move(0, -1, 0);
@@ -832,34 +851,21 @@ public class CrystalAura extends Module {
         }
 
         // Rotate and attack
-        boolean attacked = true;
-
         if (rotate.get()) {
-            double yaw = Rotations.getYaw(crystal);
-            double pitch = Rotations.getPitch(crystal, Target.Feet);
+            // Aim at the closest part of the hitbox, reach is measured along the look ray to where it enters the box
+            Vec3 aimPos = getBreakAimPos(crystal.getBoundingBox());
+            double yaw = Rotations.getYaw(aimPos);
+            double pitch = Rotations.getPitch(aimPos);
 
             if (doYawSteps(yaw, pitch)) {
-                setRotation(true, crystal.position(), 0, 0);
+                setRotation(true, aimPos, 0, 0);
                 Rotations.rotate(yaw, pitch, 50, () -> attackCrystal(crystal));
 
                 breakTimer = breakDelay.get();
-            } else {
-                attacked = false;
             }
         } else {
             attackCrystal(crystal);
             breakTimer = breakDelay.get();
-        }
-
-        if (attacked) {
-            // Update state
-            removed.add(crystal.getId());
-            attemptedBreaks.put(crystal.getId(), attemptedBreaks.get(crystal.getId()) + 1);
-            waitingToExplode.put(crystal.getId(), 0);
-
-            // Break render
-            breakRenderPos.set(crystal.blockPosition().below());
-            breakRenderTimer = breakRenderTime.get();
         }
     }
 
@@ -867,17 +873,45 @@ public class CrystalAura extends Module {
         return DamageUtils.getAttackDamage(mc.player, crystal, itemStack) > 0;
     }
 
-    private void attackCrystal(Entity entity) {
+    private void attackCrystal(Entity crystal) {
+        // The player moved since this attack was planned, recheck reach from the position the server now has
+        if (crystal.isRemoved() || !canHitNow(crystal.getBoundingBox())) return;
+
         // Attack
-        mc.player.connection.send(ServerboundInteractPacket.createAttackPacket(entity, mc.player.isShiftKeyDown()));
-
-        InteractionHand hand = InvUtils.findInHotbar(Items.END_CRYSTAL).getHand();
-        if (hand == null) hand = InteractionHand.MAIN_HAND;
-
-        if (swingMode.get().client()) mc.player.swing(hand);
-        if (swingMode.get().packet()) mc.getConnection().send(new ServerboundSwingPacket(hand));
+        mc.player.connection.send(ServerboundInteractPacket.createAttackPacket(crystal, mc.player.isShiftKeyDown()));
+        swing(InteractionHand.MAIN_HAND);
 
         attacks++;
+
+        // Update state
+        removed.add(crystal.getId());
+        attemptedBreaks.put(crystal.getId(), attemptedBreaks.get(crystal.getId()) + 1);
+        waitingToExplode.put(crystal.getId(), 0);
+
+        // Break render
+        breakRenderPos.set(crystal.blockPosition().below());
+        breakRenderTimer = breakRenderTime.get();
+    }
+
+    private boolean canHitNow(AABB crystalBox) {
+        Vec3 eyePos = mc.player.getEyePosition();
+        if (crystalBox.contains(eyePos)) return true;
+
+        double range = breakRange.get();
+        if (!rotate.get()) return crystalBox.distanceToSqr(eyePos) <= range * range;
+
+        // Grim checks that the look ray of the last sent rotation enters the hitbox within reach
+        Vec3 end = eyePos.add(Vec3.directionFromRotation(Rotations.serverPitch, Rotations.serverYaw).scale(range));
+        return crystalBox.clip(eyePos, end).isPresent();
+    }
+
+    private void swing(InteractionHand hand) {
+        switch (swingMode.get()) {
+            // LocalPlayer.swing() already sends the packet
+            case Both -> mc.player.swing(hand);
+            case Client -> mc.player.swing(hand, false);
+            case Packet -> mc.getConnection().send(new ServerboundSwingPacket(hand));
+        }
     }
 
     @EventHandler
@@ -933,9 +967,12 @@ public class CrystalAura extends Module {
             }
 
             // Check range
+            if (!isInPlaceRange(bp)) return;
+
+            // A crystal that can't be broken from here is wasted, and break reach is shorter than place reach
+            if (doBreak.get() && !isInBreakRange(getCrystalBox(bp))) return;
+
             ((IVec3) vec3d).meteor$set(bp.getX() + 0.5, bp.getY() + 1, bp.getZ() + 0.5);
-            blockPos.set(bp).move(0, 1, 0);
-            if (isOutOfRange(vec3d, blockPos, true)) return;
 
             // Check damage to self and anti suicide
             float selfDamage = DamageUtils.crystalDamage(mc.player, vec3d, predictMovement.get(), bp);
@@ -973,18 +1010,13 @@ public class CrystalAura extends Module {
 
             BlockHitResult result = getPlaceInfo(bestBlockPos.get());
 
-            ((IVec3) vec3d).meteor$set(
-                result.getBlockPos().getX() + 0.5 + result.getDirection().getUnitVec3i().getX() * 1.0 / 2.0,
-                result.getBlockPos().getY() + 0.5 + result.getDirection().getUnitVec3i().getY() * 1.0 / 2.0,
-                result.getBlockPos().getZ() + 0.5 + result.getDirection().getUnitVec3i().getZ() * 1.0 / 2.0
-            );
-
             if (rotate.get()) {
-                double yaw = Rotations.getYaw(vec3d);
-                double pitch = Rotations.getPitch(vec3d);
+                // Look at exactly where we click, the hit position is on the clicked face
+                double yaw = Rotations.getYaw(result.getLocation());
+                double pitch = Rotations.getPitch(result.getLocation());
 
                 if (yawStepMode.get() == YawStepMode.Break || doYawSteps(yaw, pitch)) {
-                    setRotation(true, vec3d, 0, 0);
+                    setRotation(true, result.getLocation(), 0, 0);
                     Rotations.rotate(yaw, pitch, 50, () -> placeCrystal(result, bestDamage.get(), isSupport.get() ? bestBlockPos.get() : null));
 
                     placeTimer += placeDelay.get();
@@ -997,16 +1029,44 @@ public class CrystalAura extends Module {
     }
 
     private BlockHitResult getPlaceInfo(BlockPos blockPos) {
-        ((IVec3) vec3d).meteor$set(mc.player.getX(), mc.player.getY() + mc.player.getEyeHeight(mc.player.getPose()), mc.player.getZ());
+        BlockHitResult result = getVisiblePlaceInfo(blockPos);
+        if (result != null) return result;
 
+        // Behind walls, click the face pointing towards the eyes, anticheats reject faces that point away
+        Direction side = Direction.getApproximateNearest(
+            playerEyePos.x - (blockPos.getX() + 0.5),
+            playerEyePos.y - (blockPos.getY() + 0.5),
+            playerEyePos.z - (blockPos.getZ() + 0.5)
+        );
+
+        // The server rejects hit positions more than a block away from the block
+        Vec3 hitPos = new Vec3(
+            blockPos.getX() + 0.5 + side.getStepX() * 0.5,
+            blockPos.getY() + 0.5 + side.getStepY() * 0.5,
+            blockPos.getZ() + 0.5 + side.getStepZ() * 0.5
+        );
+
+        return new BlockHitResult(hitPos, side, blockPos, false);
+    }
+
+    /**
+     * Returns a hit on the center of a face of the block that points towards the eyes and can be seen, or null if
+     * there is none.
+     */
+    private BlockHitResult getVisiblePlaceInfo(BlockPos blockPos) {
         for (Direction side : Direction.values()) {
             ((IVec3) vec3dRayTraceEnd).meteor$set(
-                blockPos.getX() + 0.5 + side.getUnitVec3i().getX() * 0.5,
-                blockPos.getY() + 0.5 + side.getUnitVec3i().getY() * 0.5,
-                blockPos.getZ() + 0.5 + side.getUnitVec3i().getZ() * 0.5
+                blockPos.getX() + 0.5 + side.getStepX() * 0.5,
+                blockPos.getY() + 0.5 + side.getStepY() * 0.5,
+                blockPos.getZ() + 0.5 + side.getStepZ() * 0.5
             );
 
-            ((IClipContext) clipContext).meteor$set(vec3d, vec3dRayTraceEnd, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player);
+            // Skip faces pointing away from the eyes
+            if ((playerEyePos.x - vec3dRayTraceEnd.x) * side.getStepX()
+                + (playerEyePos.y - vec3dRayTraceEnd.y) * side.getStepY()
+                + (playerEyePos.z - vec3dRayTraceEnd.z) * side.getStepZ() <= 0) continue;
+
+            ((IClipContext) clipContext).meteor$set(playerEyePos, vec3dRayTraceEnd, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player);
             BlockHitResult result = mc.level.clip(clipContext);
 
             if (result != null && result.getType() == HitResult.Type.BLOCK && result.getBlockPos().equals(blockPos)) {
@@ -1014,11 +1074,26 @@ public class CrystalAura extends Module {
             }
         }
 
-        Direction side = blockPos.getY() > vec3d.y ? Direction.DOWN : Direction.UP;
-        return new BlockHitResult(vec3d, side, blockPos, false);
+        return null;
+    }
+
+    private boolean canPlaceNow(BlockPos blockPos) {
+        Vec3 eyePos = mc.player.getEyePosition();
+        double range = placeRange.get();
+
+        ((IAABB) rangeBox).meteor$set(blockPos);
+        if (rangeBox.distanceToSqr(eyePos) > range * range) return false;
+        if (!rotate.get() || rangeBox.contains(eyePos)) return true;
+
+        // Grim checks that the look ray of the last sent rotation hits the clicked block
+        Vec3 end = eyePos.add(Vec3.directionFromRotation(Rotations.serverPitch, Rotations.serverYaw).scale(range));
+        return rangeBox.clip(eyePos, end).isPresent();
     }
 
     private void placeCrystal(BlockHitResult result, double damage, BlockPos supportBlock) {
+        // The player moved since this place was planned, recheck reach from the position the server now has
+        if (!canPlaceNow(result.getBlockPos())) return;
+
         // Switch
         Item targetItem = supportBlock == null ? Items.END_CRYSTAL : Items.OBSIDIAN;
 
@@ -1037,8 +1112,7 @@ public class CrystalAura extends Module {
             // Place crystal
             mc.gameMode.startPrediction(mc.level, sequence -> new ServerboundUseItemOnPacket(hand, result, sequence));
 
-            if (swingMode.get().client()) mc.player.swing(hand);
-            if (swingMode.get().packet()) mc.getConnection().send(new ServerboundSwingPacket(hand));
+            swing(hand);
 
             placing = true;
             placingTimer = 4;
@@ -1148,14 +1222,52 @@ public class CrystalAura extends Module {
         return (EntityUtils.getTotalHealth(mc.player) <= pauseHealth.get());
     }
 
-    private boolean isOutOfRange(Vec3 vec3d, BlockPos blockPos, boolean place) {
-        ((IClipContext) clipContext).meteor$set(playerEyePos, vec3d, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player);
+    // Range checks measure from the eyes to the closest point of the block or hitbox, like the server and Grim do
 
-        BlockHitResult result = mc.level.clip(clipContext);
+    private boolean isInPlaceRange(BlockPos blockPos) {
+        ((IAABB) rangeBox).meteor$set(blockPos);
+        double distance = rangeBox.distanceToSqr(playerEyePos);
 
-        if (result == null || !result.getBlockPos().equals(blockPos)) // Is behind wall
-            return !PlayerUtils.isWithin(vec3d, (place ? placeWallsRange : breakWallsRange).get());
-        return !PlayerUtils.isWithin(vec3d, (place ? placeRange : breakRange).get());
+        if (distance > placeRange.get() * placeRange.get()) return false;
+        return distance <= placeWallsRange.get() * placeWallsRange.get() || getVisiblePlaceInfo(blockPos) != null;
+    }
+
+    private boolean isInBreakRange(AABB crystalBox) {
+        Vec3 aimPos = getBreakAimPos(crystalBox);
+        double distance = playerEyePos.distanceToSqr(aimPos);
+
+        if (distance > breakRange.get() * breakRange.get()) return false;
+        if (distance <= breakWallsRange.get() * breakWallsRange.get()) return true;
+
+        // Behind wall if a block is in the way
+        ((IClipContext) clipContext).meteor$set(playerEyePos, aimPos, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, mc.player);
+        return mc.level.clip(clipContext).getType() == HitResult.Type.MISS;
+    }
+
+    /**
+     * The point of the hitbox closest to the eyes, moved slightly inside it.
+     */
+    private Vec3 getBreakAimPos(AABB crystalBox) {
+        ((IVec3) breakAimPos).meteor$set(
+            Mth.clamp(playerEyePos.x, crystalBox.minX + AIM_INSET, crystalBox.maxX - AIM_INSET),
+            Mth.clamp(playerEyePos.y, crystalBox.minY + AIM_INSET, crystalBox.maxY - AIM_INSET),
+            Mth.clamp(playerEyePos.z, crystalBox.minZ + AIM_INSET, crystalBox.maxZ - AIM_INSET)
+        );
+
+        return breakAimPos;
+    }
+
+    /**
+     * The hitbox a crystal placed on top of this block would have.
+     */
+    private AABB getCrystalBox(BlockPos blockPos) {
+        double x = blockPos.getX() + 0.5;
+        double y = blockPos.getY() + 1;
+        double z = blockPos.getZ() + 0.5;
+
+        double radius = EntityType.END_CRYSTAL.getWidth() / 2;
+        ((IAABB) rangeBox).meteor$set(x - radius, y, z - radius, x + radius, y + EntityType.END_CRYSTAL.getHeight(), z + radius);
+        return rangeBox;
     }
 
     private LivingEntity getNearestTarget() {
@@ -1213,11 +1325,15 @@ public class CrystalAura extends Module {
         for (Entity entity : mc.level.entitiesForRendering()) {
             // Ignore non-living
             if (!(entity instanceof LivingEntity livingEntity)) continue;
+            if (!livingEntity.isAlive()) continue;
+
+            // Withers can't be damaged while charging up after being built
+            if (livingEntity instanceof WitherBoss wither && wither.getInvulnerableTicks() > 0) continue;
 
             // Player
             if (livingEntity instanceof Player player) {
                 if (player.getAbilities().instabuild || livingEntity == mc.player) continue;
-                if (!player.isAlive() || !Friends.get().shouldAttack(player)) continue;
+                if (!Friends.get().shouldAttack(player)) continue;
 
                 if (ignoreNakeds.get()) {
                     if (player.getOffhandItem().isEmpty()
