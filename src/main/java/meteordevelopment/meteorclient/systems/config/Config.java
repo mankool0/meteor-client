@@ -187,6 +187,13 @@ public class Config extends System<Config> {
         .build()
     );
 
+    public final Setting<Boolean> movementFix = sgMisc.add(new BoolSetting.Builder()
+        .name("movement-fix")
+        .description("Moves you with the server side rotation and re-picks your movement keys to keep your direction, so Grim doesn't set you back while rotating.")
+        .defaultValue(true)
+        .build()
+    );
+
     public final Setting<Boolean> useTeamColor = sgMisc.add(new BoolSetting.Builder()
         .name("use-team-color")
         .description("Uses player's team color for rendering things like esp and tracers.")

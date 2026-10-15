@@ -21,6 +21,7 @@ import meteordevelopment.meteorclient.systems.modules.player.LiquidInteract;
 import meteordevelopment.meteorclient.systems.modules.player.NoMiningTrace;
 import meteordevelopment.meteorclient.systems.modules.player.Portals;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -113,6 +114,24 @@ public abstract class LocalPlayerMixin extends AbstractClientPlayer {
     @Inject(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/client/player/LocalPlayer;noPhysics:Z", opcode = Opcodes.GETFIELD, ordinal = 0))
     private void onInputReady(CallbackInfo ci) {
         Modules.get().get(CalmInventory.class).onInput(input);
+        Rotations.fixMovementInput(input);
+    }
+
+    // Movement fix
+
+    @Inject(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;aiStep()V"))
+    private void onPreMovement(CallbackInfo ci) {
+        Rotations.fixMovementSprint(input);
+    }
+
+    @Inject(method = "applyInput", at = @At("TAIL"))
+    private void onApplyInput(CallbackInfo ci) {
+        Rotations.startMovementRotation();
+    }
+
+    @Inject(method = "aiStep", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/player/AbstractClientPlayer;aiStep()V", shift = At.Shift.AFTER))
+    private void onPostMovement(CallbackInfo ci) {
+        Rotations.stopMovementRotation();
     }
 
     @ModifyReturnValue(method = "getJumpRidingScale", at = @At("RETURN"))
