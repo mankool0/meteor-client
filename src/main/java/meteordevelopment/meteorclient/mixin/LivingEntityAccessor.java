@@ -5,6 +5,7 @@
 
 package meteordevelopment.meteorclient.mixin;
 
+import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.tags.TagKey;
@@ -25,4 +26,9 @@ public interface LivingEntityAccessor {
 
     @Accessor("noJumpDelay")
     void meteor$setJumpCooldown(int cooldown);
+
+    @Accessor("DATA_LIVING_ENTITY_FLAGS")
+    static EntityDataAccessor<Byte> meteor$getLivingEntityFlags() {
+        return null;
+    }
 }

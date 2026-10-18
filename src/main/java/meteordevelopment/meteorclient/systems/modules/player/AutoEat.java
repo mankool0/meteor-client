@@ -8,6 +8,7 @@ package meteordevelopment.meteorclient.systems.modules.player;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import meteordevelopment.meteorclient.events.entity.player.ItemUseCrosshairTargetEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.mixin.LivingEntityAccessor;
 import meteordevelopment.meteorclient.pathing.PathManagers;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Categories;
@@ -102,6 +103,15 @@ public class AutoEat extends Module {
         .name("food-priority")
         .description("Which aspect of the food to prioritise selecting for.")
         .defaultValue(Priority.Saturation)
+        .build()
+    );
+
+    private final Setting<Integer> confirmTimeout = sgGeneral.add(new IntSetting.Builder()
+        .name("confirm-timeout")
+        .description("Ticks to wait for the server to confirm eating before releasing and trying again. Too low keeps cancelling eats on high ping.")
+        .defaultValue(20)
+        .range(5, 200)
+        .sliderRange(10, 100)
         .build()
     );
 
@@ -222,6 +232,15 @@ public class AutoEat extends Module {
 
     private void eat() {
         if (!changeSlot(slot)) return;
+
+        // The client predicts the use even if the server dropped it, and then nothing ever ends it.
+        // Release a use the server never confirmed and leave the key up so it restarts next tick, not in the same tick as the release.
+        if (mc.player.isUsingItem() && mc.player.getTicksUsingItem() > confirmTimeout.get() && !isServerUsingItem()) {
+            mc.gameMode.releaseUsingItem(mc.player);
+            setPressed(false);
+            return;
+        }
+
         setPressed(true);
         if (!mc.player.isUsingItem()) Utils.rightClick();
 
@@ -252,6 +271,13 @@ public class AutoEat extends Module {
 
     private void setPressed(boolean pressed) {
         mc.options.keyUse.setDown(pressed);
+    }
+
+    /**
+     * Only the server sets this flag, so it stays unset on the client if the server never accepted the use.
+     */
+    private boolean isServerUsingItem() {
+        return (mc.player.getEntityData().get(LivingEntityAccessor.meteor$getLivingEntityFlags()) & 1) != 0;
     }
 
     /**

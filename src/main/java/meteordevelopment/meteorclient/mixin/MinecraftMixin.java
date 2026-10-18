@@ -132,7 +132,8 @@ public abstract class MinecraftMixin implements IMinecraft {
         MeteorClient.EVENT_BUS.post(TickEvent.Pre.get());
         Profiler.get().pop();
 
-        if (rightClick && !startUseItemCalled && gameMode != null) startUseItem();
+        // The server drops use packets until the client has loaded, but the client still predicts the use and gets stuck
+        if (rightClick && !startUseItemCalled && gameMode != null && player != null && player.connection.hasClientLoaded()) startUseItem();
         rightClick = false;
     }
 
