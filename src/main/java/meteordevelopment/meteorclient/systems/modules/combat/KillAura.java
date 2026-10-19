@@ -26,7 +26,6 @@ import meteordevelopment.meteorclient.utils.world.TickRate;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.tags.ItemTags;
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.animal.frog.Frog;
@@ -41,7 +40,6 @@ import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.GameType;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
@@ -360,19 +358,36 @@ public class KillAura extends Module {
             wasPathing = true;
         }
 
-        if (hit) targets.forEach(this::attack);
+        if (hit) {
+            // every hit this tick is checked against the primary's rotation, the first one queued
+            for (Entity target : targets) {
+                if (inReach(target, primary)) attack(target);
+            }
+        }
     }
 
     private void rotate(Entity target, boolean hit) {
         // Grim checks a hit against the rotation sent right after it, so only that one has to stay on the target
-        Rotations.Aim aim = hit ? (yaw, pitch) -> hits(target, yaw, pitch) : Rotations.Aim.ANY;
+        double reach = reach(target);
+        Rotations.Aim aim = hit ? (yaw, pitch) -> hits(target, yaw, pitch, reach) : Rotations.Aim.ANY;
         Rotations.rotate(Rotations.getYaw(target), Rotations.getPitch(target, Target.Body), 0, null, aim);
     }
 
-    private boolean hits(Entity target, float yaw, float pitch) {
+    private boolean hits(Entity target, float yaw, float pitch, double reach) {
         Vec3 eye = mc.player.getEyePosition();
-        Vec3 end = eye.add(Vec3.directionFromRotation(pitch, yaw).scale(mc.player.entityInteractionRange()));
+        Vec3 end = eye.add(Vec3.directionFromRotation(pitch, yaw).scale(reach));
         return target.getBoundingBox().deflate(0.05).clip(eye, end).isPresent();
+    }
+
+    private double reach(Entity target) {
+        return PlayerUtils.canSeeEntity(target) ? range.get() : Math.min(range.get(), wallsRange.get());
+    }
+
+    // Whether a hit on target lands with the rotation sent after it: the one aimed at aimedAt, or our own when not rotating
+    private boolean inReach(Entity target, Entity aimedAt) {
+        double reach = reach(target);
+        if (rotation.get() == RotationMode.None) return hits(target, mc.player.getYRot(), mc.player.getXRot(), reach);
+        return hits(target, (float) Rotations.getYaw(aimedAt), (float) Rotations.getPitch(aimedAt, Target.Body), reach);
     }
 
     @EventHandler
@@ -413,17 +428,13 @@ public class KillAura extends Module {
         if ((entity instanceof LivingEntity livingEntity && livingEntity.isDeadOrDying()) || !entity.isAlive())
             return false;
 
-        AABB hitbox = entity.getBoundingBox();
-        if (!PlayerUtils.isWithin(
-            Mth.clamp(mc.player.getX(), hitbox.minX, hitbox.maxX),
-            Mth.clamp(mc.player.getY(), hitbox.minY, hitbox.maxY),
-            Mth.clamp(mc.player.getZ(), hitbox.minZ, hitbox.maxZ),
-            range.get()
-        )) return false;
+        // the nearest point is never farther than where the look meets the hitbox: a cheap cut before inReach
+        double r = range.get();
+        if (entity.getBoundingBox().distanceToSqr(mc.player.getEyePosition()) > r * r) return false;
 
         if (!entities.get().contains(entity.getType())) return false;
         if (ignoreNamed.get() && entity.hasCustomName()) return false;
-        if (!PlayerUtils.canSeeEntity(entity) && !PlayerUtils.isWithin(entity, wallsRange.get())) return false;
+        if (!inReach(entity, entity)) return false;
         if (ignoreTamed.get()) {
             if (entity instanceof OwnableEntity tameable
                 && tameable.getOwner() != null
