@@ -26,17 +26,21 @@ jobs:
           echo "minecraft=$(sed -n 's/^minecraft = "\(.*\)"/\1/p' gradle/libs.versions.toml)" >> $GITHUB_OUTPUT
           echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
+      # Loom needs Gradle itself on Java 25; the last version listed becomes the default.
+      # The mod's toolchain JDK is installed alongside it for Gradle to detect.
       - name: Set up Java
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: ${{ steps.versions.outputs.jdk }}
+          java-version: |
+            ${{ steps.versions.outputs.jdk }}
+            25
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v5
 
       - name: Build
-        run: ./gradlew build -Pcommit=${{ github.sha }}
+        run: ./gradlew build -Pcommit=${{ github.sha }} -Porg.gradle.java.installations.fromEnv=JAVA_HOME_${{ steps.versions.outputs.jdk }}_X64
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
