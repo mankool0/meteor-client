@@ -54,6 +54,14 @@ public interface IPathManager {
 
     float getTargetPitch();
 
+    /**
+     * @return the yaw the player walks with this tick, which isn't the given camera yaw when the path manager steers
+     * the player with a rotation of its own
+     */
+    default float getMovementYaw(float yaw) {
+        return yaw;
+    }
+
     ISettings getSettings();
 
     interface ISettings {

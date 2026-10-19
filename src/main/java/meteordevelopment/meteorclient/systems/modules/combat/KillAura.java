@@ -42,6 +42,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -352,14 +353,26 @@ public class KillAura extends Module {
         }
 
         attacking = true;
-        if (rotation.get() == RotationMode.Always)
-            Rotations.rotate(Rotations.getYaw(primary), Rotations.getPitch(primary, Target.Body));
+        boolean hit = delayCheck();
+        if (rotation.get() == RotationMode.Always) rotate(primary, hit);
         if (pauseOnCombat.get() && PathManagers.get().isPathing() && !wasPathing) {
             PathManagers.get().pause();
             wasPathing = true;
         }
 
-        if (delayCheck()) targets.forEach(this::attack);
+        if (hit) targets.forEach(this::attack);
+    }
+
+    private void rotate(Entity target, boolean hit) {
+        // Grim checks a hit against the rotation sent right after it, so only that one has to stay on the target
+        Rotations.Aim aim = hit ? (yaw, pitch) -> hits(target, yaw, pitch) : Rotations.Aim.ANY;
+        Rotations.rotate(Rotations.getYaw(target), Rotations.getPitch(target, Target.Body), 0, null, aim);
+    }
+
+    private boolean hits(Entity target, float yaw, float pitch) {
+        Vec3 eye = mc.player.getEyePosition();
+        Vec3 end = eye.add(Vec3.directionFromRotation(pitch, yaw).scale(mc.player.entityInteractionRange()));
+        return target.getBoundingBox().deflate(0.05).clip(eye, end).isPresent();
     }
 
     @EventHandler
@@ -468,8 +481,7 @@ public class KillAura extends Module {
     }
 
     private void attack(Entity target) {
-        if (rotation.get() == RotationMode.OnHit)
-            Rotations.rotate(Rotations.getYaw(target), Rotations.getPitch(target, Target.Body));
+        if (rotation.get() == RotationMode.OnHit) rotate(target, true);
 
         mc.gameMode.attack(mc.player, target);
         mc.player.swing(InteractionHand.MAIN_HAND);

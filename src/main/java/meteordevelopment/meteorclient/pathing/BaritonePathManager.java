@@ -6,6 +6,8 @@
 package meteordevelopment.meteorclient.pathing;
 
 import baritone.api.BaritoneAPI;
+import baritone.api.event.events.RotationMoveEvent;
+import baritone.api.event.listener.AbstractGameEventListener;
 import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalGetToBlock;
 import baritone.api.pathing.goals.GoalXZ;
@@ -15,6 +17,7 @@ import baritone.api.process.PathingCommandType;
 import baritone.api.utils.SettingsUtil;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.core.BlockPos;
@@ -45,6 +48,9 @@ public class BaritonePathManager implements IPathManager {
         // Baritone pathing control
         BaritoneAPI.getProvider().getPrimaryBaritone().getPathingControlManager().registerProcess(new BaritoneProcess());
         BaritoneAPI.getProvider().getPrimaryBaritone().getPathingControlManager().registerProcess(new TickPauseProcess());
+
+        // Movement fix
+        BaritoneAPI.getProvider().getPrimaryBaritone().getGameEventHandler().registerEventListener(new MovementFixListener());
     }
 
     @Override
@@ -120,6 +126,14 @@ public class BaritonePathManager implements IPathManager {
     @Override
     public float getTargetPitch() {
         return BaritoneAPI.getProvider().getPrimaryBaritone().getPlayerContext().playerRotations().getPitch();
+    }
+
+    @Override
+    public float getMovementYaw(float yaw) {
+        // Baritone walks with its look target, which its look behavior puts in this event when the player travels
+        RotationMoveEvent event = new RotationMoveEvent(RotationMoveEvent.Type.MOTION_UPDATE, yaw, mc.player.getXRot());
+        BaritoneAPI.getProvider().getPrimaryBaritone().getLookBehavior().onPlayerRotationMove(event);
+        return event.getYaw();
     }
 
     @Override
@@ -204,6 +218,21 @@ public class BaritonePathManager implements IPathManager {
 
         public int getZ() {
             return this.z;
+        }
+    }
+
+    /**
+     * Baritone swaps its look target into the player's rotation for jumping, travel and swimming. While the movement fix
+     * moves the player with the sent rotation instead, that would walk somewhere Grim doesn't expect. Registered after
+     * Baritone's look behavior, so it runs last and puts back the rotation the event started with.
+     */
+    private static class MovementFixListener implements AbstractGameEventListener {
+        @Override
+        public void onPlayerRotationMove(RotationMoveEvent event) {
+            if (!Rotations.isMovementRotated()) return;
+
+            event.setYaw(event.getOriginal().getYaw());
+            event.setPitch(event.getOriginal().getPitch());
         }
     }
 

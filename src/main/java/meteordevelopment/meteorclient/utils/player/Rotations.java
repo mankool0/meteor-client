@@ -9,6 +9,8 @@ import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.entity.player.SendMovementPacketsEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixin.ClientInputAccessor;
+import meteordevelopment.meteorclient.mixin.LocalPlayerAccessor;
+import meteordevelopment.meteorclient.pathing.PathManagers;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.utils.PreInit;
 import meteordevelopment.meteorclient.utils.entity.Target;
@@ -55,8 +57,20 @@ public class Rotations {
     }
 
     public static void rotate(double yaw, double pitch, int priority, boolean clientSide, Runnable callback) {
+        rotate(yaw, pitch, priority, clientSide, callback, null);
+    }
+
+    /**
+     * Like {@link #rotate(double, double, int, Runnable)}, but lets the movement fix send another yaw within 22.5 degrees
+     * that {@code aim} accepts, so that one of the 8 key directions matches the way the player walks exactly.
+     */
+    public static void rotate(double yaw, double pitch, int priority, Runnable callback, Aim aim) {
+        rotate(yaw, pitch, priority, false, callback, aim);
+    }
+
+    private static void rotate(double yaw, double pitch, int priority, boolean clientSide, Runnable callback, Aim aim) {
         Rotation rotation = rotationPool.get();
-        rotation.set(yaw, pitch, priority, clientSide, callback);
+        rotation.set(yaw, pitch, priority, clientSide, callback, aim);
 
         int i = 0;
         for (; i < rotations.size(); i++) {
@@ -190,20 +204,60 @@ public class Rotations {
         Vec2 move = input.getMoveVector();
         if (move.lengthSquared() == 0) return;
 
-        // the wanted direction, turned from the camera's frame into the sent rotation's frame
-        double delta = Math.toRadians(mc.player.getYRot() - fixYaw);
-        double sin = Math.sin(delta);
-        double cos = Math.cos(delta);
-        double strafe = move.x * cos - move.y * sin;
-        double forward = move.y * cos + move.x * sin;
+        // the wanted direction as a yaw: the frame the player walks in (the camera's, or Baritone's look target while it
+        // paths), turned by the move vector
+        double wantedYaw = PathManagers.get().getMovementYaw(mc.player.getYRot()) + Math.toDegrees(Math.atan2(-move.x, move.y));
+        if (rotation.aim != null) alignRotation(rotation, wantedYaw);
 
-        double angle = Math.round(Math.atan2(forward, strafe) / (Math.PI / 4)) * (Math.PI / 4);
-        int s = (int) Math.round(Math.cos(angle));
-        int f = (int) Math.round(Math.sin(angle));
+        double offset = Math.toRadians(Math.round(Mth.wrapDegrees(wantedYaw - fixYaw) / 45) * 45);
+        int s = (int) Math.round(-Math.sin(offset));
+        int f = (int) Math.round(Math.cos(offset));
 
         Input keys = input.keyPresses;
         input.keyPresses = new Input(f > 0, f < 0, s > 0, s < 0, keys.jump(), keys.shift(), keys.sprint());
         ((ClientInputAccessor) input).meteor$setMoveVector(new Vec2(s, f).normalized());
+    }
+
+    /**
+     * Moves the rotation to the yaw within 22.5 degrees, accepted by its aim, that lines one of the 8 key directions up
+     * best with the wanted direction (exactly, when the aim allows it). Keeps the requested rotation when nothing is
+     * accepted.
+     */
+    private static void alignRotation(Rotation rotation, double wantedYaw) {
+        LocalPlayerAccessor player = (LocalPlayerAccessor) mc.player;
+        float lastYaw = player.meteor$getYRotLast();
+        float lastPitch = player.meteor$getXRotLast();
+
+        double rel = Mth.wrapDegrees(wantedYaw - rotation.yaw);
+        double aligned = rel - Math.round(rel / 45) * 45;
+
+        double bestError = Double.MAX_VALUE;
+        for (int i = -1; i <= 90; i++) {
+            // the exactly aligned yaw first, then half degree steps outwards
+            double turn = i == -1 ? aligned : (i % 2 == 0 ? 1 : -1) * ((i + 1) / 2) * 0.5;
+            float yaw = (float) (rotation.yaw + turn);
+            float pitch = (float) rotation.pitch;
+
+            // Grim flags a yaw that holds still while the pitch moves by less than a degree, so hold the pitch with it
+            if (yaw == lastYaw && pitch != lastPitch) {
+                if (rotation.aim.accepts(yaw, lastPitch)) pitch = lastPitch;
+                else if (Math.abs(pitch - lastPitch) < 1) continue;
+            }
+            if (!rotation.aim.accepts(yaw, pitch)) continue;
+
+            double r = Mth.wrapDegrees(wantedYaw - yaw);
+            double error = Math.abs(r - Math.round(r / 45) * 45);
+            if (error < bestError - 1e-4) {
+                bestError = error;
+                fixYaw = yaw;
+                fixPitch = pitch;
+            }
+
+            if (i == -1) break;
+        }
+
+        rotation.yaw = fixYaw;
+        rotation.pitch = fixPitch;
     }
 
     /**
@@ -227,6 +281,13 @@ public class Rotations {
         mc.player.setYRot(fixYaw);
         mc.player.setXRot(fixPitch);
         movementRotated = true;
+    }
+
+    /**
+     * @return whether the player is turned to the sent rotation for this tick's jumping and travel
+     */
+    public static boolean isMovementRotated() {
+        return movementRotated;
     }
 
     public static void stopMovementRotation() {
@@ -312,18 +373,30 @@ public class Rotations {
         rotationTimer = 0;
     }
 
+    /**
+     * Tells the movement fix which rotations still do the caller's job, see {@link #rotate(double, double, int, Runnable, Aim)}.
+     */
+    @FunctionalInterface
+    public interface Aim {
+        Aim ANY = (yaw, pitch) -> true;
+
+        boolean accepts(float yaw, float pitch);
+    }
+
     private static class Rotation {
         public double yaw, pitch;
         public int priority;
         public boolean clientSide;
         public Runnable callback;
+        public Aim aim;
 
-        public void set(double yaw, double pitch, int priority, boolean clientSide, Runnable callback) {
+        public void set(double yaw, double pitch, int priority, boolean clientSide, Runnable callback, Aim aim) {
             this.yaw = yaw;
             this.pitch = pitch;
             this.priority = priority;
             this.clientSide = clientSide;
             this.callback = callback;
+            this.aim = aim;
         }
 
         public void sendPacket() {

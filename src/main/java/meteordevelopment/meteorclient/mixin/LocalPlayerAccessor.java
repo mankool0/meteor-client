@@ -16,4 +16,10 @@ public interface LocalPlayerAccessor {
 
     @Accessor("wasSprinting")
     boolean meteor$wasSprinting();
+
+    @Accessor("yRotLast")
+    float meteor$getYRotLast();
+
+    @Accessor("xRotLast")
+    float meteor$getXRotLast();
 }
