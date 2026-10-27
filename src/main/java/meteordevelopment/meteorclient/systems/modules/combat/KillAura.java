@@ -24,6 +24,7 @@ import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.world.TickRate;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.InteractionHand;
@@ -220,6 +221,13 @@ public class KillAura extends Module {
         .build()
     );
 
+    private final Setting<Boolean> pauseOnEat = sgTiming.add(new BoolSetting.Builder()
+        .name("pause-on-eat")
+        .description("Does not switch weapons or attack while eating, so whatever is eating keeps the food in hand.")
+        .defaultValue(true)
+        .build()
+    );
+
     private final Setting<Boolean> pauseOnCA = sgTiming.add(new BoolSetting.Builder()
         .name("pause-on-CA")
         .description("Does not attack while CA is placing.")
@@ -290,6 +298,11 @@ public class KillAura extends Module {
             return;
         }
         if (pauseOnUse.get() && (mc.gameMode.isDestroying() || mc.player.isUsingItem())) {
+            stopAttacking();
+            return;
+        }
+        // Auto-switch would take the food out of hand: the eat stops, and whatever started it presses again with our weapon
+        if (pauseOnEat.get() && mc.player.isUsingItem() && mc.player.getUseItem().has(DataComponents.FOOD)) {
             stopAttacking();
             return;
         }
