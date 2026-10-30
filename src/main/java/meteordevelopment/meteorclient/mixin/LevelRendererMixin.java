@@ -216,8 +216,10 @@ public abstract class LevelRendererMixin implements ILevelRenderer {
     // BreakIndicators
 
     @Inject(method = "extractBlockDestroyAnimation", at = @At("HEAD"), cancellable = true)
-    private void onExtractBlockDestroyAnimation(CallbackInfo ci) {
+    private void onExtractBlockDestroyAnimation(Camera camera, LevelRenderState levelRenderState, CallbackInfo ci) {
         if (Modules.get().isActive(BreakIndicators.class) || Modules.get().get(NoRender.class).noBlockBreakOverlay()) {
+            // the render state is reused across frames and only cleared here, so clear it or the last extracted cracks stay on screen
+            levelRenderState.blockBreakingRenderStates.clear();
             ci.cancel();
         }
     }
