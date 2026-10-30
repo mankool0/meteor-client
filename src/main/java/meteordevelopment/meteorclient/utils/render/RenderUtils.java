@@ -22,6 +22,7 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3x2fStack;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import java.util.List;
@@ -29,6 +30,8 @@ import java.util.List;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class RenderUtils {
+    private static final float CENTER_DISTANCE = 16;
+
     public static Vec3 center;
     public static final Matrix4f projection = new Matrix4f();
 
@@ -77,11 +80,19 @@ public class RenderUtils {
         Matrix4f invProjection = new Matrix4f(projection).invert();
         Matrix4f invView = new Matrix4f(view).invert();
 
+        Vector4f near4 = new Vector4f(0, 0, -1, 1).mul(invProjection).mul(invView);
+        near4.div(near4.w);
+
         Vector4f center4 = new Vector4f(0, 0, 0, 1).mul(invProjection).mul(invView);
         center4.div(center4.w);
 
+        // NDC depth 0 is only twice the near plane distance away, so lines from there to anything behind the camera get
+        // clipped almost immediately and end mid-screen, where the target would be if it was in front. Move the origin
+        // further along the screen center ray so those lines run off the edge of the screen instead.
+        Vector3f dir = new Vector3f(center4.x - near4.x, center4.y - near4.y, center4.z - near4.z).normalize(CENTER_DISTANCE);
+
         Vec3 camera = mc.gameRenderer.getMainCamera().position();
-        center = new Vec3(camera.x + center4.x, camera.y + center4.y, camera.z + center4.z);
+        center = new Vec3(camera.x + near4.x + dir.x, camera.y + near4.y + dir.y, camera.z + near4.z + dir.z);
     }
 
     public static void renderTickingBlock(BlockPos blockPos, Color sideColor, Color lineColor, ShapeMode shapeMode, int excludeDir, int duration, boolean fade, boolean shrink) {
