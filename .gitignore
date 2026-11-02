@@ -16,6 +16,8 @@ logs
 
 # Local, git-ignored deploy helper (see guarded apply in build.gradle.kts)
 deploy.gradle
+# Baritone fork jar, copied in by that fork's local deploy.gradle
+/libs/
 .idea/*
 !.idea/copyright/*
 !.idea/scopes/*

@@ -10,6 +10,7 @@ import meteordevelopment.meteorclient.settings.Settings;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.function.Predicate;
 
@@ -60,6 +61,14 @@ public interface IPathManager {
      */
     default float getMovementYaw(float yaw) {
         return yaw;
+    }
+
+    /**
+     * @return the step elytra-fly's Vanilla mode moves the glide by this tick while the path manager flies the elytra,
+     * zero to hold still, or null when it isn't flying the elytra by steps
+     */
+    default Vec3 getGlideStep() {
+        return null;
     }
 
     ISettings getSettings();

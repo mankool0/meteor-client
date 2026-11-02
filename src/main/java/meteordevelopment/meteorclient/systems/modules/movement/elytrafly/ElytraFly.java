@@ -14,6 +14,7 @@ import meteordevelopment.meteorclient.mixin.BlockBehaviourAccessor;
 import meteordevelopment.meteorclient.mixin.EntityAccessor;
 import meteordevelopment.meteorclient.mixin.LocalPlayerAccessor;
 import meteordevelopment.meteorclient.mixininterface.IVec3;
+import meteordevelopment.meteorclient.pathing.PathManagers;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -36,6 +37,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Block;
@@ -444,6 +446,12 @@ public class ElytraFly extends Module {
         currentMode.autoTakeoff();
 
         if (mc.player.isFallFlying()) {
+            Vec3 step = event.type == MoverType.SELF && takesGlideSteps() ? PathManagers.get().getGlideStep() : null;
+            if (step != null) {
+                moveByStep(event, step);
+                return;
+            }
+
 
             if (flightMode.get() != ElytraFlightModes.Bounce) {
                 currentMode.velX = 0;
@@ -522,6 +530,25 @@ public class ElytraFly extends Module {
                 }
             }
         }
+    }
+
+    /**
+     * Whether Vanilla mode moves the glide by the path manager's elytra steps, when it has one, in place of the keys.
+     */
+    public boolean takesGlideSteps() {
+        return isActive() && flightMode.get() == ElytraFlightModes.Vanilla && !acceleration.get();
+    }
+
+    // The path manager keeps its steps clear of blocks and within these speeds, so they go whole: no-crash and
+    // auto-hover would only cut them.
+    private void moveByStep(PlayerMoveEvent event, Vec3 step) {
+        double x = step.x, z = step.z;
+        if (dontGoIntoUnloadedChunks.get()
+            && !mc.level.getChunkSource().hasChunk(Mth.floor(mc.player.getX() + x) >> 4, Mth.floor(mc.player.getZ() + z) >> 4)) {
+            x = 0;
+            z = 0;
+        }
+        ((IVec3) event.movement).meteor$set(x, step.y, z);
     }
 
     public boolean canPacketEfly() {

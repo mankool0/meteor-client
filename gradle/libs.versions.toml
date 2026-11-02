@@ -12,8 +12,6 @@ loom = "1.18-SNAPSHOT"
 errorprone-plugin = "5.1.1"
 
 # Mods
-# Baritone (https://github.com/MeteorDevelopment/baritone)
-baritone = "1.21.11-SNAPSHOT"
 # Sodium (https://github.com/CaffeineMC/sodium-fabric)
 sodium = "mc1.21.11-0.8.14-fabric"
 # Lithium (https://github.com/CaffeineMC/lithium-fabric)
@@ -54,7 +52,6 @@ fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-l
 sodium = { module = "maven.modrinth:sodium", version.ref = "sodium" }
 lithium = { module = "maven.modrinth:lithium", version.ref = "lithium" }
 iris = { module = "maven.modrinth:iris", version.ref = "iris" }
-baritone = { module = "meteordevelopment:baritone", version.ref = "baritone" }
 modmenu = { module = "maven.modrinth:modmenu", version.ref = "modmenu" }
 viafabricplus = { module = "com.viaversion:viafabricplus", version.ref = "viafabricplus" }
 viafabricplus-api = { module = "com.viaversion:viafabricplus-api", version.ref = "viafabricplus" }
