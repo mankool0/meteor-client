@@ -84,7 +84,8 @@ dependencies {
     "modCompileOnly"(libs.viafabricplus.api) { isTransitive = false }
 
     // mankool0/baritone, not MeteorDevelopment's: its unoptimized fabric jar, which the fork's local
-    // deploy.gradle copies into libs/ (git-ignored) on every fabric dist build
+    // deploy.gradle copies into libs/ (git-ignored) on every fabric dist build; CI downloads a pinned
+    // release of it instead (.github/workflows/build.yml)
     "modCompileOnly"(files("libs/baritone-unoptimized-fabric.jar"))
     "modCompileOnly"(libs.modmenu)
 

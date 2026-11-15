@@ -26,6 +26,20 @@ jobs:
           echo "minecraft=$(sed -n 's/^minecraft = "\(.*\)"/\1/p' gradle/libs.versions.toml)" >> $GITHUB_OUTPUT
           echo "sha=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
+      # build.gradle.kts compiles against mankool0/baritone's unoptimized fabric jar in libs/ (git-ignored,
+      # filled locally by the fork's deploy.gradle). CI takes it from a pinned release of the fork, checked
+      # by hash; bump all three together, the hash from the release's checksums.txt.
+      - name: Download Baritone
+        env:
+          BARITONE_TAG: efe4e66a
+          BARITONE_JAR: baritone-unoptimized-fabric-e798503-163-gefe4e66a.jar
+          BARITONE_SHA256: 253b8968980f242d983aadf6314d74d1efe6fabcbe03044c5c87ec9ba52b3737
+        run: |
+          mkdir -p libs
+          curl -fsSL --retry 3 -o libs/baritone-unoptimized-fabric.jar \
+            "https://github.com/mankool0/baritone/releases/download/$BARITONE_TAG/$BARITONE_JAR"
+          echo "$BARITONE_SHA256  libs/baritone-unoptimized-fabric.jar" | sha256sum -c -
+
       # Loom needs Gradle itself on Java 25; the last version listed becomes the default.
       # The mod's toolchain JDK is installed alongside it for Gradle to detect.
       - name: Set up Java
