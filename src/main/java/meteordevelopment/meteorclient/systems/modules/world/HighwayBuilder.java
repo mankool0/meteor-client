@@ -35,6 +35,7 @@ import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.meteorclient.utils.world.Dir;
+import meteordevelopment.meteorclient.utils.world.ServerDigSlots;
 import meteordevelopment.meteorclient.utils.world.TickRate;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.ChatFormatting;
@@ -1891,7 +1892,7 @@ public class HighwayBuilder extends Module {
                     if (
                         BlockUtils.canBreak(pos.getBlockPos(), pos.getState())
                             && (mineBlocksToPlace || !b.blocksToPlace.get().contains(pos.getState().getBlock()))
-                            && !BlockUtils.canInstaBreak(pos.getBlockPos()) && (!Modules.get().get(SpeedMine.class).instamine() || pos.getState().getDestroyProgress(b.mc.player, b.mc.level, pos.getBlockPos()) <= 0.5)
+                            && !BlockUtils.canInstaBreak(pos.getBlockPos()) && (!Modules.get().get(SpeedMine.class).instamine() || pos.getState().getDestroyProgress(b.mc.player, b.mc.level, pos.getBlockPos()) < ServerDigSlots.FINISH_PROGRESS)
                             && (b.normalMining == null || !pos.getBlockPos().equals(b.normalMining.blockPos))
                             && (b.packetMining == null || !pos.getBlockPos().equals(b.packetMining.blockPos))
                     ) {

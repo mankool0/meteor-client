@@ -17,6 +17,7 @@ import meteordevelopment.meteorclient.systems.modules.movement.Sprint;
 import meteordevelopment.meteorclient.systems.modules.player.Reach;
 import meteordevelopment.meteorclient.systems.modules.player.SpeedMine;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import meteordevelopment.meteorclient.utils.world.ServerDigSpeed;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -72,7 +73,8 @@ public abstract class PlayerMixin extends LivingEntity {
 
     @ModifyReturnValue(method = "getDestroySpeed", at = @At(value = "RETURN"))
     public float onGetBlockBreakingSpeed(float breakSpeed, BlockState state) {
-        if (!level().isClientSide()) return breakSpeed;
+        // the server and an anticheat dig at the real speed
+        if (!level().isClientSide() || ServerDigSpeed.judging) return breakSpeed;
 
         SpeedMine speedMine = Modules.get().get(SpeedMine.class);
         if (!speedMine.isActive() || speedMine.mode.get() != SpeedMine.Mode.Normal || !speedMine.filter(state.getBlock()))

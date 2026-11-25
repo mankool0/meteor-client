@@ -16,6 +16,8 @@ import meteordevelopment.meteorclient.systems.modules.player.CalmInventory;
 import meteordevelopment.meteorclient.systems.modules.player.SpeedMine;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.meteorclient.utils.world.PendingPlaces;
+import meteordevelopment.meteorclient.utils.world.ServerDigSlots;
+import meteordevelopment.meteorclient.utils.world.ServerDigSpeed;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.multiplayer.prediction.PredictiveAction;
@@ -50,6 +52,18 @@ public abstract class MultiPlayerGameModeMixin implements IMultiPlayerGameMode {
     private int destroyDelay;
 
     @Shadow
+    private boolean isDestroying;
+
+    @Shadow
+    private BlockPos destroyBlockPos;
+
+    @Shadow
+    private ItemStack destroyingItem;
+
+    @Shadow
+    protected abstract boolean sameDestroyTarget(BlockPos pos);
+
+    @Shadow
     protected abstract void ensureHasSentCarriedItem();
 
     @Shadow
@@ -74,20 +88,61 @@ public abstract class MultiPlayerGameModeMixin implements IMultiPlayerGameMode {
 
     @Inject(method = "startDestroyBlock", at = @At("HEAD"), cancellable = true)
     private void onStartDestroyBlock(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
-        if (MeteorClient.EVENT_BUS.post(StartBreakingBlockEvent.get(pos, direction)).isCancelled()) cir.cancel();
-        else {
-            SpeedMine sm = Modules.get().get(SpeedMine.class);
-            BlockState state = mc.level.getBlockState(pos);
-
-            if (!sm.instamine() || !sm.filter(state.getBlock())) return;
-
-            if (state.getDestroyProgress(mc.player, mc.level, pos) > 0.5f) {
-                destroyBlock(pos);
-                startPrediction(mc.level, sequence -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, pos, direction, sequence));
-                startPrediction(mc.level, sequence -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, pos, direction, sequence));
-                cir.setReturnValue(true);
-            }
+        if (MeteorClient.EVENT_BUS.post(StartBreakingBlockEvent.get(pos, direction)).isCancelled()) {
+            cir.cancel();
+            return;
         }
+
+        SpeedMine sm = Modules.get().get(SpeedMine.class);
+        BlockState state = mc.level.getBlockState(pos);
+        if (!sm.finishesEarly(state.getBlock()) || mc.player.isCreative() || state.isAir()) return;
+        // vanilla turns these down itself
+        if (mc.player.blockActionRestricted(mc.level, pos, mc.gameMode.getPlayerMode()) || !mc.level.getWorldBorder().isWithinBounds(pos)) return;
+
+        // The tool wore down, say as a block parked in the server's delayed slot broke with it. Vanilla would start
+        // over, restarting the server's timer too, but the server goes by whatever is held when the stop arrives
+        if (isDestroying && pos.equals(destroyBlockPos) && ItemStack.isSameItem(mc.player.getMainHandItem(), destroyingItem)) {
+            destroyingItem = mc.player.getMainHandItem();
+            cir.setReturnValue(true);
+            return;
+        }
+
+        // only the client has it instant: the server refuses a lone start, and an anticheat sees the stop that would
+        // finish it as a dig on air. They agree again within a tick or two
+        if (ServerDigSpeed.mustWait(state, pos)) {
+            cir.setReturnValue(false);
+            return;
+        }
+
+        if (sm.doubleMines(state.getBlock()) && isDestroying && !pos.equals(destroyBlockPos) && !sameDestroyTarget(pos)) {
+            meteor$keepDigging();
+        }
+
+        float progress = ServerDigSpeed.progress(state, pos);
+        if (sm.instamines(state.getBlock()) && progress >= ServerDigSlots.FINISH_PROGRESS && progress < 1.0f) {
+            ServerDigSlots.breakFinishing(pos, direction);
+            cir.setReturnValue(true);
+        }
+    }
+
+    /**
+     * Moving on from a dig, keeps the server on it instead of aborting: a stop either finishes it, once far enough
+     * along, or parks it in the delayed slot to break by itself.
+     */
+    @Unique
+    private void meteor$keepDigging() {
+        ServerDigSlots.Dig dig = ServerDigSlots.regular();
+        if (dig == null || !dig.pos.equals(destroyBlockPos)) return;
+
+        boolean finishes = ServerDigSlots.tick() >= ServerDigSlots.finishTick(dig, true);
+        // parked, it finishes with whatever is held then, so only when the next block is dug with the same tool. Auto
+        // Tool has already switched for that one
+        if (!finishes && (!ServerDigSlots.canPark() || !ItemStack.isSameItem(mc.player.getMainHandItem(), destroyingItem))) return;
+
+        ServerDigSlots.stop(ServerDigSlots.face(dig.pos), finishes);
+        // so the start that follows doesn't abort it first
+        isDestroying = false;
+        mc.level.destroyBlockProgress(mc.player.getId(), dig.pos, -1);
     }
 
     @Inject(method = "useItemOn", at = @At("HEAD"), cancellable = true)

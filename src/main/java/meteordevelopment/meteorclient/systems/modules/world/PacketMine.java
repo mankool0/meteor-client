@@ -21,6 +21,8 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import meteordevelopment.meteorclient.utils.world.ServerDigSlots;
+import meteordevelopment.meteorclient.utils.world.ServerDigSpeed;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -249,6 +251,18 @@ public class PacketMine extends Module {
         private void sendMinePackets() {
             if (timer <= 0) {
                 if (!mining) {
+                    // only the client has it instant: the server refuses a lone start, and an anticheat sees a stop
+                    // after it as a dig on air. They agree again within a tick or two
+                    if (ServerDigSpeed.mustWait(blockState, blockPos)) return;
+
+                    // a stop after a start the server breaks the block on is a dig on air, which Grim flags
+                    if (ServerDigSpeed.progress(blockState, blockPos) >= 1.0f) {
+                        ServerDigSlots.breakInstant(blockPos, direction);
+                        mining = true;
+                        startTime = mc.player.tickCount;
+                        return;
+                    }
+
                     mc.gameMode.startPrediction(mc.level, sequence -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK, blockPos, direction, sequence));
                     mc.gameMode.startPrediction(mc.level, sequence -> new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction, sequence));
 

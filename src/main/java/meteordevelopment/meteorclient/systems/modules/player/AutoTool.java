@@ -17,8 +17,10 @@ import meteordevelopment.meteorclient.systems.modules.world.InfinityMiner;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import meteordevelopment.meteorclient.utils.world.ServerDigSlots;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
@@ -56,6 +58,13 @@ public class AutoTool extends Module {
         .name("fortune-for-ores-and-crops")
         .description("Mines Ores and crops only with the Fortune enchantment.")
         .defaultValue(false)
+        .build()
+    );
+
+    private final Setting<Boolean> saveDurability = sgGeneral.add(new BoolSetting.Builder()
+        .name("save-durability")
+        .description("Breaks blocks no tool is faster on, like tinted glass, by hand, as tools wear down on any block. Keeps a preferred Silk Touch or Fortune tool where it changes the drops.")
+        .defaultValue(true)
         .build()
     );
 
@@ -153,11 +162,35 @@ public class AutoTool extends Module {
         BlockState blockState = mc.level.getBlockState(event.blockPos);
         if (!BlockUtils.canBreak(event.blockPos, blockState)) return;
 
-        // Check if we should switch to a better tool
+        // Check if we should switch to a better tool. A block parked in the server's delayed slot finishes with
+        // whatever is held when its time comes, so its tool stays until it has
+        bestSlot = -1;
+        ServerDigSlots.Dig parked = ServerDigSlots.parked();
+        int slot = pickSlot(parked != null ? parked.state : blockState);
+        if (slot != mc.player.getInventory().getSelectedSlot()) {
+            bestSlot = slot;
+            ticks = switchDelay.get();
+
+            if (ticks == 0) InvUtils.swap(bestSlot, true);
+            else shouldSwitch = true;
+        }
+
+        // Anti break
+        if (refuses(mc.player.getMainHandItem())) {
+            mc.options.keyAttack.setDown(false);
+            event.cancel();
+        }
+    }
+
+    /**
+     * @return the hotbar slot to break the block with by these settings: the best tool, or the selected slot when no
+     * other one beats it
+     */
+    public int pickSlot(BlockState blockState) {
         ItemStack currentStack = mc.player.getMainHandItem();
 
         double bestScore = -1;
-        bestSlot = -1;
+        int best = -1;
 
         for (int i = 0; i < 9; i++) {
             ItemStack itemStack = mc.player.getInventory().getItem(i);
@@ -170,24 +203,64 @@ public class AutoTool extends Module {
 
             if (score > bestScore) {
                 bestScore = score;
-                bestSlot = i;
+                best = i;
             }
         }
 
-        if ((bestSlot != -1 && (bestScore > getScore(currentStack, blockState, silkTouchForEnderChest.get(), fortuneForOresCrops.get(), prefer.get(), itemStack -> !shouldStopUsing(itemStack))) || shouldStopUsing(currentStack) || !isTool(currentStack))) {
-            ticks = switchDelay.get();
-
-            if (ticks == 0) InvUtils.swap(bestSlot, true);
-            else shouldSwitch = true;
+        if (best != -1 && (bestScore > getScore(currentStack, blockState, silkTouchForEnderChest.get(), fortuneForOresCrops.get(), prefer.get(), itemStack -> !shouldStopUsing(itemStack)) || shouldStopUsing(currentStack) || !isTool(currentStack))) {
+            return best;
         }
 
-        // Anti break
-        currentStack = mc.player.getMainHandItem();
-
-        if (shouldStopUsing(currentStack) && isTool(currentStack)) {
-            mc.options.keyAttack.setDown(false);
-            event.cancel();
+        // No tool is faster on it or gets more from it than a hand does, but the held one would wear down
+        if (best == -1 && saveDurability.get() && wears(currentStack) && blockState.getDestroySpeed(mc.level, BlockPos.ZERO) != 0
+            && currentStack.getDestroySpeed(blockState) <= 1 && !enchantmentMatters(currentStack, blockState)) {
+            int hand = handSlot();
+            if (hand != -1) return hand;
         }
+
+        return mc.player.getInventory().getSelectedSlot();
+    }
+
+    /**
+     * @return whether mining with the stack takes durability, which it does for any block that isn't instant
+     */
+    private static boolean wears(ItemStack itemStack) {
+        return itemStack.has(DataComponents.TOOL) && itemStack.isDamageableItem();
+    }
+
+    /**
+     * @return whether the stack's preferred enchantment changes what the block drops, whatever tool it's on
+     */
+    private boolean enchantmentMatters(ItemStack itemStack, BlockState state) {
+        if (prefer.get() == EnchantPreference.SilkTouch) return Utils.hasEnchantments(itemStack, Enchantments.SILK_TOUCH);
+        if (prefer.get() != EnchantPreference.Fortune || !Utils.hasEnchantments(itemStack, Enchantments.FORTUNE)) return false;
+
+        Block block = state.getBlock();
+        return isFortunable(block) || block == Blocks.GLOWSTONE || block == Blocks.SEA_LANTERN || block == Blocks.MELON || block == Blocks.GRAVEL;
+    }
+
+    /**
+     * @return an empty hotbar slot, else one holding something that doesn't wear down, or -1
+     */
+    private int handSlot() {
+        int item = -1;
+        for (int i = 0; i < 9; i++) {
+            ItemStack itemStack = mc.player.getInventory().getItem(i);
+            if (itemStack.isEmpty()) return i;
+            if (item == -1 && !wears(itemStack)) item = i;
+        }
+        return item;
+    }
+
+    /**
+     * @return whether anti-break keeps this stack from breaking blocks
+     */
+    public boolean refuses(ItemStack itemStack) {
+        return shouldStopUsing(itemStack) && isTool(itemStack);
+    }
+
+    public boolean switchesBack() {
+        return switchBack.get();
     }
 
     private boolean shouldStopUsing(ItemStack itemStack) {

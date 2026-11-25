@@ -12,6 +12,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Categories;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.Utils;
+import meteordevelopment.meteorclient.utils.world.ServerDigSlots;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
@@ -69,8 +70,16 @@ public class SpeedMine extends Module {
 
     private final Setting<Boolean> instamine = sgGeneral.add(new BoolSetting.Builder()
         .name("instamine")
-        .description("Whether or not to instantly mine blocks under certain conditions.")
+        .description("Breaks blocks the server finishes within a tick, 70% of the break time or more, with a start and a stop at once.")
         .defaultValue(true)
+        .visible(() -> mode.get() == Mode.Damage)
+        .build()
+    );
+
+    private final Setting<Boolean> doubleMine = sgGeneral.add(new BoolSetting.Builder()
+        .name("double-mine")
+        .description("Keeps the server digging a block when you move on to the next, so two break at once. Hold the right tool until both have broken.")
+        .defaultValue(false)
         .visible(() -> mode.get() == Mode.Damage)
         .build()
     );
@@ -103,13 +112,19 @@ public class SpeedMine extends Module {
                 mc.player.addEffect(new MobEffectInstance(HASTE, -1, hasteAmplifier.get() - 1, false, false, false), null);
             }
         } else if (mode.get() == Mode.Damage) {
-            MultiPlayerGameModeAccessor im = (MultiPlayerGameModeAccessor) mc.gameMode;
-            float progress = im.meteor$getBreakingProgress();
-            BlockPos pos = im.meteor$getCurrentBreakingBlockPos();
+            if (!mc.gameMode.isDestroying()) return;
 
-            if (pos == null || progress <= 0) return;
-            if (progress + mc.level.getBlockState(pos).getDestroyProgress(mc.player, mc.level, pos) >= 0.7f)
-                im.meteor$setDestroyProgress(1f);
+            MultiPlayerGameModeAccessor im = (MultiPlayerGameModeAccessor) mc.gameMode;
+            BlockPos pos = im.meteor$getCurrentBreakingBlockPos();
+            if (!filter(mc.level.getBlockState(pos).getBlock())) return;
+
+            // timed from the start the server got, with the dig speed it judges by, which right after switching to the
+            // tool is faster than the client's own idea of it
+            ServerDigSlots.Dig dig = ServerDigSlots.regular();
+            if (dig == null || !dig.pos.equals(pos)) return;
+
+            // vanilla sends the stop when the client's progress reaches 1 later in this tick
+            if (ServerDigSlots.tick() >= ServerDigSlots.finishTick(dig, true)) im.meteor$setDestroyProgress(1f);
         }
     }
 
@@ -137,6 +152,27 @@ public class SpeedMine extends Module {
 
     public boolean instamine() {
         return isActive() && mode.get() == Mode.Damage && instamine.get();
+    }
+
+    /**
+     * @return whether digs of the block stop as soon as the server breaks it, at 70% of its break time
+     */
+    public boolean finishesEarly(Block block) {
+        return isActive() && mode.get() == Mode.Damage && filter(block);
+    }
+
+    /**
+     * @return whether a dig of the block that the server finishes within a tick is done with a start and a stop at once
+     */
+    public boolean instamines(Block block) {
+        return finishesEarly(block) && instamine.get();
+    }
+
+    /**
+     * @return whether a dig of the block is parked in the server's delayed slot to dig the next one alongside it
+     */
+    public boolean doubleMines(Block block) {
+        return finishesEarly(block) && doubleMine.get();
     }
 
     public enum Mode {

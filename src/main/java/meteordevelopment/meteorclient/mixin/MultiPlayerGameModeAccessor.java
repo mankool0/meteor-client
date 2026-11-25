@@ -21,6 +21,9 @@ public interface MultiPlayerGameModeAccessor {
     @Accessor("destroyBlockPos")
     BlockPos meteor$getCurrentBreakingBlockPos();
 
+    @Accessor("isDestroying")
+    void meteor$setDestroying(boolean destroying);
+
     // the hotbar slot the server last heard was selected
     @Accessor("carriedIndex")
     int meteor$getCarriedIndex();
