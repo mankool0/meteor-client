@@ -12,14 +12,11 @@ import baritone.api.pathing.goals.Goal;
 import baritone.api.pathing.goals.GoalGetToBlock;
 import baritone.api.pathing.goals.GoalXZ;
 import baritone.api.process.IBaritoneProcess;
-import baritone.api.process.IGlideControl;
 import baritone.api.process.PathingCommand;
 import baritone.api.process.PathingCommandType;
 import baritone.api.utils.SettingsUtil;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.ElytraFly;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
@@ -54,9 +51,6 @@ public class BaritonePathManager implements IPathManager {
 
         // Movement fix
         BaritoneAPI.getProvider().getPrimaryBaritone().getGameEventHandler().registerEventListener(new MovementFixListener());
-
-        // Elytra flight moved by elytra-fly's Vanilla mode
-        BaritoneAPI.getProvider().getPrimaryBaritone().getElytraProcess().setGlideControl(new GlideControl());
     }
 
     @Override
@@ -244,37 +238,6 @@ public class BaritonePathManager implements IPathManager {
 
             event.setYaw(event.getOriginal().getYaw());
             event.setPitch(event.getOriginal().getPitch());
-        }
-    }
-
-    /**
-     * Elytra-fly's Vanilla mode moves the glide by Baritone's steps, within its own speeds.
-     */
-    private static class GlideControl implements IGlideControl {
-        @Override
-        public boolean isActive() {
-            return elytraFly().takesGlideSteps();
-        }
-
-        @Override
-        public double maxHorizontalStep() {
-            return elytraFly().horizontalSpeed.get();
-        }
-
-        @Override
-        public double maxVerticalStep() {
-            // up and down by half the vertical speed a tick
-            return 0.5 * elytraFly().verticalSpeed.get();
-        }
-
-        @Override
-        public boolean standsWhileGliding() {
-            // saving durability, the server has the player standing every other movement packet
-            return elytraFly().saveDurability.get();
-        }
-
-        private static ElytraFly elytraFly() {
-            return Modules.get().get(ElytraFly.class);
         }
     }
 

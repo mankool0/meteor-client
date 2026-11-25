@@ -96,7 +96,7 @@ public abstract class LivingEntityMixin extends Entity {
     public void recastOnLand(CallbackInfoReturnable<Boolean> cir) {
         boolean elytra = cir.getReturnValue();
         ElytraFly elytraFly = Modules.get().get(ElytraFly.class);
-        if (previousElytra && !elytra && elytraFly.isActive() && elytraFly.flightMode.get() == ElytraFlightModes.Bounce) {
+        if (previousElytra && !elytra && elytraFly.isActive() && elytraFly.flightMode.get() == ElytraFlightModes.Bounce && !elytraFly.pathManagerFlies()) {
             cir.setReturnValue(Bounce.recastElytra(mc.player));
         }
         previousElytra = elytra;

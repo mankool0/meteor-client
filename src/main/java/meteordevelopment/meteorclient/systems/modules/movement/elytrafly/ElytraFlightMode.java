@@ -171,8 +171,9 @@ public class ElytraFlightMode {
     }
 
     public void handleVerticalSpeed(PlayerMoveEvent event) {
-        if (mc.options.keyJump.isDown()) velY += 0.5 * elytraFly.verticalSpeed.get();
-        else if (mc.options.keyShift.isDown()) velY -= 0.5 * elytraFly.verticalSpeed.get();
+        // Both held cancel out, as in creative flight, so you can sneak-click in place.
+        boolean up = mc.options.keyJump.isDown();
+        if (up != mc.options.keyShift.isDown()) velY += (up ? 0.5 : -0.5) * elytraFly.verticalSpeed.get();
     }
 
     public void handleFallMultiplier() {

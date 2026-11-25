@@ -37,7 +37,6 @@ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Block;
@@ -441,18 +440,19 @@ public class ElytraFly extends Module {
     private void onPlayerMove(PlayerMoveEvent event) {
         updateGlideHeld();
 
+        if (pathManagerFlies()) {
+            if (currentMode.lastForwardPressed) {
+                mc.options.keyUp.setDown(false);
+                currentMode.lastForwardPressed = false;
+            }
+            return;
+        }
+
         if (!(mc.player.getItemBySlot(EquipmentSlot.CHEST).has(DataComponents.GLIDER))) return;
 
         currentMode.autoTakeoff();
 
         if (mc.player.isFallFlying()) {
-            Vec3 step = event.type == MoverType.SELF && takesGlideSteps() ? PathManagers.get().getGlideStep() : null;
-            if (step != null) {
-                moveByStep(event, step);
-                return;
-            }
-
-
             if (flightMode.get() != ElytraFlightModes.Bounce) {
                 currentMode.velX = 0;
                 currentMode.velY = event.movement.y;
@@ -504,7 +504,7 @@ public class ElytraFly extends Module {
             }
         }
 
-        if (autoHover.get() && mc.player.input.keyPresses.shift() && !Modules.get().get(Freecam.class).isActive() && mc.player.isFallFlying() && flightMode.get() != ElytraFlightModes.Bounce) {
+        if (autoHover.get() && mc.player.input.keyPresses.shift() && !mc.player.input.keyPresses.jump() && !Modules.get().get(Freecam.class).isActive() && mc.player.isFallFlying() && flightMode.get() != ElytraFlightModes.Bounce) {
             BlockState underState = mc.level.getBlockState(mc.player.blockPosition().below());
             Block under = underState.getBlock();
             BlockState under2State = mc.level.getBlockState(mc.player.blockPosition().below().below());
@@ -533,26 +533,16 @@ public class ElytraFly extends Module {
     }
 
     /**
-     * Whether Vanilla mode moves the glide by the path manager's elytra steps, when it has one, in place of the keys.
+     * Whether the path manager flies the elytra itself (Baritone's elytra flight by steps, with its own speeds and
+     * save-durability). Elytra-fly is for flying by hand, and leaves the glide, its packets, the keys and the player's
+     * box alone meanwhile.
      */
-    public boolean takesGlideSteps() {
-        return isActive() && flightMode.get() == ElytraFlightModes.Vanilla && !acceleration.get();
-    }
-
-    // The path manager keeps its steps clear of blocks and within these speeds, so they go whole: no-crash and
-    // auto-hover would only cut them.
-    private void moveByStep(PlayerMoveEvent event, Vec3 step) {
-        double x = step.x, z = step.z;
-        if (dontGoIntoUnloadedChunks.get()
-            && !mc.level.getChunkSource().hasChunk(Mth.floor(mc.player.getX() + x) >> 4, Mth.floor(mc.player.getZ() + z) >> 4)) {
-            x = 0;
-            z = 0;
-        }
-        ((IVec3) event.movement).meteor$set(x, step.y, z);
+    public boolean pathManagerFlies() {
+        return PathManagers.get().getGlideStep() != null;
     }
 
     public boolean canPacketEfly() {
-        return isActive() && flightMode.get() == ElytraFlightModes.Packet && mc.player.getItemBySlot(EquipmentSlot.CHEST).has(DataComponents.GLIDER) && !mc.player.onGround();
+        return isActive() && flightMode.get() == ElytraFlightModes.Packet && mc.player.getItemBySlot(EquipmentSlot.CHEST).has(DataComponents.GLIDER) && !mc.player.onGround() && !pathManagerFlies();
     }
 
     public boolean holdsGlide() {
@@ -563,11 +553,19 @@ public class ElytraFly extends Module {
         return holdsGlide() && standingBox.get();
     }
 
+    /**
+     * Whether the entity is drawn standing while it glides: the local player's model with the standing box, so it
+     * shows the box the player has.
+     */
+    public boolean drawsStanding(LivingEntity entity) {
+        return entity == mc.player && holdsStanding();
+    }
+
     // Held from the first tick the real flag says gliding: the server's reports turn it off half the time after.
     private void updateGlideHeld() {
         LocalPlayer player = mc.player;
         boolean held = glideHeld;
-        if (!saveDurability.get() || flightMode.get() != ElytraFlightModes.Vanilla
+        if (!saveDurability.get() || flightMode.get() != ElytraFlightModes.Vanilla || pathManagerFlies()
             || player.onGround() || player.isPassenger() || player.isInWater()
             || !LivingEntity.canGlideUsing(player.getItemBySlot(EquipmentSlot.CHEST), EquipmentSlot.CHEST)) {
             held = false;
@@ -589,6 +587,7 @@ public class ElytraFly extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
+        if (pathManagerFlies()) return;
         currentMode.onTick();
     }
 
@@ -604,6 +603,7 @@ public class ElytraFly extends Module {
             }
         }
 
+        if (pathManagerFlies()) return;
         currentMode.onPreTick();
     }
 
@@ -631,6 +631,7 @@ public class ElytraFly extends Module {
             }
         }
 
+        if (pathManagerFlies()) return;
         currentMode.onPacketSend(event);
     }
 
@@ -643,6 +644,7 @@ public class ElytraFly extends Module {
         if (event.packet instanceof ClientboundPlayerPositionPacket) currentMode.zeroAcceleration();
         if (event.packet instanceof ClientboundSetEntityDataPacket data) readGlide(data);
 
+        if (pathManagerFlies()) return;
         currentMode.onPacketReceive(event);
     }
 
