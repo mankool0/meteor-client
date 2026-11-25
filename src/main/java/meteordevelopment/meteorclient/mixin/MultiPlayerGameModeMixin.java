@@ -15,6 +15,7 @@ import meteordevelopment.meteorclient.systems.modules.player.BreakDelay;
 import meteordevelopment.meteorclient.systems.modules.player.CalmInventory;
 import meteordevelopment.meteorclient.systems.modules.player.SpeedMine;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
+import meteordevelopment.meteorclient.utils.world.PendingPlaces;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.client.multiplayer.prediction.PredictiveAction;
@@ -28,11 +29,13 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -91,6 +94,42 @@ public abstract class MultiPlayerGameModeMixin implements IMultiPlayerGameMode {
     public void useItemOn(LocalPlayer player, InteractionHand hand, BlockHitResult blockHit, CallbackInfoReturnable<InteractionResult> cir) {
         if (MeteorClient.EVENT_BUS.post(InteractBlockEvent.get(player.getMainHandItem().isEmpty() ? InteractionHand.OFF_HAND : hand, blockHit)).isCancelled())
             cir.setReturnValue(InteractionResult.FAIL);
+    }
+
+    @Unique
+    private ItemStack useStack;
+
+    @Unique
+    private BlockPos useTarget;
+
+    @Unique
+    private int useSlot, useCount, useSequenceBefore;
+
+    // Main hand only: the server takes what it places from the selected hotbar slot
+    @Inject(method = "useItemOn", at = @At("HEAD"))
+    private void onUseItemOnTrackHead(LocalPlayer player, InteractionHand hand, BlockHitResult blockHit, CallbackInfoReturnable<InteractionResult> cir) {
+        useStack = null;
+        if (mc.level == null || hand != InteractionHand.MAIN_HAND) return;
+
+        useSlot = player.getInventory().getSelectedSlot();
+        useStack = player.getMainHandItem();
+        useCount = useStack.getCount();
+        // where a block would go: into the clicked block when it can be replaced, like tall grass, else next to it
+        useTarget = new BlockPlaceContext(player, hand, useStack, blockHit).getClickedPos();
+        useSequenceBefore = ((ClientLevelAccessor) mc.level).meteor$getBlockStatePredictionHandler().currentSequence();
+    }
+
+    @Inject(method = "useItemOn", at = @At("RETURN"))
+    private void onUseItemOnTrackReturn(LocalPlayer player, InteractionHand hand, BlockHitResult blockHit, CallbackInfoReturnable<InteractionResult> cir) {
+        ClientLevel level = mc.level;
+        if (useStack != null && level != null) {
+            int sequence = ((ClientLevelAccessor) level).meteor$getBlockStatePredictionHandler().currentSequence();
+            // unchanged when the click was refused before anything went out
+            if (sequence != useSequenceBefore) {
+                PendingPlaces.of(level).onUse(useSlot, sequence, useStack, useCount, useTarget, player.tickCount);
+            }
+        }
+        useStack = null;
     }
 
     @Inject(method = "attack", at = @At("HEAD"), cancellable = true)

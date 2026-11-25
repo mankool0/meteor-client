@@ -31,6 +31,7 @@ import meteordevelopment.meteorclient.systems.modules.render.*;
 import meteordevelopment.meteorclient.systems.modules.render.blockesp.BlockESP;
 import meteordevelopment.meteorclient.systems.modules.render.marker.Marker;
 import meteordevelopment.meteorclient.systems.modules.world.*;
+import meteordevelopment.meteorclient.systems.modules.world.printer.Printer;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.Keybind;
@@ -573,6 +574,8 @@ public class Modules extends System<Modules> {
             add(new Excavator());
             add(new InfinityMiner());
         }
+
+        if (Printer.LITEMATICA) add(new Printer());
     }
 
     private void initMisc() {

@@ -88,6 +88,9 @@ dependencies {
     // release of it instead (.github/workflows/build.yml)
     "modCompileOnly"(files("libs/baritone-unoptimized-fabric.jar"))
     "modCompileOnly"(libs.modmenu)
+    // Printer reads the schematic Litematica renders; it is only registered when Litematica is installed
+    "modCompileOnly"(libs.litematica) { isTransitive = false }
+    "modCompileOnly"(libs.malilib) { isTransitive = false }
 
     // Annotations (provided transitively by newer fabric-api; explicit on 1.21.4)
     compileOnly("org.jspecify:jspecify:1.0.0")

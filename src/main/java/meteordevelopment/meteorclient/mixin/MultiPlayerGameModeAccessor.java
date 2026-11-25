@@ -20,4 +20,8 @@ public interface MultiPlayerGameModeAccessor {
 
     @Accessor("destroyBlockPos")
     BlockPos meteor$getCurrentBreakingBlockPos();
+
+    // the hotbar slot the server last heard was selected
+    @Accessor("carriedIndex")
+    int meteor$getCarriedIndex();
 }

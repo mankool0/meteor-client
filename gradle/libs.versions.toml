@@ -20,6 +20,10 @@ lithium = "mc1.21.11-0.21.4-fabric"
 iris = "1.10.8+1.21.11-fabric"
 # ModMenu (https://github.com/TerraformersMC/ModMenu)
 modmenu = "17.0.1"
+# Litematica (https://modrinth.com/mod/litematica), Modrinth version id of 0.26.16
+litematica = "mengBR9D"
+# MaLiLib (https://modrinth.com/mod/malilib), Modrinth version id of 0.27.20
+malilib = "loabWpyU"
 # Orbit (https://github.com/MeteorDevelopment/orbit)
 orbit = "0.2.4"
 # Starscript (https://github.com/MeteorDevelopment/starscript)
@@ -55,6 +59,8 @@ iris = { module = "maven.modrinth:iris", version.ref = "iris" }
 modmenu = { module = "maven.modrinth:modmenu", version.ref = "modmenu" }
 viafabricplus = { module = "com.viaversion:viafabricplus", version.ref = "viafabricplus" }
 viafabricplus-api = { module = "com.viaversion:viafabricplus-api", version.ref = "viafabricplus" }
+litematica = { module = "maven.modrinth:litematica", version.ref = "litematica" }
+malilib = { module = "maven.modrinth:malilib", version.ref = "malilib" }
 
 # Libraries
 orbit = { module = "meteordevelopment:orbit", version.ref = "orbit" }

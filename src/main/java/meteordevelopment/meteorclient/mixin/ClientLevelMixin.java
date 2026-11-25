@@ -10,6 +10,7 @@ import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.entity.EntityRemovedEvent;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.render.NoRender;
+import meteordevelopment.meteorclient.utils.world.PendingPlaces;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -51,6 +52,20 @@ public abstract class ClientLevelMixin {
     @Inject(method = "addBreakingBlockEffect", at = @At("HEAD"), cancellable = true)
     private void onAddBlockBreakingParticles(BlockPos pos, Direction direction, CallbackInfo ci) {
         if (Modules.get().get(NoRender.class).noParticle(ParticleTypes.BLOCK)) ci.cancel();
+    }
+
+    // Called from the packet handler on the main thread, so it lands in order with the inventory updates the server
+    // sent ahead of the ack
+    @Inject(method = "handleBlockChangedAck", at = @At("HEAD"))
+    private void onHandleBlockChangedAck(int sequence, CallbackInfo ci) {
+        PendingPlaces.of((ClientLevel) (Object) this).onAck(sequence);
+    }
+
+    // block updates, single or by section, land here on the main thread, even for a position the client is still
+    // predicting
+    @Inject(method = "setServerVerifiedBlockState", at = @At("HEAD"))
+    private void onSetServerVerifiedBlockState(BlockPos pos, BlockState state, int flags, CallbackInfo ci) {
+        PendingPlaces.of((ClientLevel) (Object) this).onServerState(pos);
     }
 
     @ModifyArgs(method = "animateTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/ClientLevel;doAnimateTick(IIIILnet/minecraft/util/RandomSource;Lnet/minecraft/world/level/block/Block;Lnet/minecraft/core/BlockPos$MutableBlockPos;)V"))
